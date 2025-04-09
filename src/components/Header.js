@@ -178,7 +178,7 @@ function Header({ toggleTheme, searchTerm, setSearchTerm }) {
                     setProfileAnchorEl(null);
                   }}
                 >
-                  ÇIKIŞ YAP
+                  Çıkış Yap
                 </MenuItem>
               </Menu>
             </Box>
