@@ -1,4 +1,3 @@
-// CommentSection.js
 import React, { useState, useEffect } from "react";
 import {
   Box,
@@ -33,17 +32,10 @@ const CommentSection = ({ postId }) => {
       const fixed = parsed.map((c) => ({
         ...c,
         replies: c.replies || [],
-        likes: c.likes || 0,
-        dislikes: c.dislikes || 0,
       }));
       setComments(fixed);
     }
   }, [storageKey]);
-
-  const saveComments = (updated) => {
-    setComments(updated);
-    localStorage.setItem(storageKey, JSON.stringify(updated));
-  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -54,16 +46,16 @@ const CommentSection = ({ postId }) => {
       id: Date.now(),
       name: commenterName,
       text,
-      avatar: user ? `https://i.pravatar.cc/150?u=${user.name}` : null,
+      avatar: `https://i.pravatar.cc/150?img=${Math.floor(
+        Math.random() * 1000
+      )}`,
       date: new Date().toISOString(),
       replies: [],
-      likes: 0,
-      dislikes: 0,
-      userId: commenterName,
     };
 
     const updated = [...comments, newComment];
-    saveComments(updated);
+    setComments(updated);
+    localStorage.setItem(storageKey, JSON.stringify(updated));
     setName("");
     setText("");
   };
@@ -80,7 +72,10 @@ const CommentSection = ({ postId }) => {
         };
       });
     };
-    saveComments(addReplyRecursively(comments));
+
+    const updated = addReplyRecursively(comments);
+    setComments(updated);
+    localStorage.setItem(storageKey, JSON.stringify(updated));
   };
 
   const handleDelete = (id) => {
@@ -92,52 +87,48 @@ const CommentSection = ({ postId }) => {
           replies: deleteRecursively(item.replies || []),
         }));
     };
-    saveComments(deleteRecursively(comments));
+
+    const updated = deleteRecursively(comments);
+    setComments(updated);
+    localStorage.setItem(storageKey, JSON.stringify(updated));
   };
 
-  const handleUpdate = (id, updatedText) => {
-    const updateRecursively = (items) =>
-      items.map((item) => {
-        if (item.id === id) {
-          return { ...item, text: updatedText };
-        }
-        return {
-          ...item,
-          replies: updateRecursively(item.replies || []),
-        };
-      });
-    saveComments(updateRecursively(comments));
-  };
-
-  const getUpdatedComment = (comment) => ({
-    ...comment,
-    likes:
-      parseInt(localStorage.getItem(`likes_${comment.id}`)) ||
-      comment.likes ||
-      0,
-    dislikes:
-      parseInt(localStorage.getItem(`dislikes_${comment.id}`)) ||
-      comment.dislikes ||
-      0,
-    replies: comment.replies?.map(getUpdatedComment) || [],
-  });
-
-  const updatedComments = comments.map(getUpdatedComment);
-
-  const sortedComments = [...updatedComments].sort((a, b) => {
-    if (sortOrder === "mostLiked") return b.likes - a.likes;
-    return sortOrder === "newest"
-      ? new Date(b.date) - new Date(a.date)
-      : new Date(a.date) - new Date(b.date);
+  const sortedComments = [...comments].sort((a, b) => {
+    if (sortOrder === "newest") {
+      return new Date(b.date) - new Date(a.date);
+    } else if (sortOrder === "oldest") {
+      return new Date(a.date) - new Date(b.date);
+    } else if (sortOrder === "mostLiked") {
+      const aCount =
+        JSON.parse(localStorage.getItem(`comment_count_${a.id}`)) || 0;
+      const bCount =
+        JSON.parse(localStorage.getItem(`comment_count_${b.id}`)) || 0;
+      return bCount - aCount;
+    }
+    return 0;
   });
 
   return (
-    <Box sx={{ mt: 6 }}>
-      <Typography variant="h6" gutterBottom>
-        Yorumlar
-      </Typography>
+    <Box sx={{ mt: 4 }}>
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          mb: 2,
+          flexWrap: "wrap",
+        }}
+      >
+        <Typography
+          variant="h6"
+          sx={{
+            fontWeight: "bold",
+            color: theme.palette.text.primary,
+          }}
+        >
+          Yorumlar
+        </Typography>
 
-      <Box sx={{ display: "flex", justifyContent: "flex-end", mb: 2 }}>
         <Select
           value={sortOrder}
           onChange={(e) => setSortOrder(e.target.value)}
@@ -149,7 +140,7 @@ const CommentSection = ({ postId }) => {
         >
           <MenuItem value="newest">En Yeni</MenuItem>
           <MenuItem value="oldest">En Eski</MenuItem>
-          <MenuItem value="mostLiked">En Beğenilen</MenuItem>
+          <MenuItem value="mostLiked">En Çok Beğenilenler</MenuItem>{" "}
         </Select>
       </Box>
 
@@ -162,53 +153,50 @@ const CommentSection = ({ postId }) => {
             replyingTo={replyingTo}
             setReplyingTo={setReplyingTo}
             onDelete={handleDelete}
-            onUpdate={handleUpdate}
-            currentUser={user}
           />
         ))}
       </List>
 
-      <Divider sx={{ my: 4 }} />
+      <Divider sx={{ my: 3 }} />
 
       <Paper
-        elevation={4}
+        elevation={3}
         sx={{
           p: 4,
-          borderRadius: 3,
+          mt: 4,
+          borderRadius: 2,
           bgcolor: theme.palette.mode === "dark" ? "grey.900" : "grey.50",
           border: `1px solid ${
             theme.palette.mode === "dark"
               ? theme.palette.grey[800]
               : theme.palette.grey[300]
           }`,
-          boxShadow: theme.palette.mode === "dark" ? 4 : 2,
         }}
       >
         <Typography variant="subtitle1" gutterBottom>
           Yeni Yorum Yaz
         </Typography>
         <form onSubmit={handleSubmit}>
-          <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-            <TextField
-              label="Kullanıcı Adı"
-              fullWidth
-              value={user ? user.name : name}
-              onChange={(e) => setName(e.target.value)}
-              disabled={!!user}
-            />
-            <TextField
-              label="Yorum yazın"
-              fullWidth
-              value={text}
-              onChange={(e) => setText(e.target.value)}
-              multiline
-              rows={4}
-            />
-            <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
-              <Button type="submit" variant="contained">
-                Gönder
-              </Button>
-            </Box>
+          <TextField
+            label="Ad Soyad"
+            fullWidth
+            value={user ? user.name : name}
+            onChange={(e) => setName(e.target.value)}
+            sx={{ mb: 2 }}
+            disabled={!!user}
+          />
+          <TextField
+            label="Yorum yazın"
+            fullWidth
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            multiline
+            rows={3}
+          />
+          <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
+            <Button type="submit" variant="contained" sx={{ mt: 2 }}>
+              Gönder
+            </Button>
           </Box>
         </form>
       </Paper>
