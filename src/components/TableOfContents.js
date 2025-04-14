@@ -14,6 +14,7 @@ import {
 import MenuBookIcon from "@mui/icons-material/MenuBook";
 import CloseIcon from "@mui/icons-material/Close";
 import { motion, AnimatePresence } from "framer-motion";
+import { useLocation } from "react-router-dom";
 
 const TableOfContents = () => {
   const [headings, setHeadings] = useState([]);
@@ -22,7 +23,9 @@ const TableOfContents = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const [mobileOpen, setMobileOpen] = useState(false);
+  const location = useLocation(); // 👈 yazı değişimlerini takip eder
 
+  // Başlıkları her sayfa değiştiğinde yeniden tara
   useEffect(() => {
     const elements = Array.from(document.querySelectorAll("h2, h3"));
     const newHeadings = elements.map((el) => {
@@ -36,7 +39,8 @@ const TableOfContents = () => {
       };
     });
     setHeadings(newHeadings);
-  }, []);
+    setActiveId(null); // ✅ yazı değişince önceki highlight'ı sıfırla
+  }, [location.pathname]);
 
   useEffect(() => {
     const handleScroll = () => {
