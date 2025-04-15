@@ -26,7 +26,7 @@ const ScrollProgressBar = () => {
         left: 0,
         width: "100%",
         zIndex: 1500,
-        backgroundColor: "tranparent",
+        backgroundColor: "transparent",
       }}
     >
       <LinearProgress
