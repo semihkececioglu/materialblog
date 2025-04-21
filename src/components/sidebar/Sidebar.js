@@ -12,6 +12,7 @@ import {
 import { Link } from "react-router-dom";
 import SocialMediaBox from "./SocialMediaBox";
 import CategoryList from "./CategoryList";
+import SidebarTags from "./SidebarTags";
 
 const categories = ["React", "JavaScript", "Tasarım"];
 
@@ -22,6 +23,7 @@ const Sidebar = () => {
     <>
       <CategoryList />
       <SocialMediaBox />
+      <SidebarTags />
     </>
   );
 };
