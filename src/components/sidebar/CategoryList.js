@@ -5,12 +5,33 @@ import {
   List,
   ListItem,
   ListItemText,
+  ListItemIcon,
   Paper,
   useTheme,
+  Box,
 } from "@mui/material";
 import { Link } from "react-router-dom";
+import CodeIcon from "@mui/icons-material/Code";
+import JavascriptIcon from "@mui/icons-material/Javascript";
+import DesignServicesIcon from "@mui/icons-material/DesignServices";
 
-const categories = ["React", "JavaScript", "Tasarım"];
+const categories = [
+  {
+    name: "React",
+    icon: <CodeIcon />,
+    bgImage: "linear-gradient(135deg, #61dafb 0%, #21a1f1 100%)",
+  },
+  {
+    name: "JavaScript",
+    icon: <JavascriptIcon />,
+    bgImage: "linear-gradient(135deg, #f7df1e 0%, #ffd700 100%)",
+  },
+  {
+    name: "Tasarım",
+    icon: <DesignServicesIcon />,
+    bgImage: "linear-gradient(135deg, #ff7eb9 0%, #ff65a3 100%)",
+  },
+];
 
 const CategoryList = () => {
   const theme = useTheme();
@@ -20,6 +41,7 @@ const CategoryList = () => {
       elevation={3}
       sx={{
         p: 2,
+        mt: 3,
         borderRadius: 2,
         bgcolor: theme.palette.mode === "dark" ? "grey.900" : "grey.50",
         border: `1px solid ${
@@ -29,19 +51,42 @@ const CategoryList = () => {
         }`,
       }}
     >
-      <Typography variant="h6" gutterBottom>
+      <Typography variant="h6" gutterBottom fontWeight="bold">
         Kategoriler
       </Typography>
       <Divider sx={{ my: 1 }} />
-      <List dense>
-        {categories.map((category) => (
+      <List disablePadding>
+        {categories.map((category, index) => (
           <ListItem
-            key={category}
-            button
+            key={index}
             component={Link}
-            to={`/category/${category.toLowerCase()}`}
+            to={`/category/${category.name.toLowerCase()}`}
+            sx={{
+              mb: 2,
+              borderRadius: 2,
+              px: 2,
+              py: 1.5,
+              background: category.bgImage,
+              color: theme.palette.getContrastText("#ffffff"),
+              transition: "all 0.3s ease",
+              textDecoration: "none",
+              boxShadow: 3,
+              "&:hover": {
+                transform: "scale(1.02)",
+              },
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "flex-start",
+              gap: 2,
+            }}
           >
-            <ListItemText primary={category} />
+            <ListItemIcon sx={{ color: "inherit", minWidth: 0 }}>
+              {category.icon}
+            </ListItemIcon>
+            <ListItemText
+              primary={category.name}
+              primaryTypographyProps={{ fontWeight: 600 }}
+            />
           </ListItem>
         ))}
       </List>
