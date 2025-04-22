@@ -39,7 +39,7 @@ function App() {
           >
             <Routes>
               <Route path="/" element={<Home posts={filteredPosts} />} />
-              <Route path="/post/:id" element={<PostDetail />} />
+              <Route path="/post/:slug" element={<PostDetail />} />
               <Route path="/category/:kategoriAdi" element={<CategoryPage />} />
               <Route path="/tag/:tag" element={<TagPosts />} />
               <Route path="/register" element={<Register />} />
