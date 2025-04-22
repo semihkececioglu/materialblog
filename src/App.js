@@ -16,6 +16,8 @@ import ProfilePage from "./pages/ProfilePage";
 import EditProfilePage from "./pages/EditProfilePage";
 import AdminLayout from "./admin/AdminLayout";
 import PostsPage from "./admin/PostsPage";
+import DashboardPage from "./admin/DashboardPage";
+import AdminCategoriesPage from "./admin/AdminCategoriesPage";
 
 function App() {
   const [mode, setMode] = useState("light");
@@ -53,8 +55,9 @@ function App() {
               />
               {/* Admin paneli rotaları */}
               <Route path="/admin" element={<AdminLayout />}>
-                <Route index element={<div>Dashboard</div>} />
+                <Route index element={<DashboardPage />} />
                 <Route path="posts" element={<PostsPage />} />
+                <Route path="categories" element={<AdminCategoriesPage />} />
               </Route>
             </Routes>
           </Layout>
