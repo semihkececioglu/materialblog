@@ -1,4 +1,3 @@
-// PostsPage.js
 import React, { useState, useEffect } from "react";
 import {
   Paper,
@@ -18,6 +17,8 @@ import {
   Slide,
   DialogActions,
   DialogTitle,
+  Snackbar,
+  Alert,
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -25,6 +26,13 @@ import AddIcon from "@mui/icons-material/Add";
 import CloseIcon from "@mui/icons-material/Close";
 import initialPosts from "../data";
 import PostForm from "./PostForm";
+import { Chip } from "@mui/material";
+
+const categoryColors = {
+  React: "primary",
+  JavaScript: "warning",
+  Tasarım: "secondary",
+};
 
 const Transition = React.forwardRef(function Transition(props, ref) {
   return <Slide direction="up" ref={ref} {...props} />;
@@ -36,6 +44,10 @@ const PostsPage = () => {
   const [editingPost, setEditingPost] = useState(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [postToDelete, setPostToDelete] = useState(null);
+
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState("");
+  const [snackbarSeverity, setSnackbarSeverity] = useState("success");
 
   useEffect(() => {
     const storedPosts = JSON.parse(localStorage.getItem("posts")) || [];
@@ -56,6 +68,10 @@ const PostsPage = () => {
       );
     } else {
       updated = [newPost, ...allPosts];
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      setSnackbarMessage("Yazı başarıyla eklendi!");
+      setSnackbarSeverity("success");
+      setSnackbarOpen(true);
     }
     setAllPosts(updated);
     localStorage.setItem("posts", JSON.stringify(updated));
@@ -70,6 +86,9 @@ const PostsPage = () => {
     localStorage.setItem("posts", JSON.stringify(updated));
     setConfirmDelete(false);
     setPostToDelete(null);
+    setSnackbarMessage("Yazı başarıyla silindi!");
+    setSnackbarSeverity("info");
+    setSnackbarOpen(true);
   };
 
   const handleDeleteRequest = (id) => {
@@ -120,10 +139,27 @@ const PostsPage = () => {
             </TableHead>
             <TableBody>
               {allPosts.map((post) => (
-                <TableRow key={post.id} hover>
+                <TableRow
+                  key={post.id}
+                  hover
+                  sx={{
+                    transition: "all 0.2s ease",
+                    "&:hover": {
+                      boxShadow: 3,
+                      backgroundColor: "action.hover",
+                    },
+                  }}
+                >
                   <TableCell>{post.id}</TableCell>
                   <TableCell>{post.title}</TableCell>
-                  <TableCell>{post.category}</TableCell>
+                  <TableCell>
+                    <Chip
+                      label={post.category}
+                      color={categoryColors[post.category] || "default"}
+                      size="small"
+                      variant="filled"
+                    />
+                  </TableCell>
                   <TableCell align="right">
                     <IconButton
                       color="primary"
@@ -147,6 +183,7 @@ const PostsPage = () => {
         </Box>
       </Paper>
 
+      {/* TAM EKRAN FORM DİALOG */}
       <Dialog
         fullScreen
         open={open}
@@ -172,6 +209,7 @@ const PostsPage = () => {
         </DialogContent>
       </Dialog>
 
+      {/* SİLME ONAY */}
       <Dialog open={confirmDelete} onClose={() => setConfirmDelete(false)}>
         <DialogTitle>Bu yazıyı silmek istediğinize emin misiniz?</DialogTitle>
         <DialogActions>
@@ -185,6 +223,23 @@ const PostsPage = () => {
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* SNACKBAR */}
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={3000}
+        onClose={() => setSnackbarOpen(false)}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      >
+        <Alert
+          onClose={() => setSnackbarOpen(false)}
+          severity={snackbarSeverity}
+          variant="filled"
+          sx={{ width: "100%" }}
+        >
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };
