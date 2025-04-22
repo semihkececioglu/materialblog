@@ -8,7 +8,7 @@ import {
   useTheme,
   Pagination,
 } from "@mui/material";
-import posts from "../data";
+import initialPosts from "../data";
 import PostCard from "../components/PostCard";
 
 const tagColors = {
@@ -28,7 +28,13 @@ const TagPosts = () => {
   const theme = useTheme();
   const [page, setPage] = useState(1);
 
-  const filteredPosts = posts.filter(
+  const stored = JSON.parse(localStorage.getItem("posts")) || [];
+  const allPosts = [
+    ...stored,
+    ...initialPosts.filter((p) => !stored.some((s) => s.id === p.id)),
+  ];
+
+  const filteredPosts = allPosts.filter(
     (post) => post.tags && post.tags.includes(tag)
   );
 

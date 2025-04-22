@@ -1,4 +1,3 @@
-// SearchResults.js
 import React, { useState } from "react";
 import { useLocation } from "react-router-dom";
 import {
@@ -9,7 +8,7 @@ import {
   Grow,
   Container,
 } from "@mui/material";
-import posts from "../data";
+import initialPosts from "../data";
 import PostCard from "../components/PostCard";
 import Sidebar from "../components/sidebar/Sidebar";
 
@@ -25,7 +24,13 @@ const SearchResults = () => {
   const theme = useTheme();
   const [page, setPage] = useState(1);
 
-  const filteredPosts = posts.filter(
+  const stored = JSON.parse(localStorage.getItem("posts")) || [];
+  const allPosts = [
+    ...stored,
+    ...initialPosts.filter((p) => !stored.some((s) => s.id === p.id)),
+  ];
+
+  const filteredPosts = allPosts.filter(
     (post) =>
       post.title.toLowerCase().includes(searchTerm) ||
       post.content.toLowerCase().includes(searchTerm)
