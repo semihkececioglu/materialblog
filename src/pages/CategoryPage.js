@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useParams } from "react-router-dom";
-import posts from "../data";
+import initialPosts from "../data";
 import PostCard from "../components/PostCard";
 import {
   Container,
@@ -18,8 +18,13 @@ function CategoryPage() {
   const theme = useTheme();
   const [page, setPage] = useState(1);
 
-  const filteredPosts = posts.filter(
-    (post) => slugify(post.category) === kategoriAdi.toLowerCase()
+  const stored = JSON.parse(localStorage.getItem("posts")) || [];
+  const allPosts = [
+    ...stored,
+    ...initialPosts.filter((p) => !stored.some((s) => s.id === p.id)),
+  ];
+  const filteredPosts = allPosts.filter(
+    (post) => slugify(post.category) === kategoriAdi.toLocaleLowerCase()
   );
 
   const pageCount = Math.ceil(filteredPosts.length / POSTS_PER_PAGE);
