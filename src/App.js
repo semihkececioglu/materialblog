@@ -14,6 +14,8 @@ import Register from "./pages/Register";
 import SearchResults from "./pages/SearchResults";
 import ProfilePage from "./pages/ProfilePage";
 import EditProfilePage from "./pages/EditProfilePage";
+import AdminLayout from "./admin/AdminLayout";
+import PostsPage from "./admin/PostsPage";
 
 function App() {
   const [mode, setMode] = useState("light");
@@ -49,6 +51,11 @@ function App() {
                 path="/profile/:username/edit"
                 element={<EditProfilePage />}
               />
+              {/* Admin paneli rotaları */}
+              <Route path="/admin" element={<AdminLayout />}>
+                <Route index element={<div>Dashboard</div>} />
+                <Route path="posts" element={<PostsPage />} />
+              </Route>
             </Routes>
           </Layout>
         </Router>
