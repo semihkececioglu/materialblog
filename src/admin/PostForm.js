@@ -1,109 +1,110 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
-  Paper,
   TextField,
-  Typography,
   Button,
   Box,
   MenuItem,
+  Select,
+  InputLabel,
+  FormControl,
 } from "@mui/material";
 
-const initialState = {
-  title: "",
-  summary: "",
-  content: "",
-  category: "",
-  tags: "",
-};
+const PostForm = ({ onSubmit, initialData }) => {
+  const [form, setForm] = useState({
+    id: initialData?.id || Date.now(),
+    title: initialData?.title || "",
+    category: initialData?.category || "",
+    content: initialData?.content || "",
+    summary: initialData?.summary || "",
+    tags: initialData?.tags?.join(", ") || "",
+    date: initialData?.date || new Date().toISOString().slice(0, 10),
+  });
 
-const categories = ["React", "JavaScript", "Tasarım"];
+  const [categories, setCategories] = useState([]);
 
-const PostForm = ({ onSubmit }) => {
-  const [formData, setFormData] = useState(initialState);
+  useEffect(() => {
+    const storedCategories =
+      JSON.parse(localStorage.getItem("categories")) || [];
+    setCategories(storedCategories);
+  }, []);
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    setForm({ ...form, [e.target.name]: e.target.value });
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!formData.title || !formData.category) return;
 
-    const newPost = {
-      ...formData,
-      id: Date.now(),
-      tags: formData.tags.split(",").map((tag) => tag.trim()),
-      date: new Date().toISOString().split("T")[0],
+    const post = {
+      ...form,
+      tags: form.tags.split(",").map((tag) => tag.trim()),
     };
 
-    const currentPosts = JSON.parse(localStorage.getItem("posts")) || [];
-    const updatedPosts = [newPost, ...currentPosts];
-    localStorage.setItem("posts", JSON.stringify(updatedPosts));
-
-    if (onSubmit) onSubmit(newPost);
-    setFormData(initialState);
+    onSubmit(post);
   };
 
   return (
-    <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
-      <Typography variant="h6" gutterBottom>
-        Yeni Yazı Ekle
-      </Typography>
-      <Box
-        component="form"
-        onSubmit={handleSubmit}
-        sx={{ display: "grid", gap: 2 }}
-      >
-        <TextField
-          label="Başlık"
-          name="title"
-          value={formData.title}
-          onChange={handleChange}
-          fullWidth
-        />
-        <TextField
-          label="Özet"
-          name="summary"
-          value={formData.summary}
-          onChange={handleChange}
-          fullWidth
-        />
-        <TextField
-          label="İçerik"
-          name="content"
-          value={formData.content}
-          onChange={handleChange}
-          multiline
-          rows={6}
-          fullWidth
-        />
-        <TextField
-          select
-          label="Kategori"
+    <Box component="form" onSubmit={handleSubmit} sx={{ mt: 2 }}>
+      <TextField
+        fullWidth
+        label="Başlık"
+        name="title"
+        value={form.title}
+        onChange={handleChange}
+        sx={{ mb: 2 }}
+      />
+
+      <FormControl fullWidth sx={{ mb: 2 }}>
+        <InputLabel>Kategori</InputLabel>
+        <Select
           name="category"
-          value={formData.category}
+          value={form.category}
           onChange={handleChange}
-          fullWidth
+          label="Kategori"
         >
-          {categories.map((cat) => (
-            <MenuItem key={cat} value={cat}>
+          {categories.map((cat, index) => (
+            <MenuItem key={index} value={cat}>
               {cat}
             </MenuItem>
           ))}
-        </TextField>
-        <TextField
-          label="Etiketler (virgülle ayır)"
-          name="tags"
-          value={formData.tags}
-          onChange={handleChange}
-          fullWidth
-        />
-        <Button variant="contained" type="submit">
-          Kaydet
-        </Button>
-      </Box>
-    </Paper>
+        </Select>
+      </FormControl>
+
+      <TextField
+        fullWidth
+        multiline
+        minRows={4}
+        label="Özet"
+        name="summary"
+        value={form.summary}
+        onChange={handleChange}
+        sx={{ mb: 2 }}
+      />
+
+      <TextField
+        fullWidth
+        multiline
+        minRows={10}
+        label="İçerik"
+        name="content"
+        value={form.content}
+        onChange={handleChange}
+        sx={{ mb: 2 }}
+      />
+
+      <TextField
+        fullWidth
+        label="Etiketler (virgülle)"
+        name="tags"
+        value={form.tags}
+        onChange={handleChange}
+        sx={{ mb: 2 }}
+      />
+
+      <Button variant="contained" color="primary" type="submit">
+        Kaydet
+      </Button>
+    </Box>
   );
 };
 
