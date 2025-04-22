@@ -10,7 +10,7 @@ import {
 } from "@mui/material";
 import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
 import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
-import posts from "../data";
+import initialPosts from "../data";
 import CommentSection from "../components/CommentSection";
 import Sidebar from "../components/sidebar/Sidebar";
 import AuthorInfo from "../components/AuthorInfo";
@@ -20,20 +20,30 @@ import EmbeddedInteractionBar from "../components/EmbeddedInteractionBar";
 import { InteractionBarProvider } from "../contexts/InteractionBarContext";
 import ScrollProgressBar from "../components/ScrollProgressBar";
 import TableOfContents from "../components/TableOfContents";
+import slugify from "../utils/slugify";
 
 function PostDetail() {
-  const { id } = useParams();
+  const { slug } = useParams();
   const theme = useTheme();
-  const post = posts.find((p) => p.id === parseInt(id));
   const [showEmbeddedBar, setShowEmbeddedBar] = useState(false);
 
-  const currentIndex = posts.findIndex((p) => p.id === post?.id);
-  const prevPost = posts[currentIndex - 1];
-  const nextPost = posts[currentIndex + 1];
+  const storedPosts = JSON.parse(localStorage.getItem("posts")) || [];
+  const mergedPosts = [
+    ...storedPosts,
+    ...initialPosts.filter(
+      (post) => !storedPosts.some((p) => p.id === post.id)
+    ),
+  ];
+
+  const post = mergedPosts.find((p) => slugify(p.title) === slug);
+
+  const currentIndex = mergedPosts.findIndex((p) => p.id === post?.id);
+  const prevPost = mergedPosts[currentIndex - 1];
+  const nextPost = mergedPosts[currentIndex + 1];
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
-  }, [id]);
+  }, [slug]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -69,7 +79,7 @@ function PostDetail() {
       "https://ui-avatars.com/api/?name=Semih+R&background=0D8ABC&color=fff",
   };
 
-  const relatedPosts = posts
+  const relatedPosts = mergedPosts
     .filter((p) => p.category === post.category && p.id !== post.id)
     .slice(0, 3);
 
@@ -173,7 +183,7 @@ function PostDetail() {
               {prevPost && (
                 <Box
                   component={Link}
-                  to={`/post/${prevPost.id}`}
+                  to={`/post/${slugify(prevPost.title)}`}
                   sx={{
                     textDecoration: "none",
                     color: "inherit",
@@ -198,7 +208,7 @@ function PostDetail() {
               {nextPost && (
                 <Box
                   component={Link}
-                  to={`/post/${nextPost.id}`}
+                  to={`/post/${slugify(nextPost.title)}`}
                   sx={{
                     textDecoration: "none",
                     color: "inherit",
