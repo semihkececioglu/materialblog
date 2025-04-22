@@ -13,6 +13,7 @@ import {
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import ImageNotSupportedIcon from "@mui/icons-material/ImageNotSupported";
 import { useNavigate } from "react-router-dom";
+import slugify from "../utils/slugify";
 
 const getFirstImageFromHTML = (html) => {
   const match = html?.match(/<img[^>]+src=["']([^"'>]+)["']/);
@@ -29,7 +30,7 @@ const PostCard = ({ post }) => {
   const navigate = useNavigate();
 
   const handleClick = () => {
-    navigate(`/post/${post.id}`);
+    navigate(`/post/${slugify(post.title)}`);
   };
 
   const firstImage = getFirstImageFromHTML(post.content);
