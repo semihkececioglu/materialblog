@@ -8,7 +8,6 @@ import {
   ListItemIcon,
   Paper,
   useTheme,
-  Box,
 } from "@mui/material";
 import { Link } from "react-router-dom";
 import CodeIcon from "@mui/icons-material/Code";
