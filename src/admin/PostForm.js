@@ -37,7 +37,11 @@ const PostForm = ({ onSubmit }) => {
       date: new Date().toISOString().split("T")[0],
     };
 
-    onSubmit(newPost);
+    const currentPosts = JSON.parse(localStorage.getItem("posts")) || [];
+    const updatedPosts = [newPost, ...currentPosts];
+    localStorage.setItem("posts", JSON.stringify(updatedPosts));
+
+    if (onSubmit) onSubmit(newPost);
     setFormData(initialState);
   };
 
