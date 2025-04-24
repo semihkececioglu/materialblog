@@ -1,10 +1,10 @@
-// ✅ CommentItem.js (admin silme yetkisi ve yalnızca kendi yorumuna düzenleme/silme yetkisi eklendi)
+// ✅ CommentItem.js (beğeni butonu davranışları tamamen düzeltildi)
 import React, { useState, useEffect } from "react";
 import {
   Avatar,
   Box,
   Button,
-  Card,
+  Paper,
   CardContent,
   Dialog,
   DialogActions,
@@ -32,6 +32,7 @@ const CommentItem = ({
   replyingTo,
   setReplyingTo,
   onDelete,
+  onNotify,
 }) => {
   const { user } = useAuth();
   const currentUserKey = user?.username || user?.name;
@@ -48,6 +49,7 @@ const CommentItem = ({
   const [likeCount, setLikeCount] = useState(0);
   const [showAlert, setShowAlert] = useState(false);
   const [openDialog, setOpenDialog] = useState(false);
+  const [snackbar, setSnackbar] = useState({ open: false, message: "" });
 
   const likeKey = `comment_like_${comment.id}`;
   const countKey = `comment_count_${comment.id}`;
@@ -57,12 +59,7 @@ const CommentItem = ({
     const storedCount = JSON.parse(localStorage.getItem(countKey)) || 0;
 
     setLikeCount(storedCount);
-
-    if (currentUserKey && storedLiked[currentUserKey]) {
-      setLiked(true);
-    } else {
-      setLiked(false);
-    }
+    setLiked(!!storedLiked[currentUserKey]);
   }, [currentUserKey, likeKey, countKey]);
 
   const handleLike = () => {
@@ -71,7 +68,7 @@ const CommentItem = ({
       return;
     }
 
-    if (user.name === comment.name) return;
+    if (isOwner) return;
 
     const storedLiked = JSON.parse(localStorage.getItem(likeKey)) || {};
     const alreadyLiked = storedLiked[currentUserKey];
@@ -110,10 +107,11 @@ const CommentItem = ({
     setReplyText("");
     setReplyName("");
     setReplyingTo(null);
+    onNotify?.("Yanıt eklendi");
   };
 
   return (
-    <Card variant="outlined" sx={{ mb: 2, ml: 4, p: 2, borderRadius: 2 }}>
+    <Paper elevation={2} sx={{ mb: 2, ml: 4, p: 2, borderRadius: 2 }}>
       <CardContent sx={{ pb: 1 }}>
         <Box sx={{ display: "flex", justifyContent: "space-between" }}>
           <Box sx={{ display: "flex", alignItems: "center" }}>
@@ -170,6 +168,8 @@ const CommentItem = ({
                 onClick={() => {
                   comment.text = editedText;
                   setEditMode(false);
+                  setSnackbar({ open: true, message: "Yorum güncellendi" });
+                  onNotify?.("Yorum güncellendi");
                 }}
                 variant="contained"
                 size="small"
@@ -191,15 +191,15 @@ const CommentItem = ({
             sx={{ textTransform: "none" }}
             startIcon={
               <FavoriteIcon
-                color={liked ? "error" : "disabled"}
+                color={user && liked ? "error" : "disabled"}
                 sx={{
                   transition: "transform 0.2s ease",
-                  transform: liked ? "scale(1.3)" : "scale(1)",
+                  transform: user && liked ? "scale(1.3)" : "scale(1)",
                 }}
               />
             }
           >
-            {liked ? "Beğenmekten Vazgeç" : "Beğen"} ({likeCount})
+            {user && liked ? "Beğenmekten Vazgeç" : "Beğen"} ({likeCount})
           </Button>
 
           <Button
@@ -253,6 +253,7 @@ const CommentItem = ({
                 replyingTo={replyingTo}
                 setReplyingTo={setReplyingTo}
                 onDelete={onDelete}
+                onNotify={onNotify}
               />
             ))}
           </List>
@@ -271,6 +272,8 @@ const CommentItem = ({
               onClick={() => {
                 onDelete(comment.id);
                 setOpenDialog(false);
+                setSnackbar({ open: true, message: "Yorum silindi" });
+                onNotify?.("Yorum silindi");
               }}
               autoFocus
               color="error"
@@ -290,8 +293,19 @@ const CommentItem = ({
             Yorumu beğenebilmek için giriş yapmalısınız.
           </Alert>
         </Snackbar>
+
+        <Snackbar
+          open={snackbar.open}
+          autoHideDuration={3000}
+          onClose={() => setSnackbar({ open: false, message: "" })}
+          anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+        >
+          <Alert severity="success" variant="filled">
+            {snackbar.message}
+          </Alert>
+        </Snackbar>
       </CardContent>
-    </Card>
+    </Paper>
   );
 };
 
