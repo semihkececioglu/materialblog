@@ -1,3 +1,4 @@
+// ✅ CommentSection.js (yorum eklendiğinde, silindiğinde ve düzenlendiğinde snackbar entegre edildi)
 import React, { useState, useEffect } from "react";
 import {
   Box,
@@ -10,6 +11,8 @@ import {
   TextField,
   Typography,
   useTheme,
+  Snackbar,
+  Alert,
 } from "@mui/material";
 import CommentItem from "./CommentItem";
 import { useAuth } from "../contexts/AuthContext";
@@ -20,6 +23,7 @@ const CommentSection = ({ postId }) => {
   const [text, setText] = useState("");
   const [replyingTo, setReplyingTo] = useState(null);
   const [sortOrder, setSortOrder] = useState("newest");
+  const [snackbar, setSnackbar] = useState({ open: false, message: "" });
   const theme = useTheme();
   const { user } = useAuth();
 
@@ -58,6 +62,7 @@ const CommentSection = ({ postId }) => {
     localStorage.setItem(storageKey, JSON.stringify(updated));
     setName("");
     setText("");
+    setSnackbar({ open: true, message: "Yorum eklendi" });
   };
 
   const handleReplySubmit = (parentId, replyObj) => {
@@ -91,6 +96,10 @@ const CommentSection = ({ postId }) => {
     const updated = deleteRecursively(comments);
     setComments(updated);
     localStorage.setItem(storageKey, JSON.stringify(updated));
+  };
+
+  const showSnackbar = (message) => {
+    setSnackbar({ open: true, message });
   };
 
   const sortedComments = [...comments].sort((a, b) => {
@@ -153,6 +162,7 @@ const CommentSection = ({ postId }) => {
             replyingTo={replyingTo}
             setReplyingTo={setReplyingTo}
             onDelete={handleDelete}
+            onNotify={showSnackbar}
           />
         ))}
       </List>
@@ -200,6 +210,17 @@ const CommentSection = ({ postId }) => {
           </Box>
         </form>
       </Paper>
+
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={3000}
+        onClose={() => setSnackbar({ open: false, message: "" })}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      >
+        <Alert severity="success" variant="filled">
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };
