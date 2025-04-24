@@ -183,18 +183,24 @@ const CommentItem = ({
           </>
         )}
 
-        <Box sx={{ mt: 1 }}>
+        <Box sx={{ mt: 1, display: "flex", gap: 2 }}>
           <Button
             size="small"
-            startIcon={<FavoriteIcon color={liked ? "error" : "disabled"} />}
             onClick={handleLike}
             sx={{ textTransform: "none" }}
+            startIcon={
+              <FavoriteIcon
+                color={liked ? "error" : "disabled"}
+                sx={{
+                  transition: "transform 0.2s ease",
+                  transform: liked ? "scale(1.3)" : "scale(1)",
+                }}
+              />
+            }
           >
             {liked ? "Beğenmekten Vazgeç" : "Beğen"} ({likeCount})
           </Button>
-        </Box>
 
-        <Box sx={{ mt: 1 }}>
           <Button
             size="small"
             onClick={() =>
@@ -203,7 +209,7 @@ const CommentItem = ({
             sx={{ textTransform: "none" }}
             startIcon={<ChatBubbleOutlineIcon />}
           >
-            Yanıtla
+            {replyingTo === comment.id ? "Yanıtlamaktan Vazgeç" : "Yanıtla"}
           </Button>
         </Box>
 
