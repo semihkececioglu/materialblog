@@ -187,6 +187,7 @@ const CommentItem = ({
           <Button
             size="small"
             onClick={handleLike}
+            disabled={user?.name === comment.name}
             sx={{ textTransform: "none" }}
             startIcon={
               <FavoriteIcon
