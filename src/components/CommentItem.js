@@ -1,3 +1,4 @@
+// ✅ CommentItem.js (admin silme yetkisi ve yalnızca kendi yorumuna düzenleme/silme yetkisi eklendi)
 import React, { useState, useEffect } from "react";
 import {
   Avatar,
@@ -34,6 +35,10 @@ const CommentItem = ({
 }) => {
   const { user } = useAuth();
   const currentUserKey = user?.username || user?.name;
+  const isOwner = user?.name === comment.name;
+  const isAdmin =
+    user?.username?.toLowerCase() === "admin" ||
+    user?.name?.toLowerCase() === "admin";
 
   const [replyText, setReplyText] = useState("");
   const [replyName, setReplyName] = useState("");
@@ -47,7 +52,6 @@ const CommentItem = ({
   const likeKey = `comment_like_${comment.id}`;
   const countKey = `comment_count_${comment.id}`;
 
-  // useEffect: localStorage'dan beğeni bilgilerini çek
   useEffect(() => {
     const storedLiked = JSON.parse(localStorage.getItem(likeKey)) || {};
     const storedCount = JSON.parse(localStorage.getItem(countKey)) || 0;
@@ -128,14 +132,16 @@ const CommentItem = ({
             </Box>
           </Box>
           <Box>
-            {user?.name === comment.name && (
+            {isOwner && (
               <IconButton onClick={() => setEditMode(!editMode)} size="small">
                 <EditIcon fontSize="small" />
               </IconButton>
             )}
-            <IconButton onClick={() => setOpenDialog(true)} size="small">
-              <DeleteIcon fontSize="small" />
-            </IconButton>
+            {(isOwner || isAdmin) && (
+              <IconButton onClick={() => setOpenDialog(true)} size="small">
+                <DeleteIcon fontSize="small" />
+              </IconButton>
+            )}
           </Box>
         </Box>
 
