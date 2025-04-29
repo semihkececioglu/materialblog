@@ -19,6 +19,7 @@ import {
   DialogTitle,
   Snackbar,
   Alert,
+  Chip,
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -26,7 +27,6 @@ import AddIcon from "@mui/icons-material/Add";
 import CloseIcon from "@mui/icons-material/Close";
 import initialPosts from "../data";
 import PostForm from "./PostForm";
-import { Chip } from "@mui/material";
 
 const categoryColors = {
   React: "primary",
@@ -66,13 +66,15 @@ const PostsPage = () => {
       updated = allPosts.map((post) =>
         post.id === editingPost.id ? newPost : post
       );
+      setSnackbarMessage("Yazı güncellendi!");
     } else {
       updated = [newPost, ...allPosts];
-      window.scrollTo({ top: 0, behavior: "smooth" });
       setSnackbarMessage("Yazı başarıyla eklendi!");
-      setSnackbarSeverity("success");
-      setSnackbarOpen(true);
+      window.scrollTo({ top: 0, behavior: "smooth" });
     }
+
+    setSnackbarSeverity("success");
+    setSnackbarOpen(true);
     setAllPosts(updated);
     localStorage.setItem("posts", JSON.stringify(updated));
     setOpen(false);
@@ -102,7 +104,7 @@ const PostsPage = () => {
   };
 
   return (
-    <Box>
+    <Box sx={{ pt: 1 }}>
       <Box
         sx={{
           display: "flex",
@@ -183,7 +185,7 @@ const PostsPage = () => {
         </Box>
       </Paper>
 
-      {/* TAM EKRAN FORM DİALOG */}
+      {/* TAM EKRAN FORM */}
       <Dialog
         fullScreen
         open={open}
@@ -209,7 +211,7 @@ const PostsPage = () => {
         </DialogContent>
       </Dialog>
 
-      {/* SİLME ONAY */}
+      {/* SİLME ONAY DİALOGU */}
       <Dialog open={confirmDelete} onClose={() => setConfirmDelete(false)}>
         <DialogTitle>Bu yazıyı silmek istediğinize emin misiniz?</DialogTitle>
         <DialogActions>
@@ -224,7 +226,7 @@ const PostsPage = () => {
         </DialogActions>
       </Dialog>
 
-      {/* SNACKBAR */}
+      {/* BİLDİRİM SNACKBAR */}
       <Snackbar
         open={snackbarOpen}
         autoHideDuration={3000}
