@@ -1,4 +1,3 @@
-// ✅ CommentSection.js (yorum eklendiğinde, silindiğinde ve düzenlendiğinde snackbar entegre edildi)
 import React, { useState, useEffect } from "react";
 import {
   Box,
@@ -20,6 +19,7 @@ import { useAuth } from "../contexts/AuthContext";
 const CommentSection = ({ postId }) => {
   const [comments, setComments] = useState([]);
   const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
   const [text, setText] = useState("");
   const [replyingTo, setReplyingTo] = useState(null);
   const [sortOrder, setSortOrder] = useState("newest");
@@ -44,11 +44,13 @@ const CommentSection = ({ postId }) => {
   const handleSubmit = (e) => {
     e.preventDefault();
     const commenterName = user ? user.name : name;
+    const commenterEmail = user ? user.email : email;
     if (!commenterName.trim() || !text.trim()) return;
 
     const newComment = {
       id: Date.now(),
       name: commenterName,
+      email: commenterEmail,
       text,
       avatar: `https://i.pravatar.cc/150?img=${Math.floor(
         Math.random() * 1000
@@ -61,6 +63,7 @@ const CommentSection = ({ postId }) => {
     setComments(updated);
     localStorage.setItem(storageKey, JSON.stringify(updated));
     setName("");
+    setEmail("");
     setText("");
     setSnackbar({ open: true, message: "Yorum eklendi" });
   };
@@ -119,6 +122,7 @@ const CommentSection = ({ postId }) => {
 
   return (
     <Box sx={{ mt: 4 }}>
+      {/* Yorumlar Başlığı ve Sıralama */}
       <Box
         sx={{
           display: "flex",
@@ -149,10 +153,11 @@ const CommentSection = ({ postId }) => {
         >
           <MenuItem value="newest">En Yeni</MenuItem>
           <MenuItem value="oldest">En Eski</MenuItem>
-          <MenuItem value="mostLiked">En Çok Beğenilenler</MenuItem>{" "}
+          <MenuItem value="mostLiked">En Çok Beğenilenler</MenuItem>
         </Select>
       </Box>
 
+      {/* Yorumlar Listesi */}
       <List>
         {sortedComments.map((comment) => (
           <CommentItem
@@ -169,6 +174,7 @@ const CommentSection = ({ postId }) => {
 
       <Divider sx={{ my: 3 }} />
 
+      {/* Yorum Ekleme Formu */}
       <Paper
         elevation={3}
         sx={{
@@ -187,14 +193,24 @@ const CommentSection = ({ postId }) => {
           Yeni Yorum Yaz
         </Typography>
         <form onSubmit={handleSubmit}>
-          <TextField
-            label="Ad Soyad"
-            fullWidth
-            value={user ? user.name : name}
-            onChange={(e) => setName(e.target.value)}
-            sx={{ mb: 2 }}
-            disabled={!!user}
-          />
+          {!user && (
+            <Box sx={{ display: "flex", gap: 2, mb: 2 }}>
+              <TextField
+                label="Ad Soyad"
+                fullWidth
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                size="small"
+              />
+              <TextField
+                label="E-posta"
+                fullWidth
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                size="small"
+              />
+            </Box>
+          )}
           <TextField
             label="Yorum yazın"
             fullWidth
@@ -202,6 +218,7 @@ const CommentSection = ({ postId }) => {
             onChange={(e) => setText(e.target.value)}
             multiline
             rows={3}
+            size="small"
           />
           <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
             <Button type="submit" variant="contained" sx={{ mt: 2 }}>
@@ -211,6 +228,7 @@ const CommentSection = ({ postId }) => {
         </form>
       </Paper>
 
+      {/* Snackbar */}
       <Snackbar
         open={snackbar.open}
         autoHideDuration={3000}
