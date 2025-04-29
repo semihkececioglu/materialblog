@@ -1,79 +1,98 @@
-import React from "react";
-import {
-  Grid,
-  Paper,
-  Typography,
-  Box,
-  useTheme,
-  useMediaQuery,
-} from "@mui/material";
+import React, { useEffect, useState } from "react";
+import { Box, Paper, Typography, Grid, useTheme } from "@mui/material";
 import ArticleIcon from "@mui/icons-material/Article";
 import CategoryIcon from "@mui/icons-material/Category";
 import CommentIcon from "@mui/icons-material/Comment";
-import { styled } from "@mui/material/styles";
-
-const StatCard = styled(Paper)(({ theme }) => ({
-  padding: theme.spacing(3),
-  borderRadius: 16,
-  color: "#fff",
-  background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-  boxShadow: theme.shadows[6],
-  transition: "all 0.3s ease",
-  "&:hover": {
-    transform: "translateY(-5px)",
-    boxShadow: theme.shadows[12],
-  },
-}));
 
 const DashboardPage = () => {
+  const [postCount, setPostCount] = useState(0);
+  const [categoryCount, setCategoryCount] = useState(0);
+  const [commentCount, setCommentCount] = useState(0);
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
-  // Dummy stats (ileride backend'den dinamik alınabilir)
-  const stats = [
-    {
-      title: "Toplam Yazı",
-      value: JSON.parse(localStorage.getItem("posts") || "[]").length,
-      icon: <ArticleIcon fontSize="large" />,
-      bg: "linear-gradient(135deg, #2193b0 0%, #6dd5ed 100%)",
-    },
-    {
-      title: "Kategoriler",
-      value: 3, // manuel/dummy
-      icon: <CategoryIcon fontSize="large" />,
-      bg: "linear-gradient(135deg, #f7971e 0%, #ffd200 100%)",
-    },
-    {
-      title: "Yorumlar",
-      value: 26, // dummy
-      icon: <CommentIcon fontSize="large" />,
-      bg: "linear-gradient(135deg, #fc6076 0%, #ff9a44 100%)",
-    },
-  ];
+  useEffect(() => {
+    // Yazılar
+    const storedPosts = JSON.parse(localStorage.getItem("posts")) || [];
+    setPostCount(storedPosts.length);
+
+    // Kategoriler
+    const storedCategories =
+      JSON.parse(localStorage.getItem("categories")) || [];
+    setCategoryCount(storedCategories.length);
+
+    // Yorumlar (tüm `comments_${postId}` anahtarlarını bul)
+    let totalComments = 0;
+    for (let key in localStorage) {
+      if (key.startsWith("comments_")) {
+        const comments = JSON.parse(localStorage.getItem(key)) || [];
+
+        const countRecursive = (list) => {
+          return list.reduce((acc, c) => {
+            const replies = Array.isArray(c.replies) ? c.replies : [];
+            return acc + 1 + countRecursive(replies);
+          }, 0);
+        };
+
+        totalComments += countRecursive(comments);
+      }
+    }
+    setCommentCount(totalComments);
+  }, []);
+
+  const StatCard = ({ title, value, icon }) => (
+    <Paper
+      elevation={3}
+      sx={{
+        p: 3,
+        borderRadius: 3,
+        display: "flex",
+        alignItems: "center",
+        gap: 2,
+      }}
+    >
+      {icon}
+      <Box>
+        <Typography variant="h6">{value}</Typography>
+        <Typography variant="body2" color="text.secondary">
+          {title}
+        </Typography>
+      </Box>
+    </Paper>
+  );
 
   return (
-    <Box sx={{ mt: 4, px: isMobile ? 2 : 3 }}>
-      <Typography variant="h4" gutterBottom fontWeight={700}>
-        Dashboard
+    <Box>
+      <Typography variant="h5" fontWeight="bold" gutterBottom>
+        Yönetim Paneline Hoşgeldiniz
       </Typography>
-      <Grid container spacing={3}>
-        {stats.map((stat, index) => (
-          <Grid key={index} item xs={12} sm={6} md={4}>
-            <StatCard sx={{ background: stat.bg }}>
-              <Box display="flex" alignItems="center" gap={2}>
-                {stat.icon}
-                <Box>
-                  <Typography variant="h6" fontWeight={600}>
-                    {stat.title}
-                  </Typography>
-                  <Typography variant="h4" fontWeight={700}>
-                    {stat.value}
-                  </Typography>
-                </Box>
-              </Box>
-            </StatCard>
-          </Grid>
-        ))}
+
+      <Grid container spacing={2} mt={1}>
+        <Grid item xs={12} sm={6} md={4}>
+          <StatCard
+            title="Toplam Yazı"
+            value={postCount}
+            icon={<ArticleIcon color="primary" fontSize="large" />}
+          />
+        </Grid>
+        <Grid item xs={12} sm={6} md={4}>
+          <StatCard
+            title="Toplam Kategori"
+            value={categoryCount}
+            icon={<CategoryIcon color="secondary" fontSize="large" />}
+          />
+        </Grid>
+        <Grid item xs={12} sm={6} md={4}>
+          <StatCard
+            title="Toplam Yorum"
+            value={commentCount}
+            icon={
+              <CommentIcon
+                sx={{ color: theme.palette.info.main }}
+                fontSize="large"
+              />
+            }
+          />
+        </Grid>
       </Grid>
     </Box>
   );
