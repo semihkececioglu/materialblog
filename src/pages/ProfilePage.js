@@ -23,7 +23,10 @@ const stringToColor = (name) => {
 
 const formatTitleFromUrl = (url) => {
   const slug = url.replace("/post/", "");
-  return slug.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+  return slug
+    .split("-")
+    .map((s) => s.charAt(0).toUpperCase() + s.slice(1))
+    .join(" ");
 };
 
 const ProfilePage = () => {
@@ -31,15 +34,24 @@ const ProfilePage = () => {
   const { user } = useAuth();
   const theme = useTheme();
   const [likedPaths, setLikedPaths] = useState([]);
+  const [savedPaths, setSavedPaths] = useState([]);
 
   useEffect(() => {
     if (user && user.name === username) {
-      const storageKey = `likedPosts_${user.username || user.name}`;
-      const likedList = JSON.parse(localStorage.getItem(storageKey)) || [];
-      const paths = Array.isArray(likedList)
+      const likedKey = `likedPosts_${user.username || user.name}`;
+      const savedKey = `savedPosts_${user.username || user.name}`;
+
+      const likedList = JSON.parse(localStorage.getItem(likedKey)) || [];
+      const likedUrls = Array.isArray(likedList)
         ? likedList.map((item) => (typeof item === "string" ? item : item.path))
         : [];
-      setLikedPaths(paths);
+      setLikedPaths(likedUrls);
+
+      const savedList = JSON.parse(localStorage.getItem(savedKey)) || [];
+      const savedUrls = Array.isArray(savedList)
+        ? savedList.map((item) => (typeof item === "string" ? item : item.path))
+        : [];
+      setSavedPaths(savedUrls);
     }
   }, [user, username]);
 
@@ -116,8 +128,37 @@ const ProfilePage = () => {
         )}
 
         <Typography variant="subtitle1" gutterBottom sx={{ mt: 3 }}>
-          Kaydedilen Yazılar (yakında)
+          Kaydedilen Yazılar
         </Typography>
+
+        {savedPaths.length === 0 ? (
+          <Typography variant="body2" color="text.secondary">
+            Henüz kaydettiğiniz bir yazı yok.
+          </Typography>
+        ) : (
+          <List>
+            {savedPaths.map((path, index) => (
+              <React.Fragment key={index}>
+                <ListItem
+                  button
+                  component={Link}
+                  to={path}
+                  sx={{
+                    borderRadius: 1,
+                    mb: 1,
+                    transition: "all 0.3s ease",
+                    "&:hover": {
+                      bgcolor: theme.palette.action.hover,
+                    },
+                  }}
+                >
+                  <ListItemText primary={formatTitleFromUrl(path)} />
+                </ListItem>
+                <Divider />
+              </React.Fragment>
+            ))}
+          </List>
+        )}
       </Paper>
     </Box>
   );
