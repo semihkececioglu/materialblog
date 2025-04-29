@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   Box,
   CssBaseline,
@@ -15,7 +15,6 @@ import {
 } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
 import { Outlet, Link } from "react-router-dom";
-import { useState } from "react";
 
 const drawerWidth = 240;
 
@@ -71,14 +70,17 @@ const AdminLayout = () => {
     <Box sx={{ display: "flex", minHeight: "100vh" }}>
       <CssBaseline />
 
+      {/* AppBar sadece mobilde görünür: */}
       <AppBar
         position="fixed"
         sx={{
           width: { md: `calc(100% - ${drawerWidth}px)` },
           ml: { md: `${drawerWidth}px` },
-          bgcolor: "background.paper",
-          boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
+          bgcolor: theme.palette.mode === "dark" ? "#1f1f1f" : "#1976d2", // ✅ Mavi ton
+          color: "#fff", // ✅ Yazıların görünmesi için
+          boxShadow: 3,
           borderBottom: `1px solid ${theme.palette.divider}`,
+          zIndex: theme.zIndex.drawer + 1,
         }}
         elevation={0}
       >
@@ -93,17 +95,22 @@ const AdminLayout = () => {
               <MenuIcon />
             </IconButton>
           )}
-          <Typography variant="h6" noWrap component="div">
+          <Typography
+            variant="h6"
+            noWrap
+            component="div"
+            sx={{ fontWeight: 600 }}
+          >
             Admin Panel
           </Typography>
         </Toolbar>
       </AppBar>
 
+      {/* Sidebar Drawer */}
       <Box
         component="nav"
         sx={{ width: { md: drawerWidth }, flexShrink: { md: 0 } }}
       >
-        {/* Mobile Drawer */}
         <Drawer
           variant="temporary"
           open={mobileOpen}
@@ -117,7 +124,6 @@ const AdminLayout = () => {
           {drawerContent}
         </Drawer>
 
-        {/* Desktop Drawer */}
         <Drawer
           variant="permanent"
           sx={{
@@ -134,16 +140,18 @@ const AdminLayout = () => {
         </Drawer>
       </Box>
 
+      {/* İçerik */}
       <Box
         component="main"
         sx={{
           flexGrow: 1,
-          p: 3,
           width: { md: `calc(100% - ${drawerWidth}px)` },
           bgcolor: "background.default",
+          pt: { xs: 7, md: 3 }, // üst boşluk mobilde daha fazla
+          px: { xs: 2, md: 3 },
+          pb: 5,
         }}
       >
-        <Toolbar />
         <Outlet />
       </Box>
     </Box>
