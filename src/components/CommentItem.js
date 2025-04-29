@@ -1,4 +1,3 @@
-// ✅ CommentItem.js (beğeni butonu davranışları tamamen düzeltildi)
 import React, { useState, useEffect } from "react";
 import {
   Avatar,
@@ -43,6 +42,7 @@ const CommentItem = ({
 
   const [replyText, setReplyText] = useState("");
   const [replyName, setReplyName] = useState("");
+  const [replyEmail, setReplyEmail] = useState("");
   const [editMode, setEditMode] = useState(false);
   const [editedText, setEditedText] = useState(comment.text);
   const [liked, setLiked] = useState(false);
@@ -216,14 +216,24 @@ const CommentItem = ({
 
         {replyingTo === comment.id && (
           <Box sx={{ mt: 2 }}>
-            <TextField
-              label="Ad Soyad"
-              fullWidth
-              value={user ? user.name : replyName}
-              onChange={(e) => setReplyName(e.target.value)}
-              sx={{ mb: 1 }}
-              disabled={!!user}
-            />
+            {!user && (
+              <Box sx={{ display: "flex", gap: 2, mb: 2 }}>
+                <TextField
+                  label="Ad Soyad"
+                  fullWidth
+                  value={replyName}
+                  onChange={(e) => setReplyName(e.target.value)}
+                  size="small"
+                />
+                <TextField
+                  label="E-posta"
+                  fullWidth
+                  value={replyEmail}
+                  onChange={(e) => setReplyEmail(e.target.value)}
+                  size="small"
+                />
+              </Box>
+            )}
             <TextField
               label="Cevabınız"
               fullWidth
@@ -231,15 +241,18 @@ const CommentItem = ({
               onChange={(e) => setReplyText(e.target.value)}
               multiline
               rows={2}
-            />
-            <Button
-              variant="contained"
               size="small"
-              sx={{ mt: 1 }}
-              onClick={handleReply}
-            >
-              Gönder
-            </Button>
+            />
+            <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
+              <Button
+                variant="contained"
+                size="small"
+                sx={{ mt: 2 }}
+                onClick={handleReply}
+              >
+                Gönder
+              </Button>
+            </Box>
           </Box>
         )}
 
