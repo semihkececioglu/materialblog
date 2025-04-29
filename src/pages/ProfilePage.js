@@ -1,7 +1,16 @@
-// ProfilePage.js
-import React from "react";
-import { Box, Typography, Avatar, useTheme, Paper } from "@mui/material";
-import { useParams } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import {
+  Box,
+  Typography,
+  Avatar,
+  useTheme,
+  Paper,
+  List,
+  ListItem,
+  ListItemText,
+  Divider,
+} from "@mui/material";
+import { useParams, Link } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 
 const stringToColor = (name) => {
@@ -12,10 +21,27 @@ const stringToColor = (name) => {
   return `hsl(${hash % 360}, 60%, 50%)`;
 };
 
+const formatTitleFromUrl = (url) => {
+  const slug = url.replace("/post/", "");
+  return slug.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+};
+
 const ProfilePage = () => {
   const { username } = useParams();
   const { user } = useAuth();
   const theme = useTheme();
+  const [likedPaths, setLikedPaths] = useState([]);
+
+  useEffect(() => {
+    if (user && user.name === username) {
+      const storageKey = `likedPosts_${user.username || user.name}`;
+      const likedList = JSON.parse(localStorage.getItem(storageKey)) || [];
+      const paths = Array.isArray(likedList)
+        ? likedList.map((item) => (typeof item === "string" ? item : item.path))
+        : [];
+      setLikedPaths(paths);
+    }
+  }, [user, username]);
 
   if (!user || user.name !== username) {
     return (
@@ -57,9 +83,39 @@ const ProfilePage = () => {
         </Box>
 
         <Typography variant="subtitle1" gutterBottom>
-          Beğenilen Yazılar (yakında)
+          Beğenilen Yazılar
         </Typography>
-        <Typography variant="subtitle1" gutterBottom>
+
+        {likedPaths.length === 0 ? (
+          <Typography variant="body2" color="text.secondary">
+            Henüz beğendiğiniz bir yazı yok.
+          </Typography>
+        ) : (
+          <List>
+            {likedPaths.map((path, index) => (
+              <React.Fragment key={index}>
+                <ListItem
+                  button
+                  component={Link}
+                  to={path}
+                  sx={{
+                    borderRadius: 1,
+                    mb: 1,
+                    transition: "all 0.3s ease",
+                    "&:hover": {
+                      bgcolor: theme.palette.action.hover,
+                    },
+                  }}
+                >
+                  <ListItemText primary={formatTitleFromUrl(path)} />
+                </ListItem>
+                <Divider />
+              </React.Fragment>
+            ))}
+          </List>
+        )}
+
+        <Typography variant="subtitle1" gutterBottom sx={{ mt: 3 }}>
           Kaydedilen Yazılar (yakında)
         </Typography>
       </Paper>
