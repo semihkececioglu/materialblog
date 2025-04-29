@@ -18,6 +18,9 @@ import AdminLayout from "./admin/AdminLayout";
 import PostsPage from "./admin/PostsPage";
 import DashboardPage from "./admin/DashboardPage";
 import AdminCategoriesPage from "./admin/AdminCategoriesPage";
+import AdminTagsPage from "./admin/AdminTagsPage";
+import AdminCommentsPage from "./admin/AdminCommentsPage";
+import AdminSettingsPage from "./admin/AdminSettingsPage";
 
 function App() {
   const [mode, setMode] = useState("light");
@@ -58,14 +61,15 @@ function App() {
                 <Route index element={<DashboardPage />} />
                 <Route path="posts" element={<PostsPage />} />
                 <Route path="categories" element={<AdminCategoriesPage />} />
+                <Route path="/admin/tags" element={<AdminTagsPage />} />
+                <Route path="comments" element={<AdminCommentsPage />} />
+                <Route path="settings" element={<AdminSettingsPage />} />
               </Route>
             </Routes>
           </Layout>
         </Router>
       </AuthProvider>
     </ThemeProvider>
-
-    // deneme
   );
 }
 
