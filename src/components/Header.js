@@ -123,7 +123,7 @@ function Header({ toggleTheme, searchTerm, setSearchTerm }) {
               <TextField
                 size="small"
                 variant="outlined"
-                placeholder="Search..."
+                placeholder="Ara..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 onKeyDown={handleKeyDown}
