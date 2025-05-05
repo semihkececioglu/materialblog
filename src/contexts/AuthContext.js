@@ -12,7 +12,7 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const login = (name, isAdmin = false) => {
-    const userObj = { name, isAdmin }; // avatar yok artık
+    const userObj = { name, isAdmin };
     setUser(userObj);
     localStorage.setItem("user", JSON.stringify(userObj));
   };

@@ -1,4 +1,3 @@
-// ✅ PostCard.js (animasyon entegreli)
 import React from "react";
 import {
   Card,

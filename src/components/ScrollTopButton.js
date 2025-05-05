@@ -4,7 +4,7 @@ import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 
 const ScrollToTopButton = () => {
   const trigger = useScrollTrigger({
-    threshold: 300, // 300px sonra göster
+    threshold: 300,
     disableHysteresis: true,
   });
 

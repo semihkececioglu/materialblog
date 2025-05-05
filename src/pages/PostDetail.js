@@ -170,7 +170,7 @@ function PostDetail() {
               )}
             </Paper>
 
-            {/* 🔁 Önceki / Sonraki Yazılar */}
+            {/* Önceki / Sonraki Yazılar */}
             <Box
               sx={{
                 mt: 6,

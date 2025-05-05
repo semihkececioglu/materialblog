@@ -76,8 +76,8 @@ const AdminLayout = () => {
         sx={{
           width: { md: `calc(100% - ${drawerWidth}px)` },
           ml: { md: `${drawerWidth}px` },
-          bgcolor: theme.palette.mode === "dark" ? "#1f1f1f" : "#1976d2", // ✅ Mavi ton
-          color: "#fff", // ✅ Yazıların görünmesi için
+          bgcolor: theme.palette.mode === "dark" ? "#1f1f1f" : "#1976d2",
+          color: "#fff", //
           boxShadow: 3,
           borderBottom: `1px solid ${theme.palette.divider}`,
           zIndex: theme.zIndex.drawer + 1,
@@ -147,7 +147,7 @@ const AdminLayout = () => {
           flexGrow: 1,
           width: { md: `calc(100% - ${drawerWidth}px)` },
           bgcolor: "background.default",
-          pt: { xs: 7, md: 3 }, // üst boşluk mobilde daha fazla
+          pt: { xs: 7, md: 3 },
           px: { xs: 2, md: 3 },
           pb: 5,
         }}

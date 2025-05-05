@@ -1,4 +1,3 @@
-// LoginPage.js
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -33,7 +32,7 @@ const Login = () => {
       return;
     }
 
-    login(matchedUser.username); // sadece kullanıcı adı ile giriş
+    login(matchedUser.username);
     navigate("/");
   };
 
