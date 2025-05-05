@@ -110,15 +110,40 @@ const PostsPage = () => {
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
-          mb: 2,
+          mb: 3,
+          px: 2,
+          py: 1.5,
+          bgcolor: (theme) => theme.palette.background.paper,
+          borderRadius: 2,
+          boxShadow: 1,
+          border: (theme) => `1px solid ${theme.palette.divider}`,
         }}
       >
-        <Typography variant="h5" fontWeight="bold">
+        <Typography
+          variant="h5"
+          fontWeight={700}
+          letterSpacing={0.5}
+          color="text.primary"
+        >
           Yazılar
         </Typography>
+
         <Button
           variant="contained"
           startIcon={<AddIcon />}
+          sx={{
+            borderRadius: 2,
+            textTransform: "none",
+            boxShadow: "none",
+            fontWeight: 500,
+            px: 2.5,
+            py: 1,
+            bgcolor: (theme) => theme.palette.primary.main,
+            "&:hover": {
+              bgcolor: (theme) => theme.palette.primary.dark,
+              boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
+            },
+          }}
           onClick={() => {
             setEditingPost(null);
             setOpen(true);
