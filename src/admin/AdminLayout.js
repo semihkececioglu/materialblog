@@ -101,7 +101,7 @@ const AdminLayout = () => {
             component="div"
             sx={{ fontWeight: 600 }}
           >
-            Admin Panel
+            Material Blog
           </Typography>
         </Toolbar>
       </AppBar>
