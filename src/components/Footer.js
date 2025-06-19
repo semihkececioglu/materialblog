@@ -88,7 +88,7 @@ const Footer = () => {
         {/* Abonelik Alanı */}
         <Grid item xs={12} sm={12} md={6}>
           <Typography variant="h6" gutterBottom>
-            Bültenimize Abone Olun
+            E-posta aboneliği
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
             Yeni içeriklerden haberdar olmak için e-posta adresinizi bırakın.
