@@ -13,7 +13,7 @@ app.use(cors());
 app.use(express.json());
 
 //Routes
-app.use("/api/post", postRoutes);
+app.use("/api/posts", postRoutes);
 
 //MongoDB Connection
 mongoose
