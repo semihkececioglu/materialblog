@@ -10,7 +10,8 @@ import {
 } from "@mui/material";
 import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
 import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
-import initialPosts from "../data";
+import axios from "axios";
+
 import CommentSection from "../components/CommentSection";
 import Sidebar from "../components/sidebar/Sidebar";
 import AuthorInfo from "../components/AuthorInfo";
@@ -26,20 +27,21 @@ function PostDetail() {
   const { slug } = useParams();
   const theme = useTheme();
   const [showEmbeddedBar, setShowEmbeddedBar] = useState(false);
+  const [allPosts, setAllPosts] = useState([]);
+  const [post, setPost] = useState(null);
 
-  const storedPosts = JSON.parse(localStorage.getItem("posts")) || [];
-  const mergedPosts = [
-    ...storedPosts,
-    ...initialPosts.filter(
-      (post) => !storedPosts.some((p) => p.id === post.id)
-    ),
-  ];
-
-  const post = mergedPosts.find((p) => slugify(p.title) === slug);
-
-  const currentIndex = mergedPosts.findIndex((p) => p.id === post?.id);
-  const prevPost = mergedPosts[currentIndex - 1];
-  const nextPost = mergedPosts[currentIndex + 1];
+  useEffect(() => {
+    axios
+      .get("http://localhost:5000/api/posts")
+      .then((res) => {
+        setAllPosts(res.data);
+        const found = res.data.find((p) => slugify(p.title) === slug);
+        setPost(found);
+      })
+      .catch((err) => {
+        console.error("Yazı verisi alınamadı:", err);
+      });
+  }, [slug]);
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -66,7 +68,7 @@ function PostDetail() {
 
   if (!post) return <div>Yazı bulunamadı!</div>;
 
-  const formattedDate = new Date().toLocaleDateString("tr-TR", {
+  const formattedDate = new Date(post.date).toLocaleDateString("tr-TR", {
     year: "numeric",
     month: "long",
     day: "numeric",
@@ -79,12 +81,16 @@ function PostDetail() {
       "https://ui-avatars.com/api/?name=Semih+R&background=0D8ABC&color=fff",
   };
 
-  const relatedPosts = mergedPosts
-    .filter((p) => p.category === post.category && p.id !== post.id)
+  const currentIndex = allPosts.findIndex((p) => p._id === post._id);
+  const prevPost = allPosts[currentIndex - 1];
+  const nextPost = allPosts[currentIndex + 1];
+
+  const relatedPosts = allPosts
+    .filter((p) => p.category === post.category && p._id !== post._id)
     .slice(0, 3);
 
   return (
-    <InteractionBarProvider postId={post.id}>
+    <InteractionBarProvider postId={post._id}>
       <Container maxWidth="lg" sx={{ mt: 4 }}>
         <Box
           sx={{
@@ -126,6 +132,7 @@ function PostDetail() {
                 date={formattedDate}
                 readingTime={readingTime}
               />
+
               <TableOfContents />
 
               <Box
@@ -144,7 +151,8 @@ function PostDetail() {
               />
 
               <EmbeddedInteractionBar visible={showEmbeddedBar} />
-              {post.tags && post.tags.length > 0 && (
+
+              {post.tags?.length > 0 && (
                 <Box sx={{ mt: 2, display: "flex", gap: 1, flexWrap: "wrap" }}>
                   {post.tags.map((tag, index) => (
                     <Chip
@@ -234,6 +242,7 @@ function PostDetail() {
               )}
             </Box>
 
+            {/* Benzer yazılar */}
             {relatedPosts.length > 0 && (
               <Box id="recommendations" sx={{ mt: 6 }}>
                 <Typography variant="h6" gutterBottom>
@@ -242,7 +251,7 @@ function PostDetail() {
                 <Box sx={{ display: "flex", flexWrap: "wrap", gap: 3 }}>
                   {relatedPosts.map((related) => (
                     <Box
-                      key={related.id}
+                      key={related._id}
                       sx={{
                         flex: "1 1 calc(33.333% - 20px)",
                         minWidth: "250px",
@@ -255,8 +264,9 @@ function PostDetail() {
               </Box>
             )}
 
+            {/* Yorumlar */}
             <Box sx={{ mt: 6 }} id="comment-form">
-              <CommentSection postId={post.id} />
+              <CommentSection postId={post._id} />
             </Box>
           </Box>
 
