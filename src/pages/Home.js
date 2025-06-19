@@ -9,6 +9,7 @@ import {
 import PostCard from "../components/PostCard";
 import Sidebar from "../components/sidebar/Sidebar";
 import initialPosts from "../data";
+import axios from "axios";
 
 const POSTS_PER_PAGE = 6;
 
@@ -18,12 +19,14 @@ const Home = () => {
   const theme = useTheme();
 
   useEffect(() => {
-    const stored = JSON.parse(localStorage.getItem("posts")) || [];
-    const mergedPosts = [
-      ...stored,
-      ...initialPosts.filter((post) => !stored.some((p) => p.id === post.id)),
-    ];
-    setAllPosts(mergedPosts);
+    axios
+      .get("http://localhost:5000/api/posts")
+      .then((res) => {
+        setAllPosts(res.data);
+      })
+      .catch((err) => {
+        console.error("Yazılar alınamadı:", err);
+      });
   }, []);
 
   const paginatedPosts = allPosts.slice(
@@ -59,7 +62,7 @@ const Home = () => {
           >
             {paginatedPosts.map((post) => (
               <Box
-                key={post.id}
+                key={post._id}
                 sx={{ flex: "1 1 calc(33.333% - 20px)", minWidth: "250px" }}
               >
                 <PostCard post={post} />
