@@ -25,7 +25,7 @@ import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import AddIcon from "@mui/icons-material/Add";
 import CloseIcon from "@mui/icons-material/Close";
-import initialPosts from "../data";
+import axios from "axios";
 import PostForm from "./PostForm";
 
 const categoryColors = {
@@ -50,47 +50,60 @@ const PostsPage = () => {
   const [snackbarSeverity, setSnackbarSeverity] = useState("success");
 
   useEffect(() => {
-    const storedPosts = JSON.parse(localStorage.getItem("posts")) || [];
-    const merged = [
-      ...storedPosts,
-      ...initialPosts.filter(
-        (post) => !storedPosts.some((p) => p.id === post.id)
-      ),
-    ];
-    setAllPosts(merged);
+    fetchPosts();
   }, []);
 
-  const handleAddPost = (newPost) => {
-    let updated;
-    if (editingPost) {
-      updated = allPosts.map((post) =>
-        post.id === editingPost.id ? newPost : post
-      );
-      setSnackbarMessage("Yazı güncellendi!");
-    } else {
-      updated = [newPost, ...allPosts];
-      setSnackbarMessage("Yazı başarıyla eklendi!");
-      window.scrollTo({ top: 0, behavior: "smooth" });
+  const fetchPosts = async () => {
+    try {
+      const res = await axios.get("http://localhost:5000/api/posts");
+      setAllPosts(res.data);
+    } catch (err) {
+      console.error("Yazılar çekilemedi:", err);
+      showSnackbar("Yazılar alınamadı", "error");
     }
-
-    setSnackbarSeverity("success");
-    setSnackbarOpen(true);
-    setAllPosts(updated);
-    localStorage.setItem("posts", JSON.stringify(updated));
-    setOpen(false);
-    setEditingPost(null);
   };
 
-  const handleDeleteConfirm = () => {
-    if (!postToDelete) return;
-    const updated = allPosts.filter((post) => post.id !== postToDelete);
-    setAllPosts(updated);
-    localStorage.setItem("posts", JSON.stringify(updated));
-    setConfirmDelete(false);
-    setPostToDelete(null);
-    setSnackbarMessage("Yazı başarıyla silindi!");
-    setSnackbarSeverity("info");
+  const showSnackbar = (message, severity = "success") => {
+    setSnackbarMessage(message);
+    setSnackbarSeverity(severity);
     setSnackbarOpen(true);
+  };
+
+  const handleAddPost = async (newPost) => {
+    try {
+      if (editingPost) {
+        await axios.put(
+          `http://localhost:5000/api/posts/${editingPost._id}`,
+          newPost
+        );
+        showSnackbar("Yazı güncellendi!");
+      } else {
+        await axios.post("http://localhost:5000/api/posts", newPost);
+        showSnackbar("Yazı başarıyla eklendi!");
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+      fetchPosts();
+      setOpen(false);
+      setEditingPost(null);
+    } catch (err) {
+      console.error("Ekleme/Güncelleme hatası:", err);
+      showSnackbar("İşlem sırasında hata oluştu", "error");
+    }
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!postToDelete) return;
+    try {
+      await axios.delete(`http://localhost:5000/api/posts/${postToDelete}`);
+      fetchPosts();
+      showSnackbar("Yazı başarıyla silindi!", "info");
+    } catch (err) {
+      console.error("Silme hatası:", err);
+      showSnackbar("Silme işlemi başarısız", "error");
+    } finally {
+      setConfirmDelete(false);
+      setPostToDelete(null);
+    }
   };
 
   const handleDeleteRequest = (id) => {
@@ -105,6 +118,7 @@ const PostsPage = () => {
 
   return (
     <Box sx={{ pt: 1 }}>
+      {/* Üst başlık ve ekle butonu */}
       <Box
         sx={{
           display: "flex",
@@ -119,31 +133,13 @@ const PostsPage = () => {
           border: (theme) => `1px solid ${theme.palette.divider}`,
         }}
       >
-        <Typography
-          variant="h5"
-          fontWeight={700}
-          letterSpacing={0.5}
-          color="text.primary"
-        >
+        <Typography variant="h5" fontWeight={700} letterSpacing={0.5}>
           Yazılar
         </Typography>
 
         <Button
           variant="contained"
           startIcon={<AddIcon />}
-          sx={{
-            borderRadius: 2,
-            textTransform: "none",
-            boxShadow: "none",
-            fontWeight: 500,
-            px: 2.5,
-            py: 1,
-            bgcolor: (theme) => theme.palette.primary.main,
-            "&:hover": {
-              bgcolor: (theme) => theme.palette.primary.dark,
-              boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
-            },
-          }}
           onClick={() => {
             setEditingPost(null);
             setOpen(true);
@@ -153,6 +149,7 @@ const PostsPage = () => {
         </Button>
       </Box>
 
+      {/* Yazılar Tablosu */}
       <Paper elevation={3} sx={{ p: 2, borderRadius: 3 }}>
         <Box sx={{ overflowX: "auto" }}>
           <Table size="small">
@@ -166,25 +163,14 @@ const PostsPage = () => {
             </TableHead>
             <TableBody>
               {allPosts.map((post) => (
-                <TableRow
-                  key={post.id}
-                  hover
-                  sx={{
-                    transition: "all 0.2s ease",
-                    "&:hover": {
-                      boxShadow: 3,
-                      backgroundColor: "action.hover",
-                    },
-                  }}
-                >
-                  <TableCell>{post.id}</TableCell>
+                <TableRow key={post._id} hover>
+                  <TableCell>{post._id.slice(-6)}</TableCell>
                   <TableCell>{post.title}</TableCell>
                   <TableCell>
                     <Chip
                       label={post.category}
                       color={categoryColors[post.category] || "default"}
                       size="small"
-                      variant="filled"
                     />
                   </TableCell>
                   <TableCell align="right">
@@ -198,7 +184,7 @@ const PostsPage = () => {
                     <IconButton
                       color="error"
                       size="small"
-                      onClick={() => handleDeleteRequest(post.id)}
+                      onClick={() => handleDeleteRequest(post._id)}
                     >
                       <DeleteIcon fontSize="small" />
                     </IconButton>
@@ -251,7 +237,7 @@ const PostsPage = () => {
         </DialogActions>
       </Dialog>
 
-      {/* BİLDİRİM SNACKBAR */}
+      {/* SNACKBAR BİLDİRİM */}
       <Snackbar
         open={snackbarOpen}
         autoHideDuration={3000}
