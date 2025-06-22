@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const Post = require("../models/Post");
 
-// Get all posts
+// Tüm postları al
 router.get("/", async (req, res) => {
   try {
     const posts = await Post.find().sort({ date: -1 });
@@ -12,7 +12,20 @@ router.get("/", async (req, res) => {
   }
 });
 
-// Add new post
+// Tekil postu ID ile getir
+router.get("/:id", async (req, res) => {
+  try {
+    const post = await Post.findById(req.params.id);
+    if (!post) {
+      return res.status(404).json({ error: "Yazı bulunamadı" });
+    }
+    res.json(post);
+  } catch (err) {
+    res.status(500).json({ error: "Sunucu hatası" });
+  }
+});
+
+// Yeni post oluştur
 router.post("/", async (req, res) => {
   try {
     const newPost = new Post(req.body);
@@ -23,7 +36,7 @@ router.post("/", async (req, res) => {
   }
 });
 
-// Update post
+// Post güncelle
 router.put("/:id", async (req, res) => {
   try {
     const updatedPost = await Post.findByIdAndUpdate(req.params.id, req.body, {
@@ -38,7 +51,7 @@ router.put("/:id", async (req, res) => {
   }
 });
 
-// Delete post
+// Post sil
 router.delete("/:id", async (req, res) => {
   try {
     const deletedPost = await Post.findByIdAndDelete(req.params.id);
