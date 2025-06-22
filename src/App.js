@@ -21,6 +21,7 @@ import AdminCategoriesPage from "./admin/AdminCategoriesPage";
 import AdminTagsPage from "./admin/AdminTagsPage";
 import AdminCommentsPage from "./admin/AdminCommentsPage";
 import AdminSettingsPage from "./admin/AdminSettingsPage";
+import PostEditorPage from "./admin/PostEditorPage";
 
 function App() {
   const [mode, setMode] = useState("light");
@@ -64,6 +65,11 @@ function App() {
                 <Route path="/admin/tags" element={<AdminTagsPage />} />
                 <Route path="comments" element={<AdminCommentsPage />} />
                 <Route path="settings" element={<AdminSettingsPage />} />
+                <Route path="/admin/editor" element={<PostEditorPage />} />
+                <Route
+                  path="/admin/posts/edit/:id"
+                  element={<PostEditorPage />}
+                />
               </Route>
             </Routes>
           </Layout>
