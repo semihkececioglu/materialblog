@@ -1,21 +1,27 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
+const path = require("path");
 require("dotenv").config();
 
 const postRoutes = require("./routes/postRoutes");
+const uploadRoutes = require("./routes/upload");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-//Middleware
+// Middleware
 app.use(cors());
 app.use(express.json());
 
-//Routes
-app.use("/api/posts", postRoutes);
+// Statik dosya: uploads klasörünü servis et
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
-//MongoDB Connection
+// Routes
+app.use("/api/posts", postRoutes);
+app.use("/api/upload", uploadRoutes);
+
+// MongoDB bağlantısı
 mongoose
   .connect(process.env.MONGO_URI, {
     useNewUrlParser: true,
