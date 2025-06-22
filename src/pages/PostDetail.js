@@ -133,6 +133,27 @@ function PostDetail() {
                 readingTime={readingTime}
               />
 
+              {/* ✅ Kapak görseli */}
+              {post.image && (
+                <Box
+                  sx={{
+                    mb: 3,
+                    borderRadius: 2,
+                    overflow: "hidden",
+                    maxHeight: 400,
+                    "& img": {
+                      width: "100%",
+                      height: "auto",
+                      objectFit: "cover",
+                      borderRadius: 2,
+                      boxShadow: 3,
+                    },
+                  }}
+                >
+                  <img src={post.image} alt={post.title} />
+                </Box>
+              )}
+
               <TableOfContents />
 
               <Box
