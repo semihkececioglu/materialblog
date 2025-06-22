@@ -57,9 +57,7 @@ const PostsPage = () => {
 
   const fetchPosts = async () => {
     try {
-      const res = await axios.get(
-        "https://materialblog-backend.onrender.com/api/posts"
-      );
+      const res = await axios.get("http://localhost:5000/api/posts");
       setAllPosts(res.data);
     } catch (err) {
       console.error("Yazılar çekilemedi:", err);
@@ -77,15 +75,12 @@ const PostsPage = () => {
     try {
       if (editingPost) {
         await axios.put(
-          `https://materialblog-backend.onrender.com/api/posts/${editingPost._id}`,
+          `http://localhost:5000/api/posts/${editingPost._id}`,
           newPost
         );
         showSnackbar("Yazı güncellendi!");
       } else {
-        await axios.post(
-          "https://materialblog-backend.onrender.com/api/posts",
-          newPost
-        );
+        await axios.post("http://localhost:5000/api/posts", newPost);
         showSnackbar("Yazı başarıyla eklendi!");
         window.scrollTo({ top: 0, behavior: "smooth" });
       }
@@ -101,9 +96,7 @@ const PostsPage = () => {
   const handleDeleteConfirm = async () => {
     if (!postToDelete) return;
     try {
-      await axios.delete(
-        `https://materialblog-backend.onrender.com/api/posts/${postToDelete}`
-      );
+      await axios.delete(`http://localhost:5000/api/posts/${postToDelete}`);
       fetchPosts();
       showSnackbar("Yazı başarıyla silindi!", "info");
     } catch (err) {
