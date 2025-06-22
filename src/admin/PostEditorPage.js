@@ -143,7 +143,7 @@ const PostEditorPage = () => {
     try {
       if (id) {
         await axios.put(
-          `https://materialblog-server-production.up.railway.app/${id}`,
+          `https://materialblog-server-production.up.railway.app/api/posts/${id}`,
           payload
         );
         setSnackbar({
