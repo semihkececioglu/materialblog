@@ -54,7 +54,7 @@ const PostsPage = () => {
   const fetchPosts = async () => {
     try {
       const res = await axios.get(
-        "https://materialblog-server-production.up.railway.app//api/posts"
+        "https://materialblog-server-production.up.railway.app/api/posts"
       );
       setAllPosts(res.data);
     } catch (err) {
@@ -73,13 +73,13 @@ const PostsPage = () => {
     try {
       if (editingPost) {
         await axios.put(
-          `https://materialblog-server-production.up.railway.app//api/posts/${editingPost._id}`,
+          `https://materialblog-server-production.up.railway.app/api/posts/${editingPost._id}`,
           newPost
         );
         showSnackbar("Yazı güncellendi!");
       } else {
         await axios.post(
-          "https://materialblog-server-production.up.railway.app//api/posts",
+          "https://materialblog-server-production.up.railway.app/api/posts",
           newPost
         );
         showSnackbar("Yazı başarıyla eklendi!");
@@ -98,7 +98,7 @@ const PostsPage = () => {
     if (!postToDelete) return;
     try {
       await axios.delete(
-        `https://materialblog-server-production.up.railway.app//api/posts/${postToDelete}`
+        `https://materialblog-server-production.up.railway.app/api/posts/${postToDelete}`
       );
       fetchPosts();
       showSnackbar("Yazı başarıyla silindi!", "info");

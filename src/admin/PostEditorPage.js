@@ -44,7 +44,7 @@ const quillModules = {
           formData.append("image", file);
           try {
             const res = await axios.post(
-              "https://materialblog-server-production.up.railway.app//api/upload",
+              "https://materialblog-server-production.up.railway.app/api/upload",
               formData,
               {
                 headers: { "Content-Type": "multipart/form-data" },
@@ -110,7 +110,7 @@ const PostEditorPage = () => {
       setLoading(true);
       axios
         .get(
-          `https://materialblog-server-production.up.railway.app//api/posts/${id}`
+          `https://materialblog-server-production.up.railway.app/api/posts/${id}`
         )
         .then((res) => {
           const post = res.data;
@@ -143,7 +143,7 @@ const PostEditorPage = () => {
     try {
       if (id) {
         await axios.put(
-          `https://materialblog-server-production.up.railway.app//${id}`,
+          `https://materialblog-server-production.up.railway.app/${id}`,
           payload
         );
         setSnackbar({
@@ -153,7 +153,7 @@ const PostEditorPage = () => {
         });
       } else {
         await axios.post(
-          "https://materialblog-server-production.up.railway.app//api/posts",
+          "https://materialblog-server-production.up.railway.app/api/posts",
           payload
         );
         setSnackbar({
@@ -179,7 +179,7 @@ const PostEditorPage = () => {
     formData.append("image", file);
     try {
       const res = await axios.post(
-        "https://materialblog-server-production.up.railway.app//api/upload",
+        "https://materialblog-server-production.up.railway.app/api/upload",
         formData,
         {
           headers: { "Content-Type": "multipart/form-data" },

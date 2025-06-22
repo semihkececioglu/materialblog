@@ -20,7 +20,7 @@ const Home = () => {
 
   useEffect(() => {
     axios
-      .get("https://materialblog-server-production.up.railway.app//api/posts")
+      .get("https://materialblog-server-production.up.railway.app/api/posts")
       .then((res) => {
         setAllPosts(res.data);
       })
