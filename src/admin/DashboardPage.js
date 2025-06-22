@@ -3,6 +3,7 @@ import { Box, Paper, Typography, Grid, useTheme } from "@mui/material";
 import ArticleIcon from "@mui/icons-material/Article";
 import CategoryIcon from "@mui/icons-material/Category";
 import CommentIcon from "@mui/icons-material/Comment";
+import axios from "axios";
 
 const DashboardPage = () => {
   const [postCount, setPostCount] = useState(0);
@@ -11,27 +12,33 @@ const DashboardPage = () => {
   const theme = useTheme();
 
   useEffect(() => {
-    // Yazılar
-    const storedPosts = JSON.parse(localStorage.getItem("posts")) || [];
-    setPostCount(storedPosts.length);
+    // 🟢 Yazı Sayısı (Backend)
+    axios
+      .get("http://localhost:5000/api/posts")
+      .then((res) => {
+        setPostCount(res.data.length);
+      })
+      .catch((err) => {
+        console.error("Yazılar alınamadı:", err);
+        setPostCount(0);
+      });
 
-    // Kategoriler
+    // 🟠 Kategori Sayısı (localStorage)
     const storedCategories =
       JSON.parse(localStorage.getItem("categories")) || [];
     setCategoryCount(storedCategories.length);
 
-    // Yorumlar (tüm `comments_${postId}` anahtarlarını bul)
+    // 🔵 Yorum Sayısı (localStorage)
     let totalComments = 0;
     for (let key in localStorage) {
       if (key.startsWith("comments_")) {
         const comments = JSON.parse(localStorage.getItem(key)) || [];
 
-        const countRecursive = (list) => {
-          return list.reduce((acc, c) => {
+        const countRecursive = (list) =>
+          list.reduce((acc, c) => {
             const replies = Array.isArray(c.replies) ? c.replies : [];
             return acc + 1 + countRecursive(replies);
           }, 0);
-        };
 
         totalComments += countRecursive(comments);
       }
