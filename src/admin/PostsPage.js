@@ -11,9 +11,6 @@ import {
   Box,
   Button,
   Dialog,
-  DialogContent,
-  AppBar,
-  Toolbar,
   Slide,
   DialogActions,
   DialogTitle,
@@ -24,7 +21,6 @@ import {
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import AddIcon from "@mui/icons-material/Add";
-import CloseIcon from "@mui/icons-material/Close";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
@@ -57,7 +53,9 @@ const PostsPage = () => {
 
   const fetchPosts = async () => {
     try {
-      const res = await axios.get("http://localhost:5000/api/posts");
+      const res = await axios.get(
+        "https://materialblog-server-production.up.railway.app//api/posts"
+      );
       setAllPosts(res.data);
     } catch (err) {
       console.error("Yazılar çekilemedi:", err);
@@ -75,12 +73,15 @@ const PostsPage = () => {
     try {
       if (editingPost) {
         await axios.put(
-          `http://localhost:5000/api/posts/${editingPost._id}`,
+          `https://materialblog-server-production.up.railway.app//api/posts/${editingPost._id}`,
           newPost
         );
         showSnackbar("Yazı güncellendi!");
       } else {
-        await axios.post("http://localhost:5000/api/posts", newPost);
+        await axios.post(
+          "https://materialblog-server-production.up.railway.app//api/posts",
+          newPost
+        );
         showSnackbar("Yazı başarıyla eklendi!");
         window.scrollTo({ top: 0, behavior: "smooth" });
       }
@@ -96,7 +97,9 @@ const PostsPage = () => {
   const handleDeleteConfirm = async () => {
     if (!postToDelete) return;
     try {
-      await axios.delete(`http://localhost:5000/api/posts/${postToDelete}`);
+      await axios.delete(
+        `https://materialblog-server-production.up.railway.app//api/posts/${postToDelete}`
+      );
       fetchPosts();
       showSnackbar("Yazı başarıyla silindi!", "info");
     } catch (err) {

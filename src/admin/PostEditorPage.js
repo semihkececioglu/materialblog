@@ -44,7 +44,7 @@ const quillModules = {
           formData.append("image", file);
           try {
             const res = await axios.post(
-              "http://localhost:5000/api/upload",
+              "https://materialblog-server-production.up.railway.app//api/upload",
               formData,
               {
                 headers: { "Content-Type": "multipart/form-data" },
@@ -109,7 +109,9 @@ const PostEditorPage = () => {
     if (id) {
       setLoading(true);
       axios
-        .get(`http://localhost:5000/api/posts/${id}`)
+        .get(
+          `https://materialblog-server-production.up.railway.app//api/posts/${id}`
+        )
         .then((res) => {
           const post = res.data;
           setForm({
@@ -140,14 +142,20 @@ const PostEditorPage = () => {
     };
     try {
       if (id) {
-        await axios.put(`http://localhost:5000/${id}`, payload);
+        await axios.put(
+          `https://materialblog-server-production.up.railway.app//${id}`,
+          payload
+        );
         setSnackbar({
           open: true,
           message: "Yazı güncellendi!",
           severity: "success",
         });
       } else {
-        await axios.post("http://localhost:5000/api/posts", payload);
+        await axios.post(
+          "https://materialblog-server-production.up.railway.app//api/posts",
+          payload
+        );
         setSnackbar({
           open: true,
           message: "Yazı oluşturuldu!",
@@ -171,7 +179,7 @@ const PostEditorPage = () => {
     formData.append("image", file);
     try {
       const res = await axios.post(
-        "http://localhost:5000/api/upload",
+        "https://materialblog-server-production.up.railway.app//api/upload",
         formData,
         {
           headers: { "Content-Type": "multipart/form-data" },
