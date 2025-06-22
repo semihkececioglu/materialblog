@@ -1,70 +1,68 @@
-# Getting Started with Create React App
+# 📝 Material Blog
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+**Material Blog** is a modern and responsive blog platform built with **React** and **Material UI**. It aims to provide an elegant, fast, and feature-rich experience for both content creators and readers. The project is currently under active development and continuously evolving with new capabilities.
 
-## Available Scripts
+---
 
-In the project directory, you can run:
+## 🚀 Features
 
-### `npm start`
+- **Post Management (CRUD)**  
+  Add, edit, delete, and view blog posts from the admin panel with ease.
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+- **Comment System with Replies**  
+  Users can post comments, reply to others, and like individual comments in a nested structure.
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+- **Interaction Bar**  
+  A floating bar in the post detail page including like, comment, share, save, and scroll-to-top actions.
 
-### `npm test`
+- **Related Posts**  
+  Shows similar articles based on category at the bottom of each post.
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+- **Previous / Next Navigation**  
+  Easily navigate between articles using dynamic previous/next buttons.
 
-### `npm run build`
+- **Post Cards on Homepage**  
+  Articles are presented in stylish and responsive card components.
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+- **Navigation Bar**  
+  Includes site navigation, search functionality, and authentication access.
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+- **Dark Mode & Responsive Design**  
+  Seamless user experience with full dark mode and mobile compatibility.
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+- **Search Functionality**  
+  Filter posts by title directly from the search input.
 
-### `npm run eject`
+- **Authentication (Login / Register)**  
+  Users can register and log in (currently using localStorage; to be migrated to backend).
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+- **User Profile Page**  
+  Displays the user’s liked and saved posts.
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+---
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+## 🛠️ Technologies Used
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+- **React v18**
+- **Material UI (v5)**
+- **React Router DOM**
+- **Axios**
+- **React Quill** (Rich text editor)
+- **Express & Mongoose** (for backend API)
+- **Multer** (for image uploads)
+- **Responsive & Dark Mode ready**
 
-## Learn More
+---
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+## 📌 Project Status
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+This project is a **work in progress**. Future plans include:
 
-### Code Splitting
+- Full backend integration for authentication and data management
+- Role-based access control
+- Advanced dashboard analytics
+- SEO optimization
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+---
 
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+> Feel free to clone, contribute, and customize this blog platform as needed. For upcoming features and folder structure, check the issues or roadmap soon.
