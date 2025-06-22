@@ -14,7 +14,7 @@ const DashboardPage = () => {
   useEffect(() => {
     // 🟢 Yazı Sayısı (Backend)
     axios
-      .get("http://localhost:5000/api/posts")
+      .get("https://materialblog-backend.onrender.com/api/posts")
       .then((res) => {
         setPostCount(res.data.length);
       })

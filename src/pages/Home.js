@@ -20,7 +20,7 @@ const Home = () => {
 
   useEffect(() => {
     axios
-      .get("http://localhost:5000/api/posts")
+      .get("https://materialblog-backend.onrender.com/api/posts")
       .then((res) => {
         setAllPosts(res.data);
       })
