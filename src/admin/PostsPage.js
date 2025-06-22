@@ -26,7 +26,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import AddIcon from "@mui/icons-material/Add";
 import CloseIcon from "@mui/icons-material/Close";
 import axios from "axios";
-import PostForm from "./PostForm";
+import { useNavigate } from "react-router-dom";
 
 const categoryColors = {
   React: "primary",
@@ -39,6 +39,8 @@ const Transition = React.forwardRef(function Transition(props, ref) {
 });
 
 const PostsPage = () => {
+  const navigate = useNavigate();
+
   const [allPosts, setAllPosts] = useState([]);
   const [open, setOpen] = useState(false);
   const [editingPost, setEditingPost] = useState(null);
@@ -112,8 +114,7 @@ const PostsPage = () => {
   };
 
   const handleEditPost = (post) => {
-    setEditingPost(post);
-    setOpen(true);
+    navigate(`/admin/posts/edit/${post._id}`);
   };
 
   return (
@@ -140,10 +141,7 @@ const PostsPage = () => {
         <Button
           variant="contained"
           startIcon={<AddIcon />}
-          onClick={() => {
-            setEditingPost(null);
-            setOpen(true);
-          }}
+          onClick={() => navigate("/admin/editor")}
         >
           Yeni Yazı
         </Button>
@@ -196,33 +194,7 @@ const PostsPage = () => {
         </Box>
       </Paper>
 
-      {/* TAM EKRAN FORM */}
-      <Dialog
-        fullScreen
-        open={open}
-        onClose={() => setOpen(false)}
-        TransitionComponent={Transition}
-      >
-        <AppBar sx={{ position: "relative" }}>
-          <Toolbar>
-            <IconButton
-              edge="start"
-              color="inherit"
-              onClick={() => setOpen(false)}
-            >
-              <CloseIcon />
-            </IconButton>
-            <Typography sx={{ ml: 2, flex: 1 }} variant="h6" component="div">
-              {editingPost ? "Yazıyı Düzenle" : "Yeni Yazı Ekle"}
-            </Typography>
-          </Toolbar>
-        </AppBar>
-        <DialogContent>
-          <PostForm onSubmit={handleAddPost} initialData={editingPost} />
-        </DialogContent>
-      </Dialog>
-
-      {/* SİLME ONAY DİALOGU */}
+      {/* SİLME ONAY DİYALOĞU */}
       <Dialog open={confirmDelete} onClose={() => setConfirmDelete(false)}>
         <DialogTitle>Bu yazıyı silmek istediğinize emin misiniz?</DialogTitle>
         <DialogActions>
