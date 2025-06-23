@@ -13,6 +13,7 @@ import {
   Snackbar,
   Alert,
 } from "@mui/material";
+import axios from "axios";
 import CommentItem from "./CommentItem";
 import { useAuth } from "../contexts/AuthContext";
 
@@ -27,84 +28,109 @@ const CommentSection = ({ postId }) => {
   const theme = useTheme();
   const { user } = useAuth();
 
-  const storageKey = `comments_${postId}`;
-
+  // Yorumları çek
   useEffect(() => {
-    const stored = localStorage.getItem(storageKey);
-    if (stored) {
-      const parsed = JSON.parse(stored);
-      const fixed = parsed.map((c) => ({
-        ...c,
-        replies: c.replies || [],
-      }));
-      setComments(fixed);
-    }
-  }, [storageKey]);
+    fetchComments();
+  }, [postId]);
 
-  const handleSubmit = (e) => {
+  const fetchComments = async () => {
+    try {
+      const res = await axios.get(
+        `https://materialblog-server-production.up.railway.app/api/comments?postId=${postId}`
+      );
+      const tree = buildNestedComments(res.data);
+      setComments(tree);
+    } catch (err) {
+      console.error("Yorumlar alınamadı:", err);
+    }
+  };
+
+  // Flat diziyi nested hale getir
+  const buildNestedComments = (flatComments) => {
+    const map = {};
+    flatComments.forEach((c) => (map[c._id] = { ...c, replies: [] }));
+    const nested = [];
+    flatComments.forEach((c) => {
+      if (c.parentId) {
+        map[c.parentId]?.replies.push(map[c._id]);
+      } else {
+        nested.push(map[c._id]);
+      }
+    });
+    return nested;
+  };
+
+  // Yeni yorum gönder
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const commenterName = user ? user.name : name;
     const commenterEmail = user ? user.email : email;
     if (!commenterName.trim() || !text.trim()) return;
 
-    const newComment = {
-      id: Date.now(),
+    const payload = {
+      postId,
       name: commenterName,
       email: commenterEmail,
       text,
       avatar: `https://i.pravatar.cc/150?img=${Math.floor(
         Math.random() * 1000
       )}`,
-      date: new Date().toISOString(),
-      replies: [],
     };
 
-    const updated = [...comments, newComment];
-    setComments(updated);
-    localStorage.setItem(storageKey, JSON.stringify(updated));
-    setName("");
-    setEmail("");
-    setText("");
-    setSnackbar({ open: true, message: "Yorum eklendi" });
+    try {
+      await axios.post(
+        "https://materialblog-server-production.up.railway.app/api/comments",
+        payload
+      );
+      await fetchComments();
+      setName("");
+      setEmail("");
+      setText("");
+      setSnackbar({ open: true, message: "Yorum eklendi" });
+    } catch (err) {
+      console.error("Yorum eklenemedi:", err);
+    }
   };
 
-  const handleReplySubmit = (parentId, replyObj) => {
-    const addReplyRecursively = (items) => {
-      return items.map((item) => {
-        if (item.id === parentId) {
-          return { ...item, replies: [...item.replies, replyObj] };
-        }
-        return {
-          ...item,
-          replies: addReplyRecursively(item.replies || []),
-        };
-      });
+  // Yanıt gönder
+  const handleReplySubmit = async (parentId, replyObj) => {
+    const payload = {
+      ...replyObj,
+      postId,
+      parentId,
     };
 
-    const updated = addReplyRecursively(comments);
-    setComments(updated);
-    localStorage.setItem(storageKey, JSON.stringify(updated));
+    try {
+      await axios.post(
+        "https://materialblog-server-production.up.railway.app/api/comments",
+        payload
+      );
+      await fetchComments();
+      setSnackbar({ open: true, message: "Yanıt eklendi" });
+    } catch (err) {
+      console.error("Yanıt eklenemedi:", err);
+    }
   };
 
-  const handleDelete = (id) => {
-    const deleteRecursively = (items) => {
-      return items
-        .filter((item) => item.id !== id)
-        .map((item) => ({
-          ...item,
-          replies: deleteRecursively(item.replies || []),
-        }));
-    };
-
-    const updated = deleteRecursively(comments);
-    setComments(updated);
-    localStorage.setItem(storageKey, JSON.stringify(updated));
+  // Yorum sil
+  const handleDelete = async (id) => {
+    try {
+      await axios.delete(
+        `https://materialblog-server-production.up.railway.app/api/comments/${id}`
+      );
+      await fetchComments();
+      setSnackbar({ open: true, message: "Yorum silindi" });
+    } catch (err) {
+      console.error("Silme başarısız:", err);
+    }
   };
 
+  // Snackbar tetikle
   const showSnackbar = (message) => {
     setSnackbar({ open: true, message });
   };
 
+  // Sıralama
   const sortedComments = [...comments].sort((a, b) => {
     if (sortOrder === "newest") {
       return new Date(b.date) - new Date(a.date);
@@ -112,9 +138,9 @@ const CommentSection = ({ postId }) => {
       return new Date(a.date) - new Date(b.date);
     } else if (sortOrder === "mostLiked") {
       const aCount =
-        JSON.parse(localStorage.getItem(`comment_count_${a.id}`)) || 0;
+        JSON.parse(localStorage.getItem(`comment_count_${a._id}`)) || 0;
       const bCount =
-        JSON.parse(localStorage.getItem(`comment_count_${b.id}`)) || 0;
+        JSON.parse(localStorage.getItem(`comment_count_${b._id}`)) || 0;
       return bCount - aCount;
     }
     return 0;
@@ -122,7 +148,7 @@ const CommentSection = ({ postId }) => {
 
   return (
     <Box sx={{ mt: 4 }}>
-      {/* Yorumlar Başlığı ve Sıralama */}
+      {/* Başlık ve sıralama */}
       <Box
         sx={{
           display: "flex",
@@ -134,10 +160,7 @@ const CommentSection = ({ postId }) => {
       >
         <Typography
           variant="h6"
-          sx={{
-            fontWeight: "bold",
-            color: theme.palette.text.primary,
-          }}
+          sx={{ fontWeight: "bold", color: theme.palette.text.primary }}
         >
           Yorumlar
         </Typography>
@@ -157,11 +180,11 @@ const CommentSection = ({ postId }) => {
         </Select>
       </Box>
 
-      {/* Yorumlar Listesi */}
+      {/* Yorum listesi */}
       <List>
         {sortedComments.map((comment) => (
           <CommentItem
-            key={comment.id}
+            key={comment._id}
             comment={comment}
             onReplySubmit={handleReplySubmit}
             replyingTo={replyingTo}
@@ -174,7 +197,7 @@ const CommentSection = ({ postId }) => {
 
       <Divider sx={{ my: 3 }} />
 
-      {/* Yorum Ekleme Formu */}
+      {/* Yeni yorum formu */}
       <Paper
         elevation={3}
         sx={{
@@ -228,7 +251,7 @@ const CommentSection = ({ postId }) => {
         </form>
       </Paper>
 
-      {/* Snackbar */}
+      {/* Snackbar uyarısı */}
       <Snackbar
         open={snackbar.open}
         autoHideDuration={3000}

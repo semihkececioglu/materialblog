@@ -23,10 +23,17 @@ const DashboardPage = () => {
         setPostCount(0);
       });
 
-    // 🟠 Kategori Sayısı (localStorage)
-    const storedCategories =
-      JSON.parse(localStorage.getItem("categories")) || [];
-    setCategoryCount(storedCategories.length);
+    axios
+      .get(
+        "https://materialblog-server-production.up.railway.app/api/categories"
+      )
+      .then((res) => {
+        setCategoryCount(res.data.length);
+      })
+      .catch((err) => {
+        console.error("Kategoriler alınamadı:", err);
+        setCategoryCount(0);
+      });
 
     // 🔵 Yorum Sayısı (localStorage)
     let totalComments = 0;

@@ -20,9 +20,10 @@ import {
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
-import getTimeAgo from "../utils/getTimeAgo";
 import ChatBubbleOutlineIcon from "@mui/icons-material/ChatBubbleOutline";
 import FavoriteIcon from "@mui/icons-material/Favorite";
+import axios from "axios";
+import getTimeAgo from "../utils/getTimeAgo";
 import { useAuth } from "../contexts/AuthContext";
 
 const CommentItem = ({
@@ -51,8 +52,8 @@ const CommentItem = ({
   const [openDialog, setOpenDialog] = useState(false);
   const [snackbar, setSnackbar] = useState({ open: false, message: "" });
 
-  const likeKey = `comment_like_${comment.id}`;
-  const countKey = `comment_count_${comment.id}`;
+  const likeKey = `comment_like_${comment._id}`;
+  const countKey = `comment_count_${comment._id}`;
 
   useEffect(() => {
     const storedLiked = JSON.parse(localStorage.getItem(likeKey)) || {};
@@ -94,20 +95,35 @@ const CommentItem = ({
     const responderName = user ? user.name : replyName;
     if (!responderName.trim() || !replyText.trim()) return;
     const newReply = {
-      id: Date.now(),
       name: responderName,
+      email: user?.email || replyEmail,
       text: replyText,
       avatar: `https://i.pravatar.cc/150?img=${Math.floor(
         Math.random() * 1000
       )}`,
       date: new Date().toISOString(),
-      replies: [],
     };
-    onReplySubmit(comment.id, newReply);
+    onReplySubmit(comment._id, newReply);
     setReplyText("");
     setReplyName("");
+    setReplyEmail("");
     setReplyingTo(null);
     onNotify?.("Yanıt eklendi");
+  };
+
+  const handleEditSubmit = async () => {
+    try {
+      await axios.put(
+        `https://materialblog-server-production.up.railway.app/api/comments/${comment._id}`,
+        { text: editedText }
+      );
+      comment.text = editedText;
+      setEditMode(false);
+      setSnackbar({ open: true, message: "Yorum güncellendi" });
+      onNotify?.("Yorum güncellendi");
+    } catch (err) {
+      console.error("Güncelleme hatası:", err);
+    }
   };
 
   return (
@@ -165,12 +181,7 @@ const CommentItem = ({
               }}
             >
               <Button
-                onClick={() => {
-                  comment.text = editedText;
-                  setEditMode(false);
-                  setSnackbar({ open: true, message: "Yorum güncellendi" });
-                  onNotify?.("Yorum güncellendi");
-                }}
+                onClick={handleEditSubmit}
                 variant="contained"
                 size="small"
               >
@@ -205,16 +216,16 @@ const CommentItem = ({
           <Button
             size="small"
             onClick={() =>
-              setReplyingTo(replyingTo === comment.id ? null : comment.id)
+              setReplyingTo(replyingTo === comment._id ? null : comment._id)
             }
             sx={{ textTransform: "none" }}
             startIcon={<ChatBubbleOutlineIcon />}
           >
-            {replyingTo === comment.id ? "Yanıtlamaktan Vazgeç" : "Yanıtla"}
+            {replyingTo === comment._id ? "Yanıtlamaktan Vazgeç" : "Yanıtla"}
           </Button>
         </Box>
 
-        {replyingTo === comment.id && (
+        {replyingTo === comment._id && (
           <Box sx={{ mt: 2 }}>
             {!user && (
               <Box sx={{ display: "flex", gap: 2, mb: 2 }}>
@@ -260,7 +271,7 @@ const CommentItem = ({
           <List sx={{ mt: 2, ml: 2 }}>
             {comment.replies.map((reply) => (
               <CommentItem
-                key={reply.id}
+                key={reply._id}
                 comment={reply}
                 onReplySubmit={onReplySubmit}
                 replyingTo={replyingTo}
@@ -276,14 +287,14 @@ const CommentItem = ({
           <DialogTitle>Yorumu silmek istiyor musunuz?</DialogTitle>
           <DialogContent>
             <DialogContentText>
-              Bu işlem geri alınamaz. Yorum ve varsa tüm alt yanıtlar silinecek.
+              Bu işlem geri alınamaz. Yorum ve varsa tüm yanıtlar silinecek.
             </DialogContentText>
           </DialogContent>
           <DialogActions>
             <Button onClick={() => setOpenDialog(false)}>İptal</Button>
             <Button
               onClick={() => {
-                onDelete(comment.id);
+                onDelete(comment._id);
                 setOpenDialog(false);
                 setSnackbar({ open: true, message: "Yorum silindi" });
                 onNotify?.("Yorum silindi");
