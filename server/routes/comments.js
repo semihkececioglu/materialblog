@@ -4,14 +4,14 @@ const router = express.Router();
 const Comment = require("../models/comment.model");
 
 // ✅ GET: Belirli bir yazıya ait tüm yorumları al
-// GET /api/comments?postId=abc123
 router.get("/", async (req, res) => {
   try {
     const { postId } = req.query;
-    const comments = await Comment.find({ postId });
+    const filter = postId ? { postId } : {}; // ✅ postId yoksa tüm yorumları al
+    const comments = await Comment.find(filter);
     res.json(comments);
   } catch (err) {
-    res.status(500).json({ error: "Yorumlar alınamadı." });
+    res.status(500).json({ error: "Yorumlar alınamadı" });
   }
 });
 
