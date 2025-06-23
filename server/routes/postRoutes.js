@@ -64,4 +64,21 @@ router.delete("/:id", async (req, res) => {
   }
 });
 
+router.get("/", async (req, res) => {
+  try {
+    const { category } = req.query;
+
+    let filter = {};
+    if (category) {
+      filter.categorySlug = category; // dikkat: slug alanına göre filtreliyoruz
+    }
+
+    const posts = await Post.find(filter).sort({ createdAt: -1 });
+    res.json(posts);
+  } catch (err) {
+    console.error("Postları alırken hata:", err);
+    res.status(500).json({ message: "Sunucu hatası" });
+  }
+});
+
 module.exports = router;

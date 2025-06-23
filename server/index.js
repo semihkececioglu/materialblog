@@ -10,6 +10,9 @@ const uploadRoutes = require("./routes/upload");
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+const categoryRoutes = require("./routes/categoryRoutes");
+app.use("/api/categories", categoryRoutes);
+
 // Middleware
 app.use(cors());
 app.use(express.json());

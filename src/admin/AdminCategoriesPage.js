@@ -20,54 +20,73 @@ import {
 import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
+import axios from "axios";
 
 const AdminCategoriesPage = () => {
   const [categories, setCategories] = useState([]);
   const [openDialog, setOpenDialog] = useState(false);
-  const [editingIndex, setEditingIndex] = useState(null);
+  const [editingCategory, setEditingCategory] = useState(null);
   const [categoryInput, setCategoryInput] = useState("");
   const [confirmDelete, setConfirmDelete] = useState(false);
-  const [deleteIndex, setDeleteIndex] = useState(null);
+  const [deleteCategoryId, setDeleteCategoryId] = useState(null);
 
-  // Kategorileri localStorage'tan al
-  useEffect(() => {
-    const stored = JSON.parse(localStorage.getItem("categories"));
-    if (stored && stored.length > 0) {
-      setCategories(stored);
-    } else {
-      const defaultCategories = ["React", "JavaScript", "Tasarım"];
-      localStorage.setItem("categories", JSON.stringify(defaultCategories));
-      setCategories(defaultCategories);
+  const fetchCategories = async () => {
+    try {
+      const res = await axios.get(
+        "https://materialblog-server-production.up.railway.app/api/categories"
+      );
+      setCategories(res.data);
+    } catch (err) {
+      console.error("Kategoriler alınamadı:", err);
     }
+  };
+
+  useEffect(() => {
+    fetchCategories();
   }, []);
-  // Kategori ekle/güncelle
-  const handleSave = () => {
+
+  const handleSave = async () => {
     if (categoryInput.trim() === "") return;
 
-    const updated = [...categories];
-    if (editingIndex !== null) {
-      updated[editingIndex] = categoryInput;
-    } else {
-      updated.unshift(categoryInput);
+    try {
+      if (editingCategory) {
+        await axios.put(
+          `https://materialblog-server-production.up.railway.app/api/categories/${editingCategory._id}`,
+          {
+            name: categoryInput,
+          }
+        );
+      } else {
+        await axios.post(
+          "https://materialblog-server-production.up.railway.app/api/categories",
+          { name: categoryInput }
+        );
+      }
+      fetchCategories();
+      setOpenDialog(false);
+      setCategoryInput("");
+      setEditingCategory(null);
+    } catch (err) {
+      console.error("Kategori kaydetme hatası:", err);
     }
-    setCategories(updated);
-    localStorage.setItem("categories", JSON.stringify(updated));
-    setOpenDialog(false);
-    setCategoryInput("");
-    setEditingIndex(null);
   };
 
-  const handleDelete = () => {
-    const updated = categories.filter((_, i) => i !== deleteIndex);
-    setCategories(updated);
-    localStorage.setItem("categories", JSON.stringify(updated));
-    setConfirmDelete(false);
-    setDeleteIndex(null);
+  const handleDelete = async () => {
+    try {
+      await axios.delete(
+        `https://materialblog-server-production.up.railway.app/api/categories/${deleteCategoryId}`
+      );
+      fetchCategories();
+      setConfirmDelete(false);
+      setDeleteCategoryId(null);
+    } catch (err) {
+      console.error("Silme hatası:", err);
+    }
   };
 
-  const openEditDialog = (name, index) => {
-    setEditingIndex(index);
-    setCategoryInput(name);
+  const openEditDialog = (category) => {
+    setEditingCategory(category);
+    setCategoryInput(category.name);
     setOpenDialog(true);
   };
 
@@ -88,7 +107,7 @@ const AdminCategoriesPage = () => {
           variant="contained"
           startIcon={<AddIcon />}
           onClick={() => {
-            setEditingIndex(null);
+            setEditingCategory(null);
             setCategoryInput("");
             setOpenDialog(true);
           }}
@@ -109,20 +128,20 @@ const AdminCategoriesPage = () => {
             </TableHead>
             <TableBody>
               {categories.map((category, index) => (
-                <TableRow key={index} hover>
+                <TableRow key={category._id} hover>
                   <TableCell>{index + 1}</TableCell>
-                  <TableCell>{category}</TableCell>
+                  <TableCell>{category.name}</TableCell>
                   <TableCell align="right">
                     <IconButton
                       color="primary"
-                      onClick={() => openEditDialog(category, index)}
+                      onClick={() => openEditDialog(category)}
                     >
                       <EditIcon />
                     </IconButton>
                     <IconButton
                       color="error"
                       onClick={() => {
-                        setDeleteIndex(index);
+                        setDeleteCategoryId(category._id);
                         setConfirmDelete(true);
                       }}
                     >
@@ -146,7 +165,7 @@ const AdminCategoriesPage = () => {
       {/* Ekle / Düzenle */}
       <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>
         <DialogTitle>
-          {editingIndex !== null ? "Kategoriyi Düzenle" : "Yeni Kategori"}
+          {editingCategory ? "Kategoriyi Düzenle" : "Yeni Kategori"}
         </DialogTitle>
         <DialogContent>
           <TextField

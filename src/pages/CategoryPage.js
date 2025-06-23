@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
-import initialPosts from "../data";
+import axios from "axios";
 import PostCard from "../components/PostCard";
 import {
   Container,
@@ -9,23 +9,29 @@ import {
   useTheme,
   Pagination,
 } from "@mui/material";
-import { slugify } from "../utils";
 
 const POSTS_PER_PAGE = 6;
 
 function CategoryPage() {
-  const { kategoriAdi } = useParams();
+  const { kategoriAdi } = useParams(); // bu slug, örn: teknoloji
   const theme = useTheme();
   const [page, setPage] = useState(1);
+  const [filteredPosts, setFilteredPosts] = useState([]);
 
-  const stored = JSON.parse(localStorage.getItem("posts")) || [];
-  const allPosts = [
-    ...stored,
-    ...initialPosts.filter((p) => !stored.some((s) => s.id === p.id)),
-  ];
-  const filteredPosts = allPosts.filter(
-    (post) => slugify(post.category) === kategoriAdi.toLocaleLowerCase()
-  );
+  useEffect(() => {
+    const fetchPostsByCategory = async () => {
+      try {
+        const res = await axios.get(
+          `https://materialblog-server-production.up.railway.app/api/posts?category=${kategoriAdi}`
+        );
+        setFilteredPosts(res.data);
+      } catch (err) {
+        console.error("Kategoriye göre postlar alınamadı:", err);
+      }
+    };
+
+    fetchPostsByCategory();
+  }, [kategoriAdi]);
 
   const pageCount = Math.ceil(filteredPosts.length / POSTS_PER_PAGE);
   const paginatedPosts = filteredPosts.slice(
@@ -49,7 +55,7 @@ function CategoryPage() {
           <Box sx={{ display: "flex", flexWrap: "wrap", gap: 3, mt: 3 }}>
             {paginatedPosts.map((post) => (
               <Box
-                key={post.id}
+                key={post._id}
                 sx={{
                   flex: "1 1 calc(33.333% - 20px)",
                   minWidth: "250px",

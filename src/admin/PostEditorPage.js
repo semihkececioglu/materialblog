@@ -101,8 +101,17 @@ const PostEditorPage = () => {
   const { id } = useParams();
 
   useEffect(() => {
-    const stored = JSON.parse(localStorage.getItem("categories")) || [];
-    setCategories(stored);
+    axios
+      .get(
+        "https://materialblog-server-production.up.railway.app/api/categories"
+      )
+      .then((res) => {
+        const categoryNames = res.data.map((cat) => cat.name);
+        setCategories(categoryNames);
+      })
+      .catch((err) => {
+        console.error("Kategoriler alınamadı:", err);
+      });
   }, []);
 
   useEffect(() => {
