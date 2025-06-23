@@ -21,6 +21,7 @@ import axios from "axios";
 
 const AdminCommentsPage = () => {
   const [comments, setComments] = useState([]);
+  const [postTitles, setPostTitles] = useState({});
   const [deleteInfo, setDeleteInfo] = useState({ open: false, id: null });
 
   useEffect(() => {
@@ -32,7 +33,27 @@ const AdminCommentsPage = () => {
       const res = await axios.get(
         "https://materialblog-server-production.up.railway.app/api/comments"
       );
-      setComments(res.data);
+      const commentList = res.data;
+      setComments(commentList);
+
+      // Her unique postId için başlıkları çek
+      const uniquePostIds = [...new Set(commentList.map((c) => c.postId))];
+      const titleMap = {};
+
+      await Promise.all(
+        uniquePostIds.map(async (postId) => {
+          try {
+            const postRes = await axios.get(
+              `https://materialblog-server-production.up.railway.app/api/posts/${postId}`
+            );
+            titleMap[postId] = postRes.data.title;
+          } catch {
+            titleMap[postId] = "Bilinmeyen Yazı";
+          }
+        })
+      );
+
+      setPostTitles(titleMap);
     } catch (err) {
       console.error("Yorumlar alınamadı:", err);
     }
@@ -63,7 +84,7 @@ const AdminCommentsPage = () => {
               <TableRow>
                 <TableCell>Ad</TableCell>
                 <TableCell>Yorum</TableCell>
-                <TableCell>Yazı ID</TableCell>
+                <TableCell>Yazı Başlığı</TableCell>
                 <TableCell>Tarih</TableCell>
                 <TableCell align="right">İşlemler</TableCell>
               </TableRow>
@@ -74,7 +95,9 @@ const AdminCommentsPage = () => {
                   <TableRow key={comment._id}>
                     <TableCell>{comment.name}</TableCell>
                     <TableCell>{comment.text}</TableCell>
-                    <TableCell>{comment.postId}</TableCell>
+                    <TableCell>
+                      {postTitles[comment.postId] || "Yükleniyor..."}
+                    </TableCell>
                     <TableCell>
                       {new Date(comment.date).toLocaleDateString("tr-TR")}
                     </TableCell>
