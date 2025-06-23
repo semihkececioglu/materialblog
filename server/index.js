@@ -7,6 +7,7 @@ require("dotenv").config();
 const postRoutes = require("./routes/postRoutes");
 const uploadRoutes = require("./routes/upload");
 const categoryRoutes = require("./routes/categoryRoutes");
+const tagRoutes = require("./routes/tagRoutes");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -30,6 +31,7 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 app.use("/api/posts", postRoutes);
 app.use("/api/upload", uploadRoutes);
 app.use("/api/categories", categoryRoutes);
+app.use("/api/tags", tagRoutes);
 
 // ✅ MongoDB bağlantısı
 mongoose

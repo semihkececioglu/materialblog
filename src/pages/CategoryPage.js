@@ -47,7 +47,10 @@ function CategoryPage() {
   return (
     <Container sx={{ mt: 4 }}>
       <Typography variant="h4" gutterBottom>
-        {kategoriAdi.toUpperCase()} Kategorisi
+        {decodeURIComponent(kategoriAdi)
+          .replace(/-/g, " ")
+          .replace(/\b\w/g, (l) => l.toUpperCase())}{" "}
+        Kategorisi
       </Typography>
 
       {filteredPosts.length > 0 ? (

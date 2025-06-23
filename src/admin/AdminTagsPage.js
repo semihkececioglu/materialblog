@@ -20,53 +20,72 @@ import {
 import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
+import axios from "axios";
 
 const AdminTagsPage = () => {
   const [tags, setTags] = useState([]);
   const [openDialog, setOpenDialog] = useState(false);
-  const [editingIndex, setEditingIndex] = useState(null);
+  const [editingTag, setEditingTag] = useState(null);
   const [tagInput, setTagInput] = useState("");
   const [confirmDelete, setConfirmDelete] = useState(false);
-  const [deleteIndex, setDeleteIndex] = useState(null);
+  const [deleteTagId, setDeleteTagId] = useState(null);
+
+  // Etiketleri backend'den çek
+  const fetchTags = async () => {
+    try {
+      const res = await axios.get(
+        "https://materialblog-server-production.up.railway.app/api/tags"
+      );
+      setTags(res.data);
+    } catch (err) {
+      console.error("Etiketler alınamadı:", err);
+    }
+  };
 
   useEffect(() => {
-    const stored = JSON.parse(localStorage.getItem("tags"));
-    if (stored && stored.length > 0) {
-      setTags(stored);
-    } else {
-      const defaultTags = ["frontend", "react", "ui"];
-      localStorage.setItem("tags", JSON.stringify(defaultTags));
-      setTags(defaultTags);
-    }
+    fetchTags();
   }, []);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (tagInput.trim() === "") return;
 
-    const updated = [...tags];
-    if (editingIndex !== null) {
-      updated[editingIndex] = tagInput;
-    } else {
-      updated.unshift(tagInput);
+    try {
+      if (editingTag) {
+        await axios.put(
+          `https://materialblog-server-production.up.railway.app/api/tags/${editingTag._id}`,
+          { name: tagInput }
+        );
+      } else {
+        await axios.post(
+          "https://materialblog-server-production.up.railway.app/api/tags",
+          { name: tagInput }
+        );
+      }
+      fetchTags();
+      setOpenDialog(false);
+      setTagInput("");
+      setEditingTag(null);
+    } catch (err) {
+      console.error("Etiket kaydetme hatası:", err);
     }
-    setTags(updated);
-    localStorage.setItem("tags", JSON.stringify(updated));
-    setOpenDialog(false);
-    setTagInput("");
-    setEditingIndex(null);
   };
 
-  const handleDelete = () => {
-    const updated = tags.filter((_, i) => i !== deleteIndex);
-    setTags(updated);
-    localStorage.setItem("tags", JSON.stringify(updated));
-    setConfirmDelete(false);
-    setDeleteIndex(null);
+  const handleDelete = async () => {
+    try {
+      await axios.delete(
+        `https://materialblog-server-production.up.railway.app/api/tags/${deleteTagId}`
+      );
+      fetchTags();
+      setConfirmDelete(false);
+      setDeleteTagId(null);
+    } catch (err) {
+      console.error("Etiket silme hatası:", err);
+    }
   };
 
-  const openEditDialog = (name, index) => {
-    setEditingIndex(index);
-    setTagInput(name);
+  const openEditDialog = (tag) => {
+    setEditingTag(tag);
+    setTagInput(tag.name);
     setOpenDialog(true);
   };
 
@@ -87,7 +106,7 @@ const AdminTagsPage = () => {
           variant="contained"
           startIcon={<AddIcon />}
           onClick={() => {
-            setEditingIndex(null);
+            setEditingTag(null);
             setTagInput("");
             setOpenDialog(true);
           }}
@@ -108,20 +127,20 @@ const AdminTagsPage = () => {
             </TableHead>
             <TableBody>
               {tags.map((tag, index) => (
-                <TableRow key={index} hover>
+                <TableRow key={tag._id} hover>
                   <TableCell>{index + 1}</TableCell>
-                  <TableCell>{tag}</TableCell>
+                  <TableCell>{tag.name}</TableCell>
                   <TableCell align="right">
                     <IconButton
                       color="primary"
-                      onClick={() => openEditDialog(tag, index)}
+                      onClick={() => openEditDialog(tag)}
                     >
                       <EditIcon />
                     </IconButton>
                     <IconButton
                       color="error"
                       onClick={() => {
-                        setDeleteIndex(index);
+                        setDeleteTagId(tag._id);
                         setConfirmDelete(true);
                       }}
                     >
@@ -142,9 +161,10 @@ const AdminTagsPage = () => {
         </TableContainer>
       </Paper>
 
+      {/* Etiket Ekle / Düzenle Dialog */}
       <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>
         <DialogTitle>
-          {editingIndex !== null ? "Etiketi Düzenle" : "Yeni Etiket"}
+          {editingTag ? "Etiketi Düzenle" : "Yeni Etiket"}
         </DialogTitle>
         <DialogContent>
           <TextField
@@ -163,6 +183,7 @@ const AdminTagsPage = () => {
         </DialogActions>
       </Dialog>
 
+      {/* Silme onayı */}
       <Dialog open={confirmDelete} onClose={() => setConfirmDelete(false)}>
         <DialogTitle>Bu etiketi silmek istediğinize emin misiniz?</DialogTitle>
         <DialogActions>

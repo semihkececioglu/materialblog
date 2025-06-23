@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import {
   Box,
@@ -8,8 +8,9 @@ import {
   useTheme,
   Pagination,
 } from "@mui/material";
-import initialPosts from "../data";
 import PostCard from "../components/PostCard";
+import axios from "axios";
+import slugify from "slugify";
 
 const tagColors = {
   react: "#61dafb",
@@ -24,19 +25,36 @@ const tagColors = {
 const POSTS_PER_PAGE = 6;
 
 const TagPosts = () => {
-  const { tag } = useParams();
+  const { tag } = useParams(); // Örn: "full-stack"
   const theme = useTheme();
   const [page, setPage] = useState(1);
+  const [filteredPosts, setFilteredPosts] = useState([]);
 
-  const stored = JSON.parse(localStorage.getItem("posts")) || [];
-  const allPosts = [
-    ...stored,
-    ...initialPosts.filter((p) => !stored.some((s) => s.id === p.id)),
-  ];
+  useEffect(() => {
+    const fetchPostsByTag = async () => {
+      try {
+        const res = await axios.get(
+          "https://materialblog-server-production.up.railway.app/api/posts"
+        );
+        const posts = res.data;
 
-  const filteredPosts = allPosts.filter(
-    (post) => post.tags && post.tags.includes(tag)
-  );
+        const tagged = posts.filter(
+          (post) =>
+            Array.isArray(post.tags) &&
+            post.tags
+              .map((t) => slugify(t, { lower: true, strict: true }))
+              .includes(tag)
+        );
+
+        setFilteredPosts(tagged);
+        setPage(1);
+      } catch (err) {
+        console.error("Etikete göre postlar alınamadı:", err);
+      }
+    };
+
+    fetchPostsByTag();
+  }, [tag]);
 
   const pageCount = Math.ceil(filteredPosts.length / POSTS_PER_PAGE);
   const paginatedPosts = filteredPosts.slice(
@@ -49,14 +67,18 @@ const TagPosts = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
+  const tagLabel = tag
+    .replace(/-/g, " ")
+    .replace(/\b\w/g, (l) => l.toUpperCase());
+
   return (
     <Container maxWidth="lg" sx={{ mt: 4 }}>
       <Typography variant="h5" gutterBottom>
         Etiket:{" "}
         <Chip
-          label={`#${tag}`}
+          label={`#${tagLabel}`}
           sx={{
-            bgcolor: tagColors[tag] || theme.palette.primary.main,
+            bgcolor: tagColors[tag.toLowerCase()] || theme.palette.primary.main,
             color: "white",
           }}
         />
@@ -71,7 +93,7 @@ const TagPosts = () => {
           <Box sx={{ display: "flex", flexWrap: "wrap", gap: 3, mt: 3 }}>
             {paginatedPosts.map((post) => (
               <Box
-                key={post.id}
+                key={post._id}
                 sx={{
                   flex: "1 1 calc(33.333% - 20px)",
                   minWidth: "250px",
