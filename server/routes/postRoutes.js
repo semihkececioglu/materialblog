@@ -2,13 +2,21 @@ const express = require("express");
 const router = express.Router();
 const Post = require("../models/Post");
 
-// Tüm postları al
+// Tüm postları veya kategoriye göre filtrelenmiş postları al
 router.get("/", async (req, res) => {
   try {
-    const posts = await Post.find().sort({ date: -1 });
+    const { category } = req.query;
+
+    let filter = {};
+    if (category) {
+      filter.categorySlug = category;
+    }
+
+    const posts = await Post.find(filter).sort({ date: -1 });
     res.json(posts);
   } catch (err) {
-    res.status(500).json({ error: "Sunucu hatası!" });
+    console.error("Postları alırken hata:", err);
+    res.status(500).json({ error: "Sunucu hatası" });
   }
 });
 
@@ -61,23 +69,6 @@ router.delete("/:id", async (req, res) => {
     res.json({ message: "Yazı silindi" });
   } catch (err) {
     res.status(500).json({ error: "Sunucu hatası" });
-  }
-});
-
-router.get("/", async (req, res) => {
-  try {
-    const { category } = req.query;
-
-    let filter = {};
-    if (category) {
-      filter.categorySlug = category; // dikkat: slug alanına göre filtreliyoruz
-    }
-
-    const posts = await Post.find(filter).sort({ createdAt: -1 });
-    res.json(posts);
-  } catch (err) {
-    console.error("Postları alırken hata:", err);
-    res.status(500).json({ message: "Sunucu hatası" });
   }
 });
 
