@@ -17,6 +17,7 @@ import {
   Tooltip,
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
+import FavoriteIcon from "@mui/icons-material/Favorite";
 import axios from "axios";
 
 const AdminCommentsPage = () => {
@@ -86,6 +87,11 @@ const AdminCommentsPage = () => {
                 <TableCell>Yorum</TableCell>
                 <TableCell>Yazı Başlığı</TableCell>
                 <TableCell>Tarih</TableCell>
+                <TableCell>
+                  <Tooltip title="Beğeni Sayısı">
+                    <FavoriteIcon color="error" fontSize="small" />
+                  </Tooltip>
+                </TableCell>
                 <TableCell align="right">İşlemler</TableCell>
               </TableRow>
             </TableHead>
@@ -101,6 +107,7 @@ const AdminCommentsPage = () => {
                     <TableCell>
                       {new Date(comment.date).toLocaleDateString("tr-TR")}
                     </TableCell>
+                    <TableCell>{comment.likes?.length || 0}</TableCell>
                     <TableCell align="right">
                       <Tooltip title="Sil">
                         <IconButton
@@ -117,7 +124,7 @@ const AdminCommentsPage = () => {
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={5} align="center">
+                  <TableCell colSpan={6} align="center">
                     Hiç yorum bulunamadı.
                   </TableCell>
                 </TableRow>

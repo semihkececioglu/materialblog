@@ -35,22 +35,15 @@ const DashboardPage = () => {
         setCategoryCount(0);
       });
 
-    // 🔵 Yorum Sayısı (localStorage)
-    let totalComments = 0;
-    for (let key in localStorage) {
-      if (key.startsWith("comments_")) {
-        const comments = JSON.parse(localStorage.getItem(key)) || [];
-
-        const countRecursive = (list) =>
-          list.reduce((acc, c) => {
-            const replies = Array.isArray(c.replies) ? c.replies : [];
-            return acc + 1 + countRecursive(replies);
-          }, 0);
-
-        totalComments += countRecursive(comments);
-      }
-    }
-    setCommentCount(totalComments);
+    axios
+      .get("https://materialblog-server-production.up.railway.app/api/comments")
+      .then((res) => {
+        setCommentCount(res.data.length); // tüm yorum ve yanıtlar düz liste
+      })
+      .catch((err) => {
+        console.error("Yorumlar alınamadı:", err);
+        setCommentCount(0);
+      });
   }, []);
 
   const StatCard = ({ title, value, icon }) => (

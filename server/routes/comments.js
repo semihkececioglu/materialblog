@@ -60,4 +60,30 @@ router.put("/:id", async (req, res) => {
   }
 });
 
+router.put("/:id/like", async (req, res) => {
+  const { username } = req.body;
+
+  if (!username) {
+    return res.status(400).json({ error: "Kullanıcı adı gerekli." });
+  }
+
+  try {
+    const comment = await Comment.findById(req.params.id);
+    if (!comment) return res.status(404).json({ error: "Yorum bulunamadı." });
+
+    const alreadyLiked = comment.likes.includes(username);
+
+    if (alreadyLiked) {
+      comment.likes = comment.likes.filter((u) => u !== username);
+    } else {
+      comment.likes.push(username);
+    }
+
+    await comment.save();
+    res.json({ likes: comment.likes, liked: !alreadyLiked });
+  } catch (err) {
+    res.status(500).json({ error: "Beğeni güncellenemedi." });
+  }
+});
+
 module.exports = router;

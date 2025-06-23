@@ -52,43 +52,31 @@ const CommentItem = ({
   const [openDialog, setOpenDialog] = useState(false);
   const [snackbar, setSnackbar] = useState({ open: false, message: "" });
 
-  const likeKey = `comment_like_${comment._id}`;
-  const countKey = `comment_count_${comment._id}`;
-
   useEffect(() => {
-    const storedLiked = JSON.parse(localStorage.getItem(likeKey)) || {};
-    const storedCount = JSON.parse(localStorage.getItem(countKey)) || 0;
+    setLiked(comment.likes?.includes(currentUserKey));
+    setLikeCount(comment.likes?.length || 0);
+  }, [comment.likes, currentUserKey]);
 
-    setLikeCount(storedCount);
-    setLiked(!!storedLiked[currentUserKey]);
-  }, [currentUserKey, likeKey, countKey]);
-
-  const handleLike = () => {
+  const handleLike = async () => {
     if (!user) {
       setShowAlert(true);
       return;
     }
 
-    if (isOwner) return;
+    try {
+      const res = await axios.put(
+        `https://materialblog-server-production.up.railway.app/api/comments/${comment._id}/like`,
+        {
+          username: currentUserKey,
+        }
+      );
 
-    const storedLiked = JSON.parse(localStorage.getItem(likeKey)) || {};
-    const alreadyLiked = storedLiked[currentUserKey];
-
-    let newCount = likeCount;
-
-    if (alreadyLiked) {
-      delete storedLiked[currentUserKey];
-      newCount--;
-      setLiked(false);
-    } else {
-      storedLiked[currentUserKey] = true;
-      newCount++;
-      setLiked(true);
+      setLiked(res.data.liked);
+      setLikeCount(res.data.likes.length);
+      onNotify?.(res.data.liked ? "Beğenildi" : "Beğenme geri alındı");
+    } catch (err) {
+      console.error("Beğeni işlemi başarısız:", err);
     }
-
-    setLikeCount(newCount);
-    localStorage.setItem(likeKey, JSON.stringify(storedLiked));
-    localStorage.setItem(countKey, JSON.stringify(newCount));
   };
 
   const handleReply = () => {
@@ -291,7 +279,7 @@ const CommentItem = ({
             </DialogContentText>
           </DialogContent>
           <DialogActions>
-            <Button onClick={() => setOpenDialog(false)}>İptal</Button>
+            <Button onClick={() => setOpenDialog(false)}>Vazgeç</Button>
             <Button
               onClick={() => {
                 onDelete(comment._id);
