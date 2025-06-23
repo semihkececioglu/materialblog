@@ -28,6 +28,7 @@ const categoryColors = {
   React: "primary",
   JavaScript: "warning",
   Tasarım: "secondary",
+  Galatasaray: "success",
 };
 
 const Transition = React.forwardRef(function Transition(props, ref) {
