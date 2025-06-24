@@ -10,6 +10,7 @@ import {
   Alert,
 } from "@mui/material";
 import { useAuth } from "../contexts/AuthContext";
+import axios from "axios";
 
 const Login = () => {
   const { login } = useAuth();
@@ -19,21 +20,37 @@ const Login = () => {
   const navigate = useNavigate();
   const theme = useTheme();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setError("");
 
-    const users = JSON.parse(localStorage.getItem("users")) || [];
-    const matchedUser = users.find(
-      (u) => u.username === username && u.password === password
-    );
-
-    if (!matchedUser) {
-      setError("Kullanıcı adı veya şifre hatalı.");
+    if (!username || !password) {
+      setError("Tüm alanları doldurmanız gerekiyor.");
       return;
     }
 
-    login(matchedUser.username);
-    navigate("/");
+    try {
+      const res = await axios.post(
+        "https://materialblog-server-production.up.railway.app/api/auth/login",
+        {
+          usernameOrEmail: username,
+          password,
+        }
+      );
+
+      const { token, user } = res.data;
+
+      // AuthContext'e login bilgisini gönder
+      login(user, token);
+
+      navigate("/");
+    } catch (err) {
+      if (err.response && err.response.data?.message) {
+        setError(err.response.data.message);
+      } else {
+        setError("Giriş sırasında bir hata oluştu.");
+      }
+    }
   };
 
   return (

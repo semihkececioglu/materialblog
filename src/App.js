@@ -22,6 +22,7 @@ import AdminTagsPage from "./admin/AdminTagsPage";
 import AdminCommentsPage from "./admin/AdminCommentsPage";
 import AdminSettingsPage from "./admin/AdminSettingsPage";
 import PostEditorPage from "./admin/PostEditorPage";
+import AdminRoute from "./auth/AdminRoute";
 
 function App() {
   const [mode, setMode] = useState("light");
@@ -58,18 +59,22 @@ function App() {
                 element={<EditProfilePage />}
               />
               {/* Admin paneli rotaları */}
-              <Route path="/admin" element={<AdminLayout />}>
+              <Route
+                path="/admin"
+                element={
+                  <AdminRoute>
+                    <AdminLayout />
+                  </AdminRoute>
+                }
+              >
                 <Route index element={<DashboardPage />} />
                 <Route path="posts" element={<PostsPage />} />
                 <Route path="categories" element={<AdminCategoriesPage />} />
-                <Route path="/admin/tags" element={<AdminTagsPage />} />
+                <Route path="tags" element={<AdminTagsPage />} />
                 <Route path="comments" element={<AdminCommentsPage />} />
                 <Route path="settings" element={<AdminSettingsPage />} />
-                <Route path="/admin/editor" element={<PostEditorPage />} />
-                <Route
-                  path="/admin/posts/edit/:id"
-                  element={<PostEditorPage />}
-                />
+                <Route path="editor" element={<PostEditorPage />} />
+                <Route path="posts/edit/:id" element={<PostEditorPage />} />
               </Route>
             </Routes>
           </Layout>

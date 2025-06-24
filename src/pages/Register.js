@@ -9,6 +9,7 @@ import {
   Alert,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
 const Register = () => {
   const theme = useTheme();
@@ -22,25 +23,35 @@ const Register = () => {
 
   const [error, setError] = useState("");
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setError("");
+
     if (!firstName || !lastName || !username || !email || !password) {
       setError("Tüm alanları doldurmanız gerekiyor.");
       return;
     }
 
-    const users = JSON.parse(localStorage.getItem("users")) || [];
-    const existingUser = users.find((u) => u.username === username);
-    if (existingUser) {
-      setError("Bu kullanıcı adı zaten kullanılıyor.");
-      return;
+    try {
+      const res = await axios.post(
+        "https://materialblog-server-production.up.railway.app/api/auth/register",
+        {
+          username,
+          email,
+          password,
+          firstName,
+          lastName,
+        }
+      );
+
+      navigate("/login");
+    } catch (err) {
+      if (err.response && err.response.data && err.response.data.message) {
+        setError(err.response.data.message);
+      } else {
+        setError("Kayıt işlemi sırasında bir hata oluştu.");
+      }
     }
-
-    const newUser = { firstName, lastName, username, email, password };
-    users.push(newUser);
-    localStorage.setItem("users", JSON.stringify(users));
-
-    navigate("/login");
   };
 
   return (

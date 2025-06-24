@@ -8,7 +8,8 @@ const postRoutes = require("./routes/postRoutes");
 const uploadRoutes = require("./routes/upload");
 const categoryRoutes = require("./routes/categoryRoutes");
 const tagRoutes = require("./routes/tagRoutes");
-const commentRoutes = require("./routes/comments"); // ✅ Yorum rotasını ekledik
+const commentRoutes = require("./routes/comments");
+const authRoutes = require("./routes/auth");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -33,7 +34,8 @@ app.use("/api/posts", postRoutes);
 app.use("/api/upload", uploadRoutes);
 app.use("/api/categories", categoryRoutes);
 app.use("/api/tags", tagRoutes);
-app.use("/api/comments", commentRoutes); // ✅ Yorumlar rotası burada tanıtıldı
+app.use("/api/comments", commentRoutes);
+app.use("/api/auth", authRoutes);
 
 // ✅ MongoDB bağlantısı
 mongoose
