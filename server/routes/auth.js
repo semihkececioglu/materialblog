@@ -33,15 +33,22 @@ router.post("/register", async (req, res) => {
 router.post("/login", async (req, res) => {
   try {
     const { usernameOrEmail, password } = req.body;
+    console.log("Gelen login verisi:", req.body);
 
-    const user = await User.finOne({
+    const user = await User.findOne({
       $or: [{ email: usernameOrEmail }, { username: usernameOrEmail }],
     });
 
-    if (!user) return res.status(400).json({ message: "Kullanıcı bulunamadı" });
+    if (!user) {
+      console.log("Kullanıcı bulunamadı.");
+      return res.status(400).json({ message: "Kullanıcı bulunamadı." });
+    }
 
     const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) return res.status(400).json({ message: "Şifre yanlış" });
+    if (!isMatch) {
+      console.log("Şifre eşleşmedi.");
+      return res.status(400).json({ message: "Şifre yanlış." });
+    }
 
     const token = jwt.sign({ id: user._id, role: user.role }, JWT_SECRET, {
       expiresIn: "7d",
@@ -52,12 +59,13 @@ router.post("/login", async (req, res) => {
       user: {
         id: user._id,
         username: user.username,
-        role: user.role,
         email: user.email,
+        role: user.role,
       },
     });
   } catch (err) {
-    res.status(500).json({ message: "Giriş işlemi sırasında hata oluştu." });
+    console.error("Login sırasında hata:", err);
+    res.status(500).json({ message: "Sunucu hatası" });
   }
 });
 
