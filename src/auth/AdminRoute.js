@@ -3,13 +3,13 @@ import { Navigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 
 const AdminRoute = ({ children }) => {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
 
-  if (!user) {
-    return <Navigate to="/" />;
+  if (loading) {
+    return null; // veya <div>Yükleniyor...</div>
   }
 
-  if (user.role !== "admin") {
+  if (!user || user.role !== "admin") {
     return <Navigate to="/" />;
   }
 

@@ -5,6 +5,7 @@ const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(null);
+  const [loading, setLoading] = useState(true); // 🔄 ekle
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
@@ -14,12 +15,13 @@ export const AuthProvider = ({ children }) => {
       setUser(JSON.parse(storedUser));
       setToken(storedToken);
     }
+
+    setLoading(false); // ✅ localStorage kontrolü bitince yükleme tamam
   }, []);
 
   const login = (userData, tokenValue) => {
     setUser(userData);
     setToken(tokenValue);
-
     localStorage.setItem("user", JSON.stringify(userData));
     localStorage.setItem("token", tokenValue);
   };
@@ -32,7 +34,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, login, logout }}>
+    <AuthContext.Provider value={{ user, token, login, logout, loading }}>
       {children}
     </AuthContext.Provider>
   );

@@ -9,6 +9,7 @@ import {
   List,
   ListItem,
   ListItemText,
+  ListItemButton,
   IconButton,
   useTheme,
   useMediaQuery,
@@ -39,27 +40,27 @@ const AdminLayout = () => {
       </Typography>
       <List>
         {navItems.map((item) => (
-          <ListItem
-            button
-            key={item.text}
-            component={Link}
-            to={item.path}
-            sx={{
-              borderRadius: 1,
-              mb: 1,
-              px: 2,
-              py: 1,
-              transition: "0.2s",
-              "&:hover": {
-                bgcolor: theme.palette.action.hover,
-              },
-            }}
-            onClick={() => setMobileOpen(false)}
-          >
-            <ListItemText
-              primary={item.text}
-              primaryTypographyProps={{ fontWeight: 500 }}
-            />
+          <ListItem disablePadding key={item.text}>
+            <ListItemButton
+              component={Link}
+              to={item.path}
+              onClick={() => setMobileOpen(false)}
+              sx={{
+                borderRadius: 1,
+                mb: 1,
+                px: 2,
+                py: 1,
+                transition: "0.2s",
+                "&:hover": {
+                  bgcolor: theme.palette.action.hover,
+                },
+              }}
+            >
+              <ListItemText
+                primary={item.text}
+                primaryTypographyProps={{ fontWeight: 500 }}
+              />
+            </ListItemButton>
           </ListItem>
         ))}
       </List>

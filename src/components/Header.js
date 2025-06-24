@@ -46,12 +46,20 @@ const categories = [
   { name: "Javascript", icon: <JsIcon fontSize="small" /> },
 ];
 
-const stringToColor = (name) => {
+const stringToColor = (string) => {
+  if (!string || typeof string !== "string") return "#ccc"; // 👈 kontrol
+
   let hash = 0;
-  for (let i = 0; i < name.length; i++) {
-    hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  for (let i = 0; i < string.length; i++) {
+    hash = string.charCodeAt(i) + ((hash << 5) - hash);
   }
-  const color = `hsl(${hash % 360}, 60%, 50%)`;
+
+  let color = "#";
+  for (let i = 0; i < 3; i++) {
+    const value = (hash >> (i * 8)) & 0xff;
+    color += value.toString(16).padStart(2, "0");
+  }
+
   return color;
 };
 
@@ -88,7 +96,7 @@ function Header({ toggleTheme, searchTerm, setSearchTerm }) {
   };
 
   const handleProfileNavigate = (path) => {
-    navigate(`/profile/${user.name}${path}`);
+    navigate(`/profile/${user?.username}${path}`);
     setProfileAnchorEl(null);
     setDrawerOpen(false);
   };
@@ -215,10 +223,11 @@ function Header({ toggleTheme, searchTerm, setSearchTerm }) {
                         sx={{
                           width: 32,
                           height: 32,
-                          bgcolor: stringToColor(user.name),
+                          bgcolor: stringToColor(user?.username || "U"), // 🔄
                         }}
                       >
-                        {user.name.charAt(0).toUpperCase()}
+                        {(user?.username || "U").charAt(0).toUpperCase()}{" "}
+                        {/* 🔄 */}
                       </Avatar>
                       <ArrowDropDown sx={{ color: "white" }} />
                     </IconButton>

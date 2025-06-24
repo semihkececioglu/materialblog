@@ -15,11 +15,25 @@ import {
 } from "@mui/material";
 import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
+import { BASE_URL } from "../config";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 import Quill from "quill";
 import ImageResize from "quill-image-resize-module-react";
+
 Quill.register("modules/imageResize", ImageResize);
+
+// ✅ Cloudinary upload helper
+const uploadToCloudinary = async (file) => {
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("upload_preset", "materialblog");
+  const res = await axios.post(
+    "https://api.cloudinary.com/v1_1/da2mjic2e/image/upload",
+    formData
+  );
+  return res.data.secure_url;
+};
 
 const quillModules = {
   toolbar: {
@@ -37,24 +51,15 @@ const quillModules = {
         input.setAttribute("type", "file");
         input.setAttribute("accept", "image/*");
         input.click();
-
         input.onchange = async () => {
           const file = input.files[0];
-          const formData = new FormData();
-          formData.append("image", file);
+          if (!file) return;
           try {
-            const res = await axios.post(
-              "https://materialblog-server-production.up.railway.app/api/upload",
-              formData,
-              {
-                headers: { "Content-Type": "multipart/form-data" },
-              }
-            );
-            const url = res.data.url;
+            const imageUrl = await uploadToCloudinary(file);
             const range = this.quill.getSelection();
-            this.quill.insertEmbed(range.index, "image", url);
+            this.quill.insertEmbed(range.index, "image", imageUrl);
           } catch (err) {
-            console.error("Görsel yüklenemedi:", err);
+            console.error("İçerik görseli yüklenemedi:", err);
           }
         };
       },
@@ -89,38 +94,31 @@ const PostEditorPage = () => {
     content: "",
     tags: "",
   });
-  const [loading, setLoading] = useState(false);
   const [categories, setCategories] = useState([]);
+  const [loading, setLoading] = useState(false);
   const [snackbar, setSnackbar] = useState({
     open: false,
     message: "",
     severity: "success",
   });
-
   const navigate = useNavigate();
   const { id } = useParams();
 
   useEffect(() => {
     axios
-      .get(
-        "https://materialblog-server-production.up.railway.app/api/categories"
-      )
+      .get(`${BASE_URL}/api/categories`)
       .then((res) => {
-        const categoryNames = res.data.map((cat) => cat.name);
-        setCategories(categoryNames);
+        const names = res.data.map((c) => c.name);
+        setCategories(names);
       })
-      .catch((err) => {
-        console.error("Kategoriler alınamadı:", err);
-      });
+      .catch((err) => console.error("Kategori hatası:", err));
   }, []);
 
   useEffect(() => {
     if (id) {
       setLoading(true);
       axios
-        .get(
-          `https://materialblog-server-production.up.railway.app/api/posts/${id}`
-        )
+        .get(`${BASE_URL}/api/posts/${id}`)
         .then((res) => {
           const post = res.data;
           setForm({
@@ -132,9 +130,7 @@ const PostEditorPage = () => {
             tags: (post.tags || []).join(", "),
           });
         })
-        .catch((err) => {
-          console.error("Yazı getirilemedi:", err);
-        })
+        .catch((err) => console.error("Yazı çekilemedi:", err))
         .finally(() => setLoading(false));
     }
   }, [id]);
@@ -143,28 +139,33 @@ const PostEditorPage = () => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
+  const handleCoverUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    try {
+      const imageUrl = await uploadToCloudinary(file);
+      setForm({ ...form, image: imageUrl });
+    } catch (err) {
+      console.error("Kapak görseli yüklenemedi:", err);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     const payload = {
       ...form,
-      tags: form.tags.split(",").map((tag) => tag.trim()),
+      tags: form.tags.split(",").map((t) => t.trim()),
     };
     try {
       if (id) {
-        await axios.put(
-          `https://materialblog-server-production.up.railway.app/api/posts/${id}`,
-          payload
-        );
+        await axios.put(`${BASE_URL}/api/posts/${id}`, payload);
         setSnackbar({
           open: true,
           message: "Yazı güncellendi!",
           severity: "success",
         });
       } else {
-        await axios.post(
-          "https://materialblog-server-production.up.railway.app/api/posts",
-          payload
-        );
+        await axios.post(`${BASE_URL}/api/posts`, payload);
         setSnackbar({
           open: true,
           message: "Yazı oluşturuldu!",
@@ -180,27 +181,6 @@ const PostEditorPage = () => {
       });
     }
   };
-
-  const handleCoverUpload = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    const formData = new FormData();
-    formData.append("image", file);
-    try {
-      const res = await axios.post(
-        "https://materialblog-server-production.up.railway.app/api/upload",
-        formData,
-        {
-          headers: { "Content-Type": "multipart/form-data" },
-        }
-      );
-      setForm({ ...form, image: res.data.url });
-    } catch (err) {
-      console.error("Kapak görseli yüklenemedi:", err);
-    }
-  };
-
-  if (loading) return <Typography>Yükleniyor...</Typography>;
 
   return (
     <Container maxWidth="md" sx={{ py: 4 }}>
@@ -248,7 +228,7 @@ const PostEditorPage = () => {
               <Box mt={2}>
                 <img
                   src={form.image}
-                  alt="Kapak Görseli"
+                  alt="Kapak"
                   style={{
                     maxHeight: 150,
                     borderRadius: 8,
@@ -261,12 +241,12 @@ const PostEditorPage = () => {
 
           <TextField
             fullWidth
+            multiline
+            minRows={3}
             label="Özet"
             name="summary"
             value={form.summary}
             onChange={handleChange}
-            multiline
-            minRows={3}
             sx={{ mb: 2 }}
           />
 
@@ -274,8 +254,8 @@ const PostEditorPage = () => {
             İçerik:
           </Typography>
           <ReactQuill
-            value={form.content || ""}
-            onChange={(value) => setForm({ ...form, content: value })}
+            value={form.content}
+            onChange={(val) => setForm({ ...form, content: val })}
             modules={quillModules}
             formats={quillFormats}
             theme="snow"
@@ -287,7 +267,7 @@ const PostEditorPage = () => {
             name="tags"
             value={form.tags}
             onChange={handleChange}
-            sx={{ mb: 3, mt: 3 }}
+            sx={{ my: 3 }}
           />
 
           <Button variant="contained" type="submit">
