@@ -5,7 +5,6 @@ const path = require("path");
 require("dotenv").config();
 
 const postRoutes = require("./routes/postRoutes");
-const uploadRoutes = require("./routes/upload");
 const categoryRoutes = require("./routes/categoryRoutes");
 const tagRoutes = require("./routes/tagRoutes");
 const commentRoutes = require("./routes/comments");
@@ -31,12 +30,10 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // ✅ Route tanımları
 app.use("/api/posts", postRoutes);
-app.use("/api/upload", uploadRoutes);
 app.use("/api/categories", categoryRoutes);
 app.use("/api/tags", tagRoutes);
 app.use("/api/comments", commentRoutes);
 app.use("/api/auth", authRoutes);
-app.use("/api/upload", uploadRoutes);
 // ✅ MongoDB bağlantısı
 mongoose
   .connect(process.env.MONGO_URI, {
