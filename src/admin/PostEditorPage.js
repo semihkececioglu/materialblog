@@ -15,7 +15,7 @@ import {
 } from "@mui/material";
 import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
-import { BASE_URL } from "../config";
+import { BASE_URL } from "../config"; // backend API için
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 import Quill from "quill";
@@ -23,18 +23,19 @@ import ImageResize from "quill-image-resize-module-react";
 
 Quill.register("modules/imageResize", ImageResize);
 
-// ✅ Cloudinary upload helper
+// ✅ Cloudinary’ye direkt yükleme fonksiyonu
 const uploadToCloudinary = async (file) => {
   const formData = new FormData();
   formData.append("file", file);
-  formData.append("upload_preset", "materialblog");
+  formData.append("upload_preset", "materialblog"); // Cloudinary’de oluşturduğun unsigned preset adı
   const res = await axios.post(
-    "https://api.cloudinary.com/v1_1/da2mjic2e/image/upload",
+    "https://api.cloudinary.com/v1_1/da2mjic2e/image/upload", // kendi cloud_name ile değiştir
     formData
   );
   return res.data.secure_url;
 };
 
+// ✅ Quill ayarları
 const quillModules = {
   toolbar: {
     container: [
@@ -51,13 +52,14 @@ const quillModules = {
         input.setAttribute("type", "file");
         input.setAttribute("accept", "image/*");
         input.click();
+
         input.onchange = async () => {
           const file = input.files[0];
           if (!file) return;
           try {
-            const imageUrl = await uploadToCloudinary(file);
+            const url = await uploadToCloudinary(file);
             const range = this.quill.getSelection();
-            this.quill.insertEmbed(range.index, "image", imageUrl);
+            this.quill.insertEmbed(range.index, "image", url);
           } catch (err) {
             console.error("İçerik görseli yüklenemedi:", err);
           }
@@ -107,11 +109,8 @@ const PostEditorPage = () => {
   useEffect(() => {
     axios
       .get(`${BASE_URL}/api/categories`)
-      .then((res) => {
-        const names = res.data.map((c) => c.name);
-        setCategories(names);
-      })
-      .catch((err) => console.error("Kategori hatası:", err));
+      .then((res) => setCategories(res.data.map((c) => c.name)))
+      .catch((err) => console.error("Kategori alınamadı:", err));
   }, []);
 
   useEffect(() => {
@@ -143,8 +142,8 @@ const PostEditorPage = () => {
     const file = e.target.files[0];
     if (!file) return;
     try {
-      const imageUrl = await uploadToCloudinary(file);
-      setForm({ ...form, image: imageUrl });
+      const url = await uploadToCloudinary(file);
+      setForm({ ...form, image: url });
     } catch (err) {
       console.error("Kapak görseli yüklenemedi:", err);
     }
@@ -181,6 +180,8 @@ const PostEditorPage = () => {
       });
     }
   };
+
+  if (loading) return <Typography>Yükleniyor...</Typography>;
 
   return (
     <Container maxWidth="md" sx={{ py: 4 }}>

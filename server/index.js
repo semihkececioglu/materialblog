@@ -36,8 +36,7 @@ app.use("/api/categories", categoryRoutes);
 app.use("/api/tags", tagRoutes);
 app.use("/api/comments", commentRoutes);
 app.use("/api/auth", authRoutes);
-app.use("/api/upload", require("./routes/upload"));
-
+app.use("/api/upload", uploadRoutes);
 // ✅ MongoDB bağlantısı
 mongoose
   .connect(process.env.MONGO_URI, {
