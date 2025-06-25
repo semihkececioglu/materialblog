@@ -1,5 +1,4 @@
-// EditProfilePage.js
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Typography,
@@ -8,9 +7,11 @@ import {
   Avatar,
   useTheme,
   Paper,
+  Snackbar,
 } from "@mui/material";
 import { useAuth } from "../contexts/AuthContext";
 import { useParams, useNavigate } from "react-router-dom";
+import axios from "axios";
 
 const stringToColor = (name) => {
   let hash = 0;
@@ -21,14 +22,33 @@ const stringToColor = (name) => {
 };
 
 const EditProfilePage = () => {
-  const { user, login } = useAuth();
+  const { user } = useAuth();
   const { username } = useParams();
   const navigate = useNavigate();
   const theme = useTheme();
 
-  const [name, setName] = useState(user?.name || "");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [open, setOpen] = useState(false);
 
-  if (!user || user.name !== username) {
+  useEffect(() => {
+    if (!user || user.username !== username) return;
+
+    // Kullanıcının mevcut bilgilerini backend'den çek
+    axios
+      .get(
+        `https://materialblog-server-production.up.railway.app/api/users/${username}`
+      )
+      .then((res) => {
+        setFirstName(res.data.firstName);
+        setLastName(res.data.lastName);
+      })
+      .catch((err) => {
+        console.error("Kullanıcı bilgisi alınamadı:", err);
+      });
+  }, [user, username]);
+
+  if (!user || user.username !== username) {
     return (
       <Box sx={{ p: 4 }}>
         <Typography>Bu sayfayı düzenleme yetkiniz yok.</Typography>
@@ -36,11 +56,17 @@ const EditProfilePage = () => {
     );
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (name.trim()) {
-      login(name, user?.isAdmin);
-      navigate(`/profile/${name}`);
+    try {
+      await axios.put(
+        `https://materialblog-server-production.up.railway.app/api/users/${username}`,
+        { firstName, lastName }
+      );
+      setOpen(true);
+      setTimeout(() => navigate(`/profile/${username}`), 1500);
+    } catch (err) {
+      console.error("Güncelleme hatası:", err);
     }
   };
 
@@ -59,26 +85,36 @@ const EditProfilePage = () => {
         <Typography variant="h6" gutterBottom>
           Profili Düzenle
         </Typography>
+
         <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 2 }}>
           <Avatar
             sx={{
               width: 64,
               height: 64,
-              bgcolor: stringToColor(name),
+              bgcolor: stringToColor(user.username),
               color: "white",
             }}
           >
-            {name.charAt(0).toUpperCase()}
+            {user.username.charAt(0).toUpperCase()}
           </Avatar>
-          <Typography>{name}</Typography>
+          <Typography>
+            {user.firstName} {user.lastName}
+          </Typography>
         </Box>
 
         <form onSubmit={handleSubmit}>
           <TextField
             fullWidth
-            label="Ad Soyad"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
+            label="Ad"
+            value={firstName}
+            onChange={(e) => setFirstName(e.target.value)}
+            sx={{ mb: 2 }}
+          />
+          <TextField
+            fullWidth
+            label="Soyad"
+            value={lastName}
+            onChange={(e) => setLastName(e.target.value)}
             sx={{ mb: 2 }}
           />
           <Button type="submit" variant="contained">
@@ -86,6 +122,11 @@ const EditProfilePage = () => {
           </Button>
         </form>
       </Paper>
+      <Snackbar
+        open={open}
+        autoHideDuration={3000}
+        message="Profil başarıyla güncellendi"
+      />
     </Box>
   );
 };
