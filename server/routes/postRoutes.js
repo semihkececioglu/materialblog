@@ -80,23 +80,29 @@ router.post("/slug/:slug/like", async (req, res) => {
 
   try {
     const post = await Post.findOne({ slug });
-    if (!post) return res.status(404).json({ message: "Post not found" });
+    const user = await User.findById(userId);
+
+    if (!post || !user) return res.status(404).json({ message: "Bulunamadı" });
 
     const alreadyLiked = post.likes.includes(userId);
 
     if (alreadyLiked) {
       post.likes.pull(userId);
+      user.likedPosts.pull(post._id);
     } else {
       post.likes.push(userId);
+      user.likedPosts.push(post._id);
     }
 
     await post.save();
+    await user.save();
 
     res.status(200).json({
       liked: !alreadyLiked,
       likeCount: post.likes.length,
     });
   } catch (error) {
+    console.error("Like işlem hatası:", error);
     res.status(500).json({ message: "Sunucu hatası" });
   }
 });
@@ -108,17 +114,17 @@ router.post("/slug/:slug/save", async (req, res) => {
 
   try {
     const post = await Post.findOne({ slug });
-    if (!post) return res.status(404).json({ message: "Post not found" });
-
     const user = await User.findById(userId);
-    if (!user) return res.status(404).json({ message: "User not found" });
 
-    const alreadySaved = user.savedPosts.includes(post._id);
+    if (!post || !user) return res.status(404).json({ message: "Bulunamadı" });
+
+    const postId = post._id;
+    const alreadySaved = user.savedPosts.includes(postId);
 
     if (alreadySaved) {
-      user.savedPosts.pull(post._id);
+      user.savedPosts.pull(postId);
     } else {
-      user.savedPosts.push(post._id);
+      user.savedPosts.push(postId);
     }
 
     await user.save();
@@ -127,6 +133,7 @@ router.post("/slug/:slug/save", async (req, res) => {
       saved: !alreadySaved,
     });
   } catch (error) {
+    console.error("Save işlem hatası:", error);
     res.status(500).json({ message: "Sunucu hatası" });
   }
 });

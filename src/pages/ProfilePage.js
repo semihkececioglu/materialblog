@@ -23,58 +23,64 @@ const stringToColor = (name) => {
   return `hsl(${hash % 360}, 60%, 50%)`;
 };
 
-const formatTitleFromUrl = (url) => {
-  const slug = url.replace("/post/", "");
-  return slug
-    .split("-")
-    .map((s) => s.charAt(0).toUpperCase() + s.slice(1))
-    .join(" ");
-};
-
 const ProfilePage = () => {
   const { username } = useParams();
   const { user } = useAuth();
   const theme = useTheme();
+
   const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [likedPaths, setLikedPaths] = useState([]);
-  const [savedPaths, setSavedPaths] = useState([]);
+  const [likedPosts, setLikedPosts] = useState([]);
+  const [savedPosts, setSavedPosts] = useState([]);
 
-  // Kullanıcı bilgisi çekiliyor
+  const isOwnProfile = user && user.username === username;
+
   useEffect(() => {
-    axios
-      .get(
-        `https://materialblog-server-production.up.railway.app/api/users/${username}`
-      )
-      .then((res) => {
-        setUserData(res.data);
+    const fetchUserAndPosts = async () => {
+      try {
+        const userRes = await axios.get(
+          `https://materialblog-server-production.up.railway.app/api/users/${username}`
+        );
+        const userInfo = userRes.data;
+        setUserData(userInfo);
+
+        // Eğer likedPosts varsa post detaylarını çek
+        if (isOwnProfile) {
+          const likedPostDetails = await Promise.all(
+            (userInfo.likedPosts || []).map((id) =>
+              axios
+                .get(
+                  `https://materialblog-server-production.up.railway.app/api/posts/${id}`
+                )
+                .then((res) => res.data)
+                .catch(() => null)
+            )
+          );
+
+          const savedPostDetails = await Promise.all(
+            (userInfo.savedPosts || []).map((id) =>
+              axios
+                .get(
+                  `https://materialblog-server-production.up.railway.app/api/posts/${id}`
+                )
+                .then((res) => res.data)
+                .catch(() => null)
+            )
+          );
+
+          setLikedPosts(likedPostDetails.filter(Boolean));
+          setSavedPosts(savedPostDetails.filter(Boolean));
+        }
+
         setLoading(false);
-      })
-      .catch((err) => {
+      } catch (err) {
         console.error("Kullanıcı verisi alınamadı:", err);
         setLoading(false);
-      });
-  }, [username]);
+      }
+    };
 
-  // LocalStorage'dan beğenilen/kaydedilen yazılar
-  useEffect(() => {
-    if (user && user.username === username) {
-      const likedKey = `likedPosts_${user.username}`;
-      const savedKey = `savedPosts_${user.username}`;
-
-      const likedList = JSON.parse(localStorage.getItem(likedKey)) || [];
-      const likedUrls = Array.isArray(likedList)
-        ? likedList.map((item) => (typeof item === "string" ? item : item.path))
-        : [];
-      setLikedPaths(likedUrls);
-
-      const savedList = JSON.parse(localStorage.getItem(savedKey)) || [];
-      const savedUrls = Array.isArray(savedList)
-        ? savedList.map((item) => (typeof item === "string" ? item : item.path))
-        : [];
-      setSavedPaths(savedUrls);
-    }
-  }, [user, username]);
+    fetchUserAndPosts();
+  }, [username, isOwnProfile]);
 
   if (loading) {
     return (
@@ -91,8 +97,6 @@ const ProfilePage = () => {
       </Box>
     );
   }
-
-  const isOwnProfile = user && user.username === username;
 
   return (
     <Box sx={{ p: 4 }}>
@@ -133,18 +137,18 @@ const ProfilePage = () => {
               Beğenilen Yazılar
             </Typography>
 
-            {likedPaths.length === 0 ? (
+            {likedPosts.length === 0 ? (
               <Typography variant="body2" color="text.secondary">
                 Henüz beğendiğiniz bir yazı yok.
               </Typography>
             ) : (
               <List>
-                {likedPaths.map((path, index) => (
-                  <React.Fragment key={index}>
+                {likedPosts.map((post) => (
+                  <React.Fragment key={post._id}>
                     <ListItem
                       button
                       component={Link}
-                      to={path}
+                      to={`/post/${post.slug}`}
                       sx={{
                         borderRadius: 1,
                         mb: 1,
@@ -154,7 +158,7 @@ const ProfilePage = () => {
                         },
                       }}
                     >
-                      <ListItemText primary={formatTitleFromUrl(path)} />
+                      <ListItemText primary={post.title} />
                     </ListItem>
                     <Divider />
                   </React.Fragment>
@@ -166,18 +170,18 @@ const ProfilePage = () => {
               Kaydedilen Yazılar
             </Typography>
 
-            {savedPaths.length === 0 ? (
+            {savedPosts.length === 0 ? (
               <Typography variant="body2" color="text.secondary">
                 Henüz kaydettiğiniz bir yazı yok.
               </Typography>
             ) : (
               <List>
-                {savedPaths.map((path, index) => (
-                  <React.Fragment key={index}>
+                {savedPosts.map((post) => (
+                  <React.Fragment key={post._id}>
                     <ListItem
                       button
                       component={Link}
-                      to={path}
+                      to={`/post/${post.slug}`}
                       sx={{
                         borderRadius: 1,
                         mb: 1,
@@ -187,7 +191,7 @@ const ProfilePage = () => {
                         },
                       }}
                     >
-                      <ListItemText primary={formatTitleFromUrl(path)} />
+                      <ListItemText primary={post.title} />
                     </ListItem>
                     <Divider />
                   </React.Fragment>
