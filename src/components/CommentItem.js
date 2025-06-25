@@ -26,6 +26,15 @@ import axios from "axios";
 import getTimeAgo from "../utils/getTimeAgo";
 import { useAuth } from "../contexts/AuthContext";
 
+const stringToColor = (name) => {
+  if (!name || typeof name !== "string") return "#888";
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return `hsl(${hash % 360}, 60%, 50%)`;
+};
+
 const CommentItem = ({
   comment,
   onReplySubmit,
@@ -35,15 +44,13 @@ const CommentItem = ({
   onNotify,
 }) => {
   const { user } = useAuth();
-  const currentUserKey = user?.username || user?.name;
-  const isOwner = user?.name === comment.name;
-  const isAdmin =
-    user?.username?.toLowerCase() === "admin" ||
-    user?.name?.toLowerCase() === "admin";
+  const isOwner = user?.username === comment.username;
+  const isAdmin = user?.role === "admin";
 
   const [replyText, setReplyText] = useState("");
-  const [replyName, setReplyName] = useState("");
   const [replyEmail, setReplyEmail] = useState("");
+  const [replyName, setReplyName] = useState("");
+
   const [editMode, setEditMode] = useState(false);
   const [editedText, setEditedText] = useState(comment.text);
   const [liked, setLiked] = useState(false);
@@ -52,43 +59,38 @@ const CommentItem = ({
   const [openDialog, setOpenDialog] = useState(false);
   const [snackbar, setSnackbar] = useState({ open: false, message: "" });
 
+  const displayName = comment.username || comment.name || "Anonim";
+
   useEffect(() => {
-    setLiked(comment.likes?.includes(currentUserKey));
+    setLiked(comment.likes?.includes(user?.username));
     setLikeCount(comment.likes?.length || 0);
-  }, [comment.likes, currentUserKey]);
+  }, [comment.likes, user?.username]);
 
   const handleLike = async () => {
-    if (!user) {
-      setShowAlert(true);
-      return;
-    }
+    if (!user) return setShowAlert(true);
+    if (isOwner) return;
 
     try {
       const res = await axios.put(
         `https://materialblog-server-production.up.railway.app/api/comments/${comment._id}/like`,
-        {
-          username: currentUserKey,
-        }
+        { username: user.username }
       );
-
       setLiked(res.data.liked);
       setLikeCount(res.data.likes.length);
       onNotify?.(res.data.liked ? "Beğenildi" : "Beğenme geri alındı");
     } catch (err) {
-      console.error("Beğeni işlemi başarısız:", err);
+      console.error("Beğeni hatası:", err);
     }
   };
 
   const handleReply = () => {
-    const responderName = user ? user.name : replyName;
-    if (!responderName.trim() || !replyText.trim()) return;
+    const responderUsername = user?.username || replyName;
+    if (!responderUsername.trim() || !replyText.trim()) return;
+
     const newReply = {
-      name: responderName,
+      username: responderUsername,
       email: user?.email || replyEmail,
       text: replyText,
-      avatar: `https://i.pravatar.cc/150?img=${Math.floor(
-        Math.random() * 1000
-      )}`,
       date: new Date().toISOString(),
     };
     onReplySubmit(comment._id, newReply);
@@ -108,7 +110,6 @@ const CommentItem = ({
       comment.text = editedText;
       setEditMode(false);
       setSnackbar({ open: true, message: "Yorum güncellendi" });
-      onNotify?.("Yorum güncellendi");
     } catch (err) {
       console.error("Güncelleme hatası:", err);
     }
@@ -119,11 +120,21 @@ const CommentItem = ({
       <CardContent sx={{ pb: 1 }}>
         <Box sx={{ display: "flex", justifyContent: "space-between" }}>
           <Box sx={{ display: "flex", alignItems: "center" }}>
-            <Tooltip title={comment.name}>
-              <Avatar src={comment.avatar} alt={comment.name} sx={{ mr: 1 }} />
+            <Tooltip title={displayName}>
+              <Avatar
+                sx={{
+                  bgcolor: stringToColor(displayName),
+                  width: 36,
+                  height: 36,
+                  fontSize: 14,
+                  mr: 1,
+                }}
+              >
+                {displayName.charAt(0).toUpperCase()}
+              </Avatar>
             </Tooltip>
             <Box>
-              <Typography variant="subtitle2">{comment.name}</Typography>
+              <Typography variant="subtitle2">{displayName}</Typography>
               <Typography
                 variant="caption"
                 color="text.secondary"
@@ -133,6 +144,7 @@ const CommentItem = ({
               </Typography>
             </Box>
           </Box>
+
           <Box>
             {isOwner && (
               <IconButton onClick={() => setEditMode(!editMode)} size="small">
@@ -186,7 +198,7 @@ const CommentItem = ({
           <Button
             size="small"
             onClick={handleLike}
-            disabled={user?.name === comment.name}
+            disabled={isOwner}
             sx={{ textTransform: "none" }}
             startIcon={
               <FavoriteIcon
@@ -255,7 +267,7 @@ const CommentItem = ({
           </Box>
         )}
 
-        {comment.replies && comment.replies.length > 0 && (
+        {comment.replies?.length > 0 && (
           <List sx={{ mt: 2, ml: 2 }}>
             {comment.replies.map((reply) => (
               <CommentItem
@@ -275,7 +287,7 @@ const CommentItem = ({
           <DialogTitle>Yorumu silmek istiyor musunuz?</DialogTitle>
           <DialogContent>
             <DialogContentText>
-              Bu işlem geri alınamaz. Yorum ve varsa tüm yanıtlar silinecek.
+              Bu işlem geri alınamaz. Yorum ve varsa yanıtlar silinecek.
             </DialogContentText>
           </DialogContent>
           <DialogActions>
@@ -285,7 +297,6 @@ const CommentItem = ({
                 onDelete(comment._id);
                 setOpenDialog(false);
                 setSnackbar({ open: true, message: "Yorum silindi" });
-                onNotify?.("Yorum silindi");
               }}
               autoFocus
               color="error"

@@ -13,18 +13,18 @@ import {
   Snackbar,
   Alert,
 } from "@mui/material";
+import { Link } from "react-router-dom";
 import axios from "axios";
 import CommentItem from "./CommentItem";
 import { useAuth } from "../contexts/AuthContext";
 
 const CommentSection = ({ postId }) => {
   const [comments, setComments] = useState([]);
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
   const [text, setText] = useState("");
   const [replyingTo, setReplyingTo] = useState(null);
   const [sortOrder, setSortOrder] = useState("newest");
   const [snackbar, setSnackbar] = useState({ open: false, message: "" });
+
   const theme = useTheme();
   const { user } = useAuth();
 
@@ -45,7 +45,6 @@ const CommentSection = ({ postId }) => {
     }
   };
 
-  // Flat diziyi nested hale getir
   const buildNestedComments = (flatComments) => {
     const map = {};
     flatComments.forEach((c) => (map[c._id] = { ...c, replies: [] }));
@@ -60,21 +59,16 @@ const CommentSection = ({ postId }) => {
     return nested;
   };
 
-  // Yeni yorum gönder
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const commenterName = user ? user.name : name;
-    const commenterEmail = user ? user.email : email;
-    if (!commenterName.trim() || !text.trim()) return;
+    if (!text.trim()) return;
 
     const payload = {
       postId,
-      name: commenterName,
-      email: commenterEmail,
+      username: user.username,
+      email: user.email,
       text,
-      avatar: `https://i.pravatar.cc/150?img=${Math.floor(
-        Math.random() * 1000
-      )}`,
+      date: new Date().toISOString(),
     };
 
     try {
@@ -83,8 +77,6 @@ const CommentSection = ({ postId }) => {
         payload
       );
       await fetchComments();
-      setName("");
-      setEmail("");
       setText("");
       setSnackbar({ open: true, message: "Yorum eklendi" });
     } catch (err) {
@@ -92,7 +84,6 @@ const CommentSection = ({ postId }) => {
     }
   };
 
-  // Yanıt gönder
   const handleReplySubmit = async (parentId, replyObj) => {
     const payload = {
       ...replyObj,
@@ -112,7 +103,6 @@ const CommentSection = ({ postId }) => {
     }
   };
 
-  // Yorum sil
   const handleDelete = async (id) => {
     try {
       await axios.delete(
@@ -125,22 +115,18 @@ const CommentSection = ({ postId }) => {
     }
   };
 
-  // Snackbar tetikle
   const showSnackbar = (message) => {
     setSnackbar({ open: true, message });
   };
 
-  // Sıralama
   const sortedComments = [...comments].sort((a, b) => {
     if (sortOrder === "newest") {
       return new Date(b.date) - new Date(a.date);
     } else if (sortOrder === "oldest") {
       return new Date(a.date) - new Date(b.date);
     } else if (sortOrder === "mostLiked") {
-      const aCount =
-        JSON.parse(localStorage.getItem(`comment_count_${a._id}`)) || 0;
-      const bCount =
-        JSON.parse(localStorage.getItem(`comment_count_${b._id}`)) || 0;
+      const aCount = a.likes?.length || 0;
+      const bCount = b.likes?.length || 0;
       return bCount - aCount;
     }
     return 0;
@@ -197,61 +183,53 @@ const CommentSection = ({ postId }) => {
 
       <Divider sx={{ my: 3 }} />
 
-      {/* Yeni yorum formu */}
-      <Paper
-        elevation={3}
-        sx={{
-          p: 4,
-          mt: 4,
-          borderRadius: 2,
-          bgcolor: theme.palette.mode === "dark" ? "grey.900" : "grey.50",
-          border: `1px solid ${
-            theme.palette.mode === "dark"
-              ? theme.palette.grey[800]
-              : theme.palette.grey[300]
-          }`,
-        }}
-      >
-        <Typography variant="subtitle1" gutterBottom>
-          Yeni Yorum Yaz
-        </Typography>
-        <form onSubmit={handleSubmit}>
-          {!user && (
-            <Box sx={{ display: "flex", gap: 2, mb: 2 }}>
-              <TextField
-                label="Ad Soyad"
-                fullWidth
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                size="small"
-              />
-              <TextField
-                label="E-posta"
-                fullWidth
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                size="small"
-              />
+      {/* Yorum formu */}
+      {!user ? (
+        <Box sx={{ mt: 2, textAlign: "center" }}>
+          <Typography variant="body2" color="text.secondary">
+            Yorum yapabilmek için{" "}
+            <Link to="/login" style={{ color: theme.palette.primary.main }}>
+              giriş yapmalısınız.
+            </Link>
+          </Typography>
+        </Box>
+      ) : (
+        <Paper
+          elevation={3}
+          sx={{
+            p: 4,
+            mt: 4,
+            borderRadius: 2,
+            bgcolor: theme.palette.mode === "dark" ? "grey.900" : "grey.50",
+            border: `1px solid ${
+              theme.palette.mode === "dark"
+                ? theme.palette.grey[800]
+                : theme.palette.grey[300]
+            }`,
+          }}
+        >
+          <Typography variant="subtitle1" gutterBottom>
+            Yeni Yorum Yaz
+          </Typography>
+          <form onSubmit={handleSubmit}>
+            <TextField
+              label="Yorum yazın"
+              fullWidth
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+              multiline
+              rows={3}
+              size="small"
+            />
+            <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
+              <Button type="submit" variant="contained" sx={{ mt: 2 }}>
+                Gönder
+              </Button>
             </Box>
-          )}
-          <TextField
-            label="Yorum yazın"
-            fullWidth
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            multiline
-            rows={3}
-            size="small"
-          />
-          <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
-            <Button type="submit" variant="contained" sx={{ mt: 2 }}>
-              Gönder
-            </Button>
-          </Box>
-        </form>
-      </Paper>
+          </form>
+        </Paper>
+      )}
 
-      {/* Snackbar uyarısı */}
       <Snackbar
         open={snackbar.open}
         autoHideDuration={3000}

@@ -11,16 +11,23 @@ const commentSchema = new mongoose.Schema({
     ref: "Comment",
     default: null,
   },
-  name: String,
+  username: {
+    // 🔁 name ➜ username
+    type: String,
+    required: true,
+  },
   email: String,
-  text: String,
-  avatar: String,
+  text: {
+    type: String,
+    required: true,
+  },
+  avatar: String, // opsiyonel, ileride kullanılabilir
   date: {
     type: Date,
     default: Date.now,
   },
   likes: {
-    type: [String],
+    type: [String], // kullanıcı adı listesi
     default: [],
   },
 });

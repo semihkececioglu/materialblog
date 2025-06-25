@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   Box,
   IconButton,
@@ -28,115 +28,64 @@ import WhatsAppIcon from "@mui/icons-material/WhatsApp";
 import TelegramIcon from "@mui/icons-material/Telegram";
 import { useInteractionBar } from "../contexts/InteractionBarContext";
 import { useAuth } from "../contexts/AuthContext";
+import axios from "axios";
 
 const InteractionBarBase = ({ visible = true, position = "fixed" }) => {
   const theme = useTheme();
   const [anchorEl, setAnchorEl] = useState(null);
   const [snackbar, setSnackbar] = useState({ open: false, message: "" });
-  const { liked, setLiked, likeCount, setLikeCount, commentCount } =
-    useInteractionBar();
+
+  const {
+    liked,
+    setLiked,
+    likeCount,
+    setLikeCount,
+    commentCount,
+    saved,
+    setSaved,
+  } = useInteractionBar();
+
   const { user } = useAuth();
-  const [saved, setSaved] = useState(false);
+  const postId = window.location.pathname.split("/").pop(); // /post/:id
 
-  useEffect(() => {
-    const currentPath = window.location.pathname;
-    let total = 0;
-    Object.keys(localStorage).forEach((key) => {
-      if (key.startsWith("likedPosts_")) {
-        const likedList = JSON.parse(localStorage.getItem(key)) || [];
-        const matched = likedList.some((item) =>
-          typeof item === "string"
-            ? item === currentPath
-            : item?.path === currentPath
-        );
-        if (matched) total++;
-      }
-    });
-    setLikeCount(total);
-
-    if (!user) {
-      setLiked(false);
-      setSaved(false);
-      return;
-    }
-
-    const postPath = currentPath;
-    const storageKeyLiked = `likedPosts_${user.username || user.name}`;
-    const storageKeySaved = `savedPosts_${user.username || user.name}`;
-
-    const likedStored = JSON.parse(localStorage.getItem(storageKeyLiked)) || [];
-    const savedStored = JSON.parse(localStorage.getItem(storageKeySaved)) || [];
-
-    const alreadyLiked = likedStored.find(
-      (item) => item.path === postPath || item === postPath
-    );
-    const alreadySaved = savedStored.find(
-      (item) => item.path === postPath || item === postPath
-    );
-
-    setLiked(!!alreadyLiked);
-    setSaved(!!alreadySaved);
-  }, [user]);
-
-  const handleLike = () => {
+  const handleLike = async () => {
     if (!user) {
       setSnackbar({ open: true, message: "Beğenmek için giriş yapmalısınız." });
       return;
     }
 
-    const postPath = window.location.pathname;
-    const postTitle = document.title;
-    const storageKey = `likedPosts_${user.username || user.name}`;
-    const stored = JSON.parse(localStorage.getItem(storageKey)) || [];
-    const alreadyLiked = stored.find(
-      (item) => item.path === postPath || item === postPath
-    );
-
-    let updated;
-    let globalCount = likeCount;
-
-    if (alreadyLiked) {
-      updated = stored.filter((item) =>
-        typeof item === "string" ? item !== postPath : item.path !== postPath
+    try {
+      const res = await axios.post(
+        `https://materialblog-server-production.up.railway.app/api/posts/${postId}/like`,
+        { userId: user._id }
       );
-      setLiked(false);
-      globalCount = Math.max(globalCount - 1, 0);
-    } else {
-      updated = [...stored, { path: postPath, title: postTitle }];
-      setLiked(true);
-      globalCount += 1;
+      setLiked(res.data.liked);
+      setLikeCount(res.data.likeCount);
+    } catch (error) {
+      console.error("Beğeni hatası:", error);
+      setSnackbar({ open: true, message: "Beğeni işlemi başarısız oldu." });
     }
-
-    localStorage.setItem(storageKey, JSON.stringify(updated));
-    setLikeCount(globalCount);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!user) {
-      setSnackbar({ open: true, message: "Kaydetmek için giriş yapın." });
+      setSnackbar({
+        open: true,
+        message: "Kaydetmek için giriş yapmalısınız.",
+      });
       return;
     }
 
-    const postPath = window.location.pathname;
-    const postTitle = document.title;
-    const storageKey = `savedPosts_${user.username || user.name}`;
-    const stored = JSON.parse(localStorage.getItem(storageKey)) || [];
-    const alreadySaved = stored.find(
-      (item) => item.path === postPath || item === postPath
-    );
-
-    let updated;
-    if (alreadySaved) {
-      updated = stored.filter((item) =>
-        typeof item === "string" ? item !== postPath : item.path !== postPath
+    try {
+      const res = await axios.post(
+        `https://materialblog-server-production.up.railway.app/api/posts/${postId}/save`,
+        { userId: user._id }
       );
-      setSaved(false);
-    } else {
-      updated = [...stored, { path: postPath, title: postTitle }];
-      setSaved(true);
+      setSaved(res.data.saved);
+    } catch (error) {
+      console.error("Kaydetme hatası:", error);
+      setSnackbar({ open: true, message: "Kaydetme işlemi başarısız oldu." });
     }
-
-    localStorage.setItem(storageKey, JSON.stringify(updated));
   };
 
   const handleScrollToComments = () => {

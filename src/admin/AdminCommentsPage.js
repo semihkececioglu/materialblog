@@ -99,7 +99,9 @@ const AdminCommentsPage = () => {
               {comments.length > 0 ? (
                 comments.map((comment) => (
                   <TableRow key={comment._id}>
-                    <TableCell>{comment.name}</TableCell>
+                    <TableCell>
+                      {comment.username || comment.name || "Anonim"}
+                    </TableCell>
                     <TableCell>{comment.text}</TableCell>
                     <TableCell>
                       {postTitles[comment.postId] || "Yükleniyor..."}

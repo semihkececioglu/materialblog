@@ -13,6 +13,7 @@ const postSchema = new mongoose.Schema({
     default: Date.now,
   },
   image: String,
+  likes: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
 });
 
 // Her post kaydedilmeden önce categorySlug otomatik üret
