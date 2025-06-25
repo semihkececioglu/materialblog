@@ -74,13 +74,13 @@ router.delete("/:id", async (req, res) => {
 });
 
 // Like/Unlike
-router.post("/:id/like", async (req, res) => {
-  const postId = req.params.id;
-  const userId = req.body.userId;
+router.post("/slug/:slug/like", async (req, res) => {
+  const { slug } = req.params;
+  const { userId } = req.body;
 
   try {
-    const post = await Post.findById(postId);
-    if (!post) return res.status(404).json({ message: "Post not found " });
+    const post = await Post.findOne({ slug });
+    if (!post) return res.status(404).json({ message: "Post not found" });
 
     const alreadyLiked = post.likes.includes(userId);
 
@@ -102,26 +102,48 @@ router.post("/:id/like", async (req, res) => {
 });
 
 // Save/unsave
-router.post("/:id/save", async (req, res) => {
-  const postId = req.params.id;
-  const userId = req.body.userId;
+router.post("/slug/:slug/save", async (req, res) => {
+  const { slug } = req.params;
+  const { userId } = req.body;
 
   try {
-    const user = await User.findById(userId);
-    if (!user) return res.status(404).json({ message: "User not found " });
+    const post = await Post.findOne({ slug });
+    if (!post) return res.status(404).json({ message: "Post not found" });
 
-    const alreadySaved = user.savedPosts.includes(postId);
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    const alreadySaved = user.savedPosts.includes(post._id);
 
     if (alreadySaved) {
-      user.savedPosts.pull(postId);
+      user.savedPosts.pull(post._id);
     } else {
-      user.savedPosts.push(postId);
+      user.savedPosts.push(post._id);
     }
 
     await user.save();
 
     res.status(200).json({
       saved: !alreadySaved,
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Sunucu hatası" });
+  }
+});
+
+router.get("/slug/:slug/like-status", async (req, res) => {
+  const { slug } = req.params;
+  const { userId } = req.query;
+
+  try {
+    const post = await Post.findOne({ slug });
+    if (!post) return res.status(404).json({ message: "Post not found" });
+
+    const liked = post.likes.includes(userId);
+
+    res.status(200).json({
+      liked,
+      likeCount: post.likes.length,
     });
   } catch (error) {
     res.status(500).json({ message: "Sunucu hatası" });

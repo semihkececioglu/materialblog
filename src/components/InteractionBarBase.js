@@ -46,7 +46,7 @@ const InteractionBarBase = ({ visible = true, position = "fixed" }) => {
   } = useInteractionBar();
 
   const { user } = useAuth();
-  const postId = window.location.pathname.split("/").pop(); // /post/:id
+  const slug = window.location.pathname.split("/").pop(); // örn: /post/my-article
 
   const handleLike = async () => {
     if (!user) {
@@ -56,7 +56,7 @@ const InteractionBarBase = ({ visible = true, position = "fixed" }) => {
 
     try {
       const res = await axios.post(
-        `https://materialblog-server-production.up.railway.app/api/posts/${postId}/like`,
+        `https://materialblog-server-production.up.railway.app/api/posts/slug/${slug}/like`,
         { userId: user._id }
       );
       setLiked(res.data.liked);
@@ -78,7 +78,7 @@ const InteractionBarBase = ({ visible = true, position = "fixed" }) => {
 
     try {
       const res = await axios.post(
-        `https://materialblog-server-production.up.railway.app/api/posts/${postId}/save`,
+        `https://materialblog-server-production.up.railway.app/api/posts/slug/${slug}/save`,
         { userId: user._id }
       );
       setSaved(res.data.saved);
