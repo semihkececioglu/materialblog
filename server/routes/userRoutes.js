@@ -2,7 +2,18 @@ const express = require("express");
 const router = express.Router();
 const User = require("../models/User");
 
-// ✅ GET /api/users/:username → Kullanıcı bilgisi getir (şifresiz)
+// ✅ GET /api/users → Tüm kullanıcıları getir
+router.get("/", async (req, res) => {
+  try {
+    const users = await User.find({}, "-password");
+    res.json(users);
+  } catch (error) {
+    console.error("Kullanıcılar alınamadı:", error.message);
+    res.status(500).json({ message: "Sunucu hatası" });
+  }
+});
+
+// ✅ GET /api/users/:username → Tek bir kullanıcıyı getir
 router.get("/:username", async (req, res) => {
   try {
     const user = await User.findOne({ username: req.params.username }).select(
@@ -18,6 +29,7 @@ router.get("/:username", async (req, res) => {
   }
 });
 
+// ✅ PUT /api/users/:username → Kullanıcı profilini güncelle
 router.put("/:username", async (req, res) => {
   const { username } = req.params;
   const { firstName, lastName } = req.body;

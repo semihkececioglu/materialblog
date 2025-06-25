@@ -25,6 +25,7 @@ const navItems = [
   { text: "Kategoriler", path: "/admin/categories" },
   { text: "Etiketler", path: "/admin/tags" },
   { text: "Yorumlar", path: "/admin/comments" },
+  { text: "Kullanıcılar", path: "/admin/users" },
   { text: "Ayarlar", path: "/admin/settings" },
 ];
 
