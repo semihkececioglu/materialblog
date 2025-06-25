@@ -9,9 +9,11 @@ import {
   ListItem,
   ListItemText,
   Divider,
+  CircularProgress,
 } from "@mui/material";
 import { useParams, Link } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
+import axios from "axios";
 
 const stringToColor = (name) => {
   let hash = 0;
@@ -33,13 +35,32 @@ const ProfilePage = () => {
   const { username } = useParams();
   const { user } = useAuth();
   const theme = useTheme();
+  const [userData, setUserData] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [likedPaths, setLikedPaths] = useState([]);
   const [savedPaths, setSavedPaths] = useState([]);
 
+  // Kullanıcı bilgisi çekiliyor
   useEffect(() => {
-    if (user && user.name === username) {
-      const likedKey = `likedPosts_${user.username || user.name}`;
-      const savedKey = `savedPosts_${user.username || user.name}`;
+    axios
+      .get(
+        `https://materialblog-server-production.up.railway.app/api/users/${username}`
+      )
+      .then((res) => {
+        setUserData(res.data);
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error("Kullanıcı verisi alınamadı:", err);
+        setLoading(false);
+      });
+  }, [username]);
+
+  // LocalStorage'dan beğenilen/kaydedilen yazılar
+  useEffect(() => {
+    if (user && user.username === username) {
+      const likedKey = `likedPosts_${user.username}`;
+      const savedKey = `savedPosts_${user.username}`;
 
       const likedList = JSON.parse(localStorage.getItem(likedKey)) || [];
       const likedUrls = Array.isArray(likedList)
@@ -55,13 +76,23 @@ const ProfilePage = () => {
     }
   }, [user, username]);
 
-  if (!user || user.name !== username) {
+  if (loading) {
     return (
-      <Box sx={{ p: 4 }}>
-        <Typography>Bu sayfayı görüntüleme yetkiniz yok.</Typography>
+      <Box sx={{ p: 4, textAlign: "center" }}>
+        <CircularProgress />
       </Box>
     );
   }
+
+  if (!userData) {
+    return (
+      <Box sx={{ p: 4 }}>
+        <Typography>Kullanıcı bulunamadı.</Typography>
+      </Box>
+    );
+  }
+
+  const isOwnProfile = user && user.username === username;
 
   return (
     <Box sx={{ p: 4 }}>
@@ -80,84 +111,90 @@ const ProfilePage = () => {
             sx={{
               width: 64,
               height: 64,
-              bgcolor: stringToColor(user.name),
+              bgcolor: stringToColor(userData.username),
               color: "white",
             }}
           >
-            {user.name.charAt(0).toUpperCase()}
+            {userData.username.charAt(0).toUpperCase()}
           </Avatar>
           <Box>
-            <Typography variant="h6">{user.name}</Typography>
+            <Typography variant="h6">
+              {userData.firstName} {userData.lastName}
+            </Typography>
             <Typography variant="body2" color="text.secondary">
-              Kullanıcı Profili
+              @{userData.username}
             </Typography>
           </Box>
         </Box>
 
-        <Typography variant="subtitle1" gutterBottom>
-          Beğenilen Yazılar
-        </Typography>
+        {isOwnProfile && (
+          <>
+            <Typography variant="subtitle1" gutterBottom>
+              Beğenilen Yazılar
+            </Typography>
 
-        {likedPaths.length === 0 ? (
-          <Typography variant="body2" color="text.secondary">
-            Henüz beğendiğiniz bir yazı yok.
-          </Typography>
-        ) : (
-          <List>
-            {likedPaths.map((path, index) => (
-              <React.Fragment key={index}>
-                <ListItem
-                  button
-                  component={Link}
-                  to={path}
-                  sx={{
-                    borderRadius: 1,
-                    mb: 1,
-                    transition: "all 0.3s ease",
-                    "&:hover": {
-                      bgcolor: theme.palette.action.hover,
-                    },
-                  }}
-                >
-                  <ListItemText primary={formatTitleFromUrl(path)} />
-                </ListItem>
-                <Divider />
-              </React.Fragment>
-            ))}
-          </List>
-        )}
+            {likedPaths.length === 0 ? (
+              <Typography variant="body2" color="text.secondary">
+                Henüz beğendiğiniz bir yazı yok.
+              </Typography>
+            ) : (
+              <List>
+                {likedPaths.map((path, index) => (
+                  <React.Fragment key={index}>
+                    <ListItem
+                      button
+                      component={Link}
+                      to={path}
+                      sx={{
+                        borderRadius: 1,
+                        mb: 1,
+                        transition: "all 0.3s ease",
+                        "&:hover": {
+                          bgcolor: theme.palette.action.hover,
+                        },
+                      }}
+                    >
+                      <ListItemText primary={formatTitleFromUrl(path)} />
+                    </ListItem>
+                    <Divider />
+                  </React.Fragment>
+                ))}
+              </List>
+            )}
 
-        <Typography variant="subtitle1" gutterBottom sx={{ mt: 3 }}>
-          Kaydedilen Yazılar
-        </Typography>
+            <Typography variant="subtitle1" gutterBottom sx={{ mt: 3 }}>
+              Kaydedilen Yazılar
+            </Typography>
 
-        {savedPaths.length === 0 ? (
-          <Typography variant="body2" color="text.secondary">
-            Henüz kaydettiğiniz bir yazı yok.
-          </Typography>
-        ) : (
-          <List>
-            {savedPaths.map((path, index) => (
-              <React.Fragment key={index}>
-                <ListItem
-                  button
-                  component={Link}
-                  to={path}
-                  sx={{
-                    borderRadius: 1,
-                    mb: 1,
-                    transition: "all 0.3s ease",
-                    "&:hover": {
-                      bgcolor: theme.palette.action.hover,
-                    },
-                  }}
-                >
-                  <ListItemText primary={formatTitleFromUrl(path)} />
-                </ListItem>
-                <Divider />
-              </React.Fragment>
-            ))}
-          </List>
+            {savedPaths.length === 0 ? (
+              <Typography variant="body2" color="text.secondary">
+                Henüz kaydettiğiniz bir yazı yok.
+              </Typography>
+            ) : (
+              <List>
+                {savedPaths.map((path, index) => (
+                  <React.Fragment key={index}>
+                    <ListItem
+                      button
+                      component={Link}
+                      to={path}
+                      sx={{
+                        borderRadius: 1,
+                        mb: 1,
+                        transition: "all 0.3s ease",
+                        "&:hover": {
+                          bgcolor: theme.palette.action.hover,
+                        },
+                      }}
+                    >
+                      <ListItemText primary={formatTitleFromUrl(path)} />
+                    </ListItem>
+                    <Divider />
+                  </React.Fragment>
+                ))}
+              </List>
+            )}
+          </>
         )}
       </Paper>
     </Box>

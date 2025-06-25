@@ -9,6 +9,7 @@ const categoryRoutes = require("./routes/categoryRoutes");
 const tagRoutes = require("./routes/tagRoutes");
 const commentRoutes = require("./routes/comments");
 const authRoutes = require("./routes/auth");
+const userRoutes = require("./routes/userRoutes");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -34,6 +35,8 @@ app.use("/api/categories", categoryRoutes);
 app.use("/api/tags", tagRoutes);
 app.use("/api/comments", commentRoutes);
 app.use("/api/auth", authRoutes);
+app.use("/api/users", userRoutes);
+
 // ✅ MongoDB bağlantısı
 mongoose
   .connect(process.env.MONGO_URI, {
