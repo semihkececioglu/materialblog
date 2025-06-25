@@ -20,9 +20,10 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const login = (userData, tokenValue) => {
-    setUser(userData);
+    const fixedUser = { ...userData, _id: userData.id }; // 🔧 burada düzeltme
+    setUser(fixedUser);
     setToken(tokenValue);
-    localStorage.setItem("user", JSON.stringify(userData));
+    localStorage.setItem("user", JSON.stringify(fixedUser));
     localStorage.setItem("token", tokenValue);
   };
 

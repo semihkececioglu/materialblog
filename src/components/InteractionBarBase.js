@@ -46,7 +46,7 @@ const InteractionBarBase = ({ visible = true, position = "fixed" }) => {
   } = useInteractionBar();
 
   const { user } = useAuth();
-  const slug = window.location.pathname.split("/").pop(); // örn: /post/my-article
+  const slug = window.location.pathname.split("/").pop();
 
   const handleLike = async () => {
     if (!user) {
@@ -54,15 +54,25 @@ const InteractionBarBase = ({ visible = true, position = "fixed" }) => {
       return;
     }
 
+    console.log("➡️ [handleLike] Başladı");
+    console.log("Slug:", slug);
+    console.log("User ID:", user._id);
+
     try {
       const res = await axios.post(
         `https://materialblog-server-production.up.railway.app/api/posts/slug/${slug}/like`,
         { userId: user._id }
       );
+
+      console.log("✅ [handleLike] Yanıt:", res.data);
+
       setLiked(res.data.liked);
       setLikeCount(res.data.likeCount);
     } catch (error) {
-      console.error("Beğeni hatası:", error);
+      console.error(
+        "❌ [handleLike] Hata:",
+        error?.response?.data || error.message
+      );
       setSnackbar({ open: true, message: "Beğeni işlemi başarısız oldu." });
     }
   };
@@ -76,14 +86,24 @@ const InteractionBarBase = ({ visible = true, position = "fixed" }) => {
       return;
     }
 
+    console.log("➡️ [handleSave] Başladı");
+    console.log("Slug:", slug);
+    console.log("User ID:", user._id);
+
     try {
       const res = await axios.post(
         `https://materialblog-server-production.up.railway.app/api/posts/slug/${slug}/save`,
         { userId: user._id }
       );
+
+      console.log("✅ [handleSave] Yanıt:", res.data);
+
       setSaved(res.data.saved);
     } catch (error) {
-      console.error("Kaydetme hatası:", error);
+      console.error(
+        "❌ [handleSave] Hata:",
+        error?.response?.data || error.message
+      );
       setSnackbar({ open: true, message: "Kaydetme işlemi başarısız oldu." });
     }
   };

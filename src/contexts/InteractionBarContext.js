@@ -5,23 +5,20 @@ import { useAuth } from "./AuthContext";
 const InteractionBarContext = createContext();
 
 export const InteractionBarProvider = ({ children }) => {
-  const { user } = useAuth();
+  const { user, loading } = useAuth(); // 🔄 loading eklendi
   const [liked, setLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(0);
   const [saved, setSaved] = useState(false);
   const [commentCount, setCommentCount] = useState(0);
 
-  // Slug'ı URL'den al (örn: /post/slug-adi)
   const slug = window.location.pathname.split("/").pop();
 
-  // Beğeni durumu ve toplam beğeni sayısını al
+  // ✅ Beğeni durumu
   const fetchLikeStatus = async () => {
     try {
       const res = await axios.get(
         `https://materialblog-server-production.up.railway.app/api/posts/slug/${slug}/like-status`,
-        {
-          params: { userId: user?._id },
-        }
+        { params: { userId: user?._id } }
       );
       setLiked(res.data.liked);
       setLikeCount(res.data.likeCount);
@@ -30,25 +27,47 @@ export const InteractionBarProvider = ({ children }) => {
     }
   };
 
-  // Kaydetme durumu al
+  // ✅ Kaydetme durumu
   const fetchSaveStatus = async () => {
     try {
-      const res = await axios.get(
+      // 1. Kullanıcı verisini al
+      const userRes = await axios.get(
         `https://materialblog-server-production.up.railway.app/api/users/${user?._id}`
       );
-      const savedList = res.data.savedPosts || [];
-      setSaved(savedList.includes(res.data._id)); // tüm postId'ler ObjectId formatında olmalı
+      const savedPostIds =
+        userRes.data.savedPosts?.map((id) => id.toString()) || [];
+
+      // 2. Slug'a göre post'u al
+      const postRes = await axios.get(
+        `https://materialblog-server-production.up.railway.app/api/posts`
+      );
+      const currentPost = postRes.data.find((p) => p.slug === slug);
+
+      // 3. Slug eşleştiyse, o post'un _id'si savedPostIds içinde mi kontrol et
+      if (currentPost) {
+        const isSaved = savedPostIds.includes(currentPost._id.toString());
+        setSaved(isSaved);
+      } else {
+        console.warn("Slug eşleşen yazı bulunamadı:", slug);
+      }
     } catch (err) {
       console.error("Kaydetme durumu alınamadı:", err);
     }
   };
 
-  // Yorum sayısını hesapla (nested yorumlar dahil)
+  // ✅ Yorum sayısı
   const fetchCommentCount = async () => {
     try {
-      const res = await axios.get(
-        `https://materialblog-server-production.up.railway.app/api/comments?slug=${slug}`
+      const postRes = await axios.get(
+        `https://materialblog-server-production.up.railway.app/api/posts`
       );
+      const currentPost = postRes.data.find((p) => p.slug === slug);
+      if (!currentPost) return;
+
+      const res = await axios.get(
+        `https://materialblog-server-production.up.railway.app/api/comments?postId=${currentPost._id}`
+      );
+
       const calculateTotalComments = (comments) => {
         let total = 0;
         const countRecursive = (arr) => {
@@ -62,6 +81,7 @@ export const InteractionBarProvider = ({ children }) => {
         countRecursive(res.data || []);
         return total;
       };
+
       setCommentCount(calculateTotalComments(res.data));
     } catch (err) {
       console.error("Yorum sayısı alınamadı:", err);
@@ -69,12 +89,12 @@ export const InteractionBarProvider = ({ children }) => {
   };
 
   useEffect(() => {
-    if (slug) {
-      fetchLikeStatus();
-      fetchCommentCount();
-      if (user) fetchSaveStatus();
-    }
-  }, [slug, user]);
+    if (!slug || loading) return;
+
+    fetchLikeStatus();
+    fetchCommentCount();
+    if (user) fetchSaveStatus();
+  }, [slug, user, loading]);
 
   return (
     <InteractionBarContext.Provider
