@@ -13,8 +13,11 @@ import {
   IconButton,
   useTheme,
   useMediaQuery,
+  Button,
+  Tooltip,
 } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
+import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import { Outlet, Link } from "react-router-dom";
 
 const drawerWidth = 240;
@@ -72,14 +75,13 @@ const AdminLayout = () => {
     <Box sx={{ display: "flex", minHeight: "100vh" }}>
       <CssBaseline />
 
-      {/* AppBar sadece mobilde görünür: */}
       <AppBar
         position="fixed"
         sx={{
           width: { md: `calc(100% - ${drawerWidth}px)` },
           ml: { md: `${drawerWidth}px` },
           bgcolor: theme.palette.mode === "dark" ? "#1f1f1f" : "#1976d2",
-          color: "#fff", //
+          color: "#fff",
           boxShadow: 3,
           borderBottom: `1px solid ${theme.palette.divider}`,
           zIndex: theme.zIndex.drawer + 1,
@@ -97,18 +99,31 @@ const AdminLayout = () => {
               <MenuIcon />
             </IconButton>
           )}
+
           <Typography
             variant="h6"
             noWrap
             component="div"
-            sx={{ fontWeight: 600 }}
+            sx={{ fontWeight: 600, flexGrow: 1 }}
           >
             Material Blog
           </Typography>
+
+          <Tooltip title="Blog Ana Sayfasına Git">
+            <Button
+              color="inherit"
+              href="/"
+              target="_blank"
+              rel="noopener noreferrer"
+              startIcon={<OpenInNewIcon />}
+              sx={{ textTransform: "none" }}
+            >
+              Bloga Dön
+            </Button>
+          </Tooltip>
         </Toolbar>
       </AppBar>
 
-      {/* Sidebar Drawer */}
       <Box
         component="nav"
         sx={{ width: { md: drawerWidth }, flexShrink: { md: 0 } }}
@@ -142,18 +157,18 @@ const AdminLayout = () => {
         </Drawer>
       </Box>
 
-      {/* İçerik */}
       <Box
         component="main"
         sx={{
           flexGrow: 1,
           width: { md: `calc(100% - ${drawerWidth}px)` },
           bgcolor: "background.default",
-          pt: { xs: 7, md: 3 },
           px: { xs: 2, md: 3 },
           pb: 5,
+          pt: { xs: 4, md: 6 },
         }}
       >
+        <Toolbar />
         <Outlet />
       </Box>
     </Box>

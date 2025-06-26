@@ -6,9 +6,7 @@ import Layout from "./components/Layout";
 import Home from "./pages/Home";
 import PostDetail from "./pages/PostDetail";
 import CategoryPage from "./pages/CategoryPage";
-import posts from "./data";
 import TagPosts from "./pages/TagPosts";
-import { AuthProvider } from "./contexts/AuthContext";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import SearchResults from "./pages/SearchResults";
@@ -24,6 +22,7 @@ import AdminSettingsPage from "./admin/AdminSettingsPage";
 import PostEditorPage from "./admin/PostEditorPage";
 import AdminRoute from "./auth/AdminRoute";
 import AdminUsersPage from "./admin/AdminUsersPage";
+import { AuthProvider } from "./contexts/AuthContext";
 
 function App() {
   const [mode, setMode] = useState("light");
@@ -31,27 +30,34 @@ function App() {
 
   const theme = useMemo(() => getTheme(mode), [mode]);
 
-  const filteredPosts = posts.filter((post) =>
-    post.title.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <AuthProvider>
         <Router>
-          <Layout
-            toggleTheme={() => setMode(mode === "light" ? "dark" : "light")}
-            searchTerm={searchTerm}
-            setSearchTerm={setSearchTerm}
-          >
-            <Routes>
-              <Route path="/" element={<Home posts={filteredPosts} />} />
+          <Routes>
+            {/* Blog Layout */}
+            <Route
+              element={
+                <Layout
+                  toggleTheme={() =>
+                    setMode(mode === "light" ? "dark" : "light")
+                  }
+                  searchTerm={searchTerm}
+                  setSearchTerm={setSearchTerm}
+                />
+              }
+            >
+              <Route path="/" element={<Home />} />
               <Route path="/post/:slug" element={<PostDetail />} />
               <Route path="/category/:kategoriAdi" element={<CategoryPage />} />
+              <Route
+                path="/category/:kategoriAdi/page/:pageNumber"
+                element={<CategoryPage />}
+              />
               <Route path="/tag/:tag" element={<TagPosts />} />
+              <Route path="/tag/:tag/page/:pageNumber" element={<TagPosts />} />
               <Route path="/register" element={<Register />} />
-
               <Route path="/login" element={<Login />} />
               <Route path="/search" element={<SearchResults />} />
               <Route path="/profile/:username" element={<ProfilePage />} />
@@ -59,27 +65,29 @@ function App() {
                 path="/profile/:username/edit"
                 element={<EditProfilePage />}
               />
-              {/* Admin paneli rotaları */}
-              <Route
-                path="/admin"
-                element={
-                  <AdminRoute>
-                    <AdminLayout />
-                  </AdminRoute>
-                }
-              >
-                <Route index element={<DashboardPage />} />
-                <Route path="posts" element={<PostsPage />} />
-                <Route path="categories" element={<AdminCategoriesPage />} />
-                <Route path="tags" element={<AdminTagsPage />} />
-                <Route path="comments" element={<AdminCommentsPage />} />
-                <Route path="/admin/users" element={<AdminUsersPage />} />
-                <Route path="settings" element={<AdminSettingsPage />} />
-                <Route path="editor" element={<PostEditorPage />} />
-                <Route path="posts/edit/:id" element={<PostEditorPage />} />
-              </Route>
-            </Routes>
-          </Layout>
+              <Route path="/page/:pageNumber" element={<Home />} />
+            </Route>
+
+            {/* Admin Layout */}
+            <Route
+              path="/admin/*"
+              element={
+                <AdminRoute>
+                  <AdminLayout />
+                </AdminRoute>
+              }
+            >
+              <Route index element={<DashboardPage />} />
+              <Route path="posts" element={<PostsPage />} />
+              <Route path="categories" element={<AdminCategoriesPage />} />
+              <Route path="tags" element={<AdminTagsPage />} />
+              <Route path="comments" element={<AdminCommentsPage />} />
+              <Route path="users" element={<AdminUsersPage />} />
+              <Route path="settings" element={<AdminSettingsPage />} />
+              <Route path="editor" element={<PostEditorPage />} />
+              <Route path="posts/edit/:id" element={<PostEditorPage />} />
+            </Route>
+          </Routes>
         </Router>
       </AuthProvider>
     </ThemeProvider>

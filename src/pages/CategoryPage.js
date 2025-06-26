@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import PostCard from "../components/PostCard";
 import {
@@ -8,40 +8,50 @@ import {
   Box,
   useTheme,
   Pagination,
+  CircularProgress,
 } from "@mui/material";
 
 const POSTS_PER_PAGE = 6;
 
 function CategoryPage() {
-  const { kategoriAdi } = useParams(); // bu slug, örn: teknoloji
+  const { kategoriAdi, pageNumber } = useParams();
+  const navigate = useNavigate();
   const theme = useTheme();
-  const [page, setPage] = useState(1);
-  const [filteredPosts, setFilteredPosts] = useState([]);
+
+  const page = parseInt(pageNumber) || 1;
+  const [posts, setPosts] = useState([]);
+  const [totalPages, setTotalPages] = useState(1);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchPostsByCategory = async () => {
+      setLoading(true);
       try {
         const res = await axios.get(
-          `https://materialblog-server-production.up.railway.app/api/posts?category=${kategoriAdi}`
+          `https://materialblog-server-production.up.railway.app/api/posts?category=${kategoriAdi}&page=${page}&limit=${POSTS_PER_PAGE}`
         );
-        setFilteredPosts(res.data);
+        setPosts(res.data.posts || []);
+        setTotalPages(res.data.totalPages || 1);
       } catch (err) {
         console.error("Kategoriye göre postlar alınamadı:", err);
+      } finally {
+        setLoading(false);
       }
     };
 
     fetchPostsByCategory();
-  }, [kategoriAdi]);
+  }, [kategoriAdi, page]);
 
-  const pageCount = Math.ceil(filteredPosts.length / POSTS_PER_PAGE);
-  const paginatedPosts = filteredPosts.slice(
-    (page - 1) * POSTS_PER_PAGE,
-    page * POSTS_PER_PAGE
-  );
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [page]);
 
   const handlePageChange = (event, value) => {
-    setPage(value);
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    const pageUrl =
+      value === 1
+        ? `/category/${kategoriAdi}`
+        : `/category/${kategoriAdi}/page/${value}`;
+    navigate(pageUrl);
   };
 
   return (
@@ -53,10 +63,14 @@ function CategoryPage() {
         Kategorisi
       </Typography>
 
-      {filteredPosts.length > 0 ? (
+      {loading ? (
+        <Box sx={{ display: "flex", justifyContent: "center", mt: 8 }}>
+          <CircularProgress />
+        </Box>
+      ) : (
         <>
           <Box sx={{ display: "flex", flexWrap: "wrap", gap: 3, mt: 3 }}>
-            {paginatedPosts.map((post) => (
+            {posts.map((post) => (
               <Box
                 key={post._id}
                 sx={{
@@ -69,10 +83,10 @@ function CategoryPage() {
             ))}
           </Box>
 
-          {pageCount > 1 && (
+          {totalPages > 1 && (
             <Box sx={{ display: "flex", justifyContent: "center", mt: 5 }}>
               <Pagination
-                count={pageCount}
+                count={totalPages}
                 page={page}
                 onChange={handlePageChange}
                 color="primary"
@@ -80,10 +94,6 @@ function CategoryPage() {
             </Box>
           )}
         </>
-      ) : (
-        <Typography variant="body1" sx={{ mt: 2 }}>
-          Bu kategoriye ait yazı bulunamadı.
-        </Typography>
       )}
     </Container>
   );

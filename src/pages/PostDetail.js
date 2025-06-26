@@ -7,6 +7,7 @@ import {
   Chip,
   useTheme,
   Paper,
+  CircularProgress,
 } from "@mui/material";
 import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
 import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
@@ -29,19 +30,34 @@ function PostDetail() {
   const [showEmbeddedBar, setShowEmbeddedBar] = useState(false);
   const [allPosts, setAllPosts] = useState([]);
   const [post, setPost] = useState(null);
+  const [loading, setLoading] = useState(true);
 
+  // Yazı verisini sadece slug ile al
+  useEffect(() => {
+    setLoading(true);
+    axios
+      .get(
+        `https://materialblog-server-production.up.railway.app/api/posts/slug/${slug}`
+      )
+      .then((res) => setPost(res.data))
+      .catch((err) => {
+        console.error("Yazı bulunamadı:", err);
+        setPost(null);
+      })
+      .finally(() => setLoading(false));
+  }, [slug]);
+
+  // Benzer yazılar için tüm postları bir kez al
   useEffect(() => {
     axios
-      .get("https://materialblog-server-production.up.railway.app/api/posts")
+      .get(
+        "https://materialblog-server-production.up.railway.app/api/posts?page=1&limit=1000"
+      )
       .then((res) => {
-        setAllPosts(res.data);
-        const found = res.data.find((p) => slugify(p.title) === slug);
-        setPost(found);
+        setAllPosts(res.data.posts || []);
       })
-      .catch((err) => {
-        console.error("Yazı verisi alınamadı:", err);
-      });
-  }, [slug]);
+      .catch((err) => console.error("Yazı listesi alınamadı:", err));
+  }, []);
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -66,7 +82,44 @@ function PostDetail() {
     };
   }, []);
 
-  if (!post) return <div>Yazı bulunamadı!</div>;
+  if (loading) {
+    return (
+      <Container sx={{ mt: 10, display: "flex", justifyContent: "center" }}>
+        <CircularProgress />
+      </Container>
+    );
+  }
+
+  if (!post) {
+    return (
+      <Container sx={{ mt: 10 }}>
+        <Paper
+          elevation={3}
+          sx={{
+            p: 4,
+            textAlign: "center",
+            borderRadius: 2,
+            bgcolor:
+              theme.palette.mode === "dark"
+                ? "grey.900"
+                : theme.palette.grey[50],
+            border: `1px solid ${
+              theme.palette.mode === "dark"
+                ? theme.palette.grey[800]
+                : theme.palette.grey[300]
+            }`,
+          }}
+        >
+          <Typography variant="h5" gutterBottom>
+            Yazı bulunamadı!
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            Aradığınız yazı yayından kaldırılmış veya bağlantı hatalı olabilir.
+          </Typography>
+        </Paper>
+      </Container>
+    );
+  }
 
   const formattedDate = new Date(post.date).toLocaleDateString("tr-TR", {
     year: "numeric",
@@ -75,6 +128,7 @@ function PostDetail() {
   });
 
   const readingTime = Math.ceil(post.content.split(" ").length / 150);
+
   const author = {
     name: "Semih Rahman Keçecioğlu",
     avatar:
@@ -133,7 +187,6 @@ function PostDetail() {
                 readingTime={readingTime}
               />
 
-              {/* ✅ Kapak görseli */}
               {post.image && (
                 <Box
                   sx={{
@@ -199,7 +252,6 @@ function PostDetail() {
               )}
             </Paper>
 
-            {/* Önceki / Sonraki Yazılar */}
             <Box
               sx={{
                 mt: 6,
@@ -220,7 +272,6 @@ function PostDetail() {
                     p: 2,
                     borderRadius: 2,
                     flex: "1 1 45%",
-                    transition: "0.2s",
                     display: "flex",
                     alignItems: "center",
                     gap: 1,
@@ -245,12 +296,10 @@ function PostDetail() {
                     p: 2,
                     borderRadius: 2,
                     flex: "1 1 45%",
-                    textAlign: "right",
                     display: "flex",
-                    alignItems: "center",
                     justifyContent: "flex-end",
+                    alignItems: "center",
                     gap: 1,
-                    transition: "0.2s",
                     "&:hover": {
                       bgcolor: "primary.light",
                       color: "white",
@@ -263,7 +312,6 @@ function PostDetail() {
               )}
             </Box>
 
-            {/* Benzer yazılar */}
             {relatedPosts.length > 0 && (
               <Box id="recommendations" sx={{ mt: 6 }}>
                 <Typography variant="h6" gutterBottom>
@@ -285,7 +333,6 @@ function PostDetail() {
               </Box>
             )}
 
-            {/* Yorumlar */}
             <Box sx={{ mt: 6 }} id="comment-form">
               <CommentSection postId={post._id} />
             </Box>

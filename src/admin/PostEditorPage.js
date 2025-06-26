@@ -12,10 +12,11 @@ import {
   Paper,
   Snackbar,
   Alert,
+  Autocomplete,
 } from "@mui/material";
 import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
-import { BASE_URL } from "../config"; // backend API için
+import { BASE_URL } from "../config";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 import Quill from "quill";
@@ -94,9 +95,11 @@ const PostEditorPage = () => {
     image: "",
     summary: "",
     content: "",
-    tags: "",
+    tags: [], // string[] yerine array olarak
   });
+
   const [categories, setCategories] = useState([]);
+  const [allTags, setAllTags] = useState([]); // tüm etiketleri tutar
   const [loading, setLoading] = useState(false);
   const [snackbar, setSnackbar] = useState({
     open: false,
@@ -106,6 +109,7 @@ const PostEditorPage = () => {
   const navigate = useNavigate();
   const { id } = useParams();
 
+  // Kategoriler
   useEffect(() => {
     axios
       .get(`${BASE_URL}/api/categories`)
@@ -113,6 +117,15 @@ const PostEditorPage = () => {
       .catch((err) => console.error("Kategori alınamadı:", err));
   }, []);
 
+  // Tüm etiketler
+  useEffect(() => {
+    axios
+      .get(`${BASE_URL}/api/tags`)
+      .then((res) => setAllTags(res.data)) // tüm tag objeleri
+      .catch((err) => console.error("Etiketler alınamadı:", err));
+  }, []);
+
+  // Yazı verisi
   useEffect(() => {
     if (id) {
       setLoading(true);
@@ -126,7 +139,7 @@ const PostEditorPage = () => {
             image: post.image || "",
             summary: post.summary || "",
             content: post.content || "",
-            tags: (post.tags || []).join(", "),
+            tags: post.tags || [],
           });
         })
         .catch((err) => console.error("Yazı çekilemedi:", err))
@@ -151,10 +164,26 @@ const PostEditorPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // Yeni etiketleri backend'e ekle
+    for (const tag of form.tags) {
+      const exists = allTags.some(
+        (t) => t.name.toLowerCase() === tag.toLowerCase()
+      );
+      if (!exists) {
+        try {
+          await axios.post(`${BASE_URL}/api/tags`, { name: tag });
+        } catch (err) {
+          console.error("Yeni etiket eklenemedi:", err);
+        }
+      }
+    }
+
     const payload = {
       ...form,
-      tags: form.tags.split(",").map((t) => t.trim()),
+      tags: form.tags.map((t) => t.trim()),
     };
+
     try {
       if (id) {
         await axios.put(`${BASE_URL}/api/posts/${id}`, payload);
@@ -198,6 +227,7 @@ const PostEditorPage = () => {
             onChange={handleChange}
             sx={{ mb: 2 }}
           />
+
           <FormControl fullWidth sx={{ mb: 2 }}>
             <InputLabel>Kategori</InputLabel>
             <Select
@@ -262,13 +292,16 @@ const PostEditorPage = () => {
             theme="snow"
           />
 
-          <TextField
-            fullWidth
-            label="Etiketler (virgülle)"
-            name="tags"
+          {/* ✅ Etiket Autocomplete alanı */}
+          <Autocomplete
+            multiple
+            freeSolo
+            options={allTags.map((tag) => tag.name)}
             value={form.tags}
-            onChange={handleChange}
-            sx={{ my: 3 }}
+            onChange={(e, newValue) => setForm({ ...form, tags: newValue })}
+            renderInput={(params) => (
+              <TextField {...params} label="Etiketler" sx={{ my: 3 }} />
+            )}
           />
 
           <Button variant="contained" type="submit">

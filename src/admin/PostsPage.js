@@ -55,9 +55,9 @@ const PostsPage = () => {
   const fetchPosts = async () => {
     try {
       const res = await axios.get(
-        "https://materialblog-server-production.up.railway.app/api/posts"
+        "https://materialblog-server-production.up.railway.app/api/posts?limit=1000"
       );
-      setAllPosts(res.data);
+      setAllPosts(res.data.posts || []);
     } catch (err) {
       console.error("Yazılar çekilemedi:", err);
       showSnackbar("Yazılar alınamadı", "error");

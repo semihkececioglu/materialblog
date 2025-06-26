@@ -5,35 +5,79 @@ import {
   Paper,
   TextField,
   Button,
-  FormControlLabel,
-  Switch,
-  Divider,
   Snackbar,
   Alert,
+  CircularProgress,
 } from "@mui/material";
+import axios from "axios";
 
 const AdminSettingsPage = () => {
   const [siteTitle, setSiteTitle] = useState("");
   const [siteDescription, setSiteDescription] = useState("");
-  const [darkMode, setDarkMode] = useState(false);
-  const [snackbar, setSnackbar] = useState({ open: false, message: "" });
+  const [darkMode, setDarkMode] = useState(false); // Eğer backend destekliyorsa, backend'den çek
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: "",
+    severity: "success",
+  });
 
   useEffect(() => {
-    const settings = JSON.parse(localStorage.getItem("siteSettings")) || {};
-    setSiteTitle(settings.title || "");
-    setSiteDescription(settings.description || "");
-    setDarkMode(settings.darkMode || false);
+    // Backend'den ayarları çek
+    axios
+      .get("https://materialblog-server-production.up.railway.app/api/settings")
+      .then((res) => {
+        const settings = res.data || {};
+        setSiteTitle(settings.siteTitle || "");
+        setSiteDescription(settings.siteDescription || "");
+        setDarkMode(settings.darkMode || false);
+        setLoading(false);
+      })
+      .catch(() => {
+        // Hata olursa localStorage'den oku (fallback)
+        const settings = JSON.parse(localStorage.getItem("siteSettings")) || {};
+        setSiteTitle(settings.title || "");
+        setSiteDescription(settings.description || "");
+        setDarkMode(settings.darkMode || false);
+        setLoading(false);
+      });
   }, []);
 
   const handleSave = () => {
+    setSaving(true);
     const newSettings = {
-      title: siteTitle,
-      description: siteDescription,
+      siteTitle,
+      siteDescription,
       darkMode,
     };
-    localStorage.setItem("siteSettings", JSON.stringify(newSettings));
-    setSnackbar({ open: true, message: "Ayarlar kaydedildi" });
+    // Backend'e kaydet
+    axios
+      .put(
+        "https://materialblog-server-production.up.railway.app/api/settings",
+        newSettings
+      )
+      .then(() => {
+        setSnackbar({
+          open: true,
+          message: "Ayarlar kaydedildi",
+          severity: "success",
+        });
+        setSaving(false);
+        // Ayrıca localStorage'i güncelle (isteğe bağlı)
+        localStorage.setItem("siteSettings", JSON.stringify(newSettings));
+      })
+      .catch(() => {
+        setSnackbar({
+          open: true,
+          message: "Kaydetme hatası",
+          severity: "error",
+        });
+        setSaving(false);
+      });
   };
+
+  if (loading) return <CircularProgress />;
 
   return (
     <Box>
@@ -60,30 +104,18 @@ const AdminSettingsPage = () => {
           sx={{ mb: 2 }}
         />
 
-        <FormControlLabel
-          control={
-            <Switch
-              checked={darkMode}
-              onChange={() => setDarkMode((prev) => !prev)}
-            />
-          }
-          label="Karanlık Mod Aktif"
-        />
-
-        <Divider sx={{ my: 2 }} />
-
-        <Button variant="contained" onClick={handleSave}>
-          Kaydet
+        <Button variant="contained" onClick={handleSave} disabled={saving}>
+          {saving ? "Kaydediliyor..." : "Kaydet"}
         </Button>
       </Paper>
 
       <Snackbar
         open={snackbar.open}
         autoHideDuration={3000}
-        onClose={() => setSnackbar({ open: false, message: "" })}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
         anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
       >
-        <Alert severity="success" variant="filled">
+        <Alert severity={snackbar.severity} variant="filled">
           {snackbar.message}
         </Alert>
       </Snackbar>

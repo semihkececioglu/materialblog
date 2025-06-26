@@ -12,11 +12,12 @@ const DashboardPage = () => {
   const theme = useTheme();
 
   useEffect(() => {
-    // 🟢 Yazı Sayısı (Backend)
     axios
-      .get("https://materialblog-server-production.up.railway.app/api/posts")
+      .get(
+        "https://materialblog-server-production.up.railway.app/api/posts?limit=1000"
+      )
       .then((res) => {
-        setPostCount(res.data.length);
+        setPostCount(res.data.posts?.length || 0);
       })
       .catch((err) => {
         console.error("Yazılar alınamadı:", err);
@@ -38,7 +39,7 @@ const DashboardPage = () => {
     axios
       .get("https://materialblog-server-production.up.railway.app/api/comments")
       .then((res) => {
-        setCommentCount(res.data.length); // tüm yorum ve yanıtlar düz liste
+        setCommentCount(res.data.length);
       })
       .catch((err) => {
         console.error("Yorumlar alınamadı:", err);
@@ -69,10 +70,6 @@ const DashboardPage = () => {
 
   return (
     <Box>
-      <Typography variant="h5" fontWeight="bold" gutterBottom>
-        Yönetim Paneline Hoşgeldiniz
-      </Typography>
-
       <Grid container spacing={2} mt={1}>
         <Grid item xs={12} sm={6} md={4}>
           <StatCard

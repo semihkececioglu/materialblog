@@ -2,9 +2,9 @@ import React from "react";
 import Header from "./Header";
 import Footer from "./Footer";
 import ScrollToTopButton from "./ScrollTopButton";
-import { useLocation } from "react-router-dom";
+import { useLocation, Outlet } from "react-router-dom";
 
-function Layout({ children, toggleTheme, searchTerm, setSearchTerm }) {
+function Layout({ toggleTheme, searchTerm, setSearchTerm }) {
   const location = useLocation();
   const isAdmin = location.pathname.startsWith("/admin");
 
@@ -15,9 +15,10 @@ function Layout({ children, toggleTheme, searchTerm, setSearchTerm }) {
         searchTerm={searchTerm}
         setSearchTerm={setSearchTerm}
       />
-      <main style={{ minHeight: "80vh" }}>{children}</main>
+      <main style={{ minHeight: "80vh" }}>
+        <Outlet />
+      </main>
       <ScrollToTopButton />
-
       {!isAdmin && <Footer />}
     </>
   );

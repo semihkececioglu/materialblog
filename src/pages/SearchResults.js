@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { useLocation } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import {
   Box,
   Typography,
@@ -7,40 +7,48 @@ import {
   Pagination,
   Grow,
   Container,
+  CircularProgress,
 } from "@mui/material";
-import initialPosts from "../data";
+import axios from "axios";
 import PostCard from "../components/PostCard";
 import Sidebar from "../components/sidebar/Sidebar";
-
-function useQuery() {
-  return new URLSearchParams(useLocation().search);
-}
 
 const POSTS_PER_PAGE = 6;
 
 const SearchResults = () => {
-  const query = useQuery();
-  const searchTerm = query.get("q")?.toLowerCase() || "";
+  const [searchParams, setSearchParams] = useSearchParams();
+  const searchTerm = searchParams.get("q")?.toLowerCase() || "";
+  const page = parseInt(searchParams.get("page")) || 1;
+
+  const [posts, setPosts] = useState([]);
+  const [totalPages, setTotalPages] = useState(1);
+  const [loading, setLoading] = useState(true);
+
   const theme = useTheme();
-  const [page, setPage] = useState(1);
 
-  const stored = JSON.parse(localStorage.getItem("posts")) || [];
-  const allPosts = [
-    ...stored,
-    ...initialPosts.filter((p) => !stored.some((s) => s.id === p.id)),
-  ];
+  useEffect(() => {
+    const fetchPosts = async () => {
+      try {
+        setLoading(true);
+        const res = await axios.get(
+          `https://materialblog-server-production.up.railway.app/api/posts?search=${searchTerm}&page=${page}&limit=${POSTS_PER_PAGE}`
+        );
+        setPosts(res.data.posts || []);
+        setTotalPages(res.data.totalPages || 1);
+      } catch (error) {
+        console.error("Arama sonuçları alınamadı:", error);
+        setPosts([]);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const filteredPosts = allPosts.filter(
-    (post) =>
-      post.title.toLowerCase().includes(searchTerm) ||
-      post.content.toLowerCase().includes(searchTerm)
-  );
+    fetchPosts();
+  }, [searchTerm, page]);
 
-  const totalPages = Math.ceil(filteredPosts.length / POSTS_PER_PAGE);
-  const displayedPosts = filteredPosts.slice(
-    (page - 1) * POSTS_PER_PAGE,
-    page * POSTS_PER_PAGE
-  );
+  const handlePageChange = (event, value) => {
+    setSearchParams({ q: searchTerm, page: value });
+  };
 
   return (
     <Container maxWidth="lg" sx={{ mt: 4 }}>
@@ -56,7 +64,11 @@ const SearchResults = () => {
             "{searchTerm}" için sonuçlar
           </Typography>
 
-          {filteredPosts.length === 0 ? (
+          {loading ? (
+            <Box sx={{ mt: 6, textAlign: "center" }}>
+              <CircularProgress />
+            </Box>
+          ) : posts.length === 0 ? (
             <Grow in>
               <Box
                 sx={{
@@ -79,8 +91,8 @@ const SearchResults = () => {
           ) : (
             <Box>
               <Box sx={{ display: "flex", flexWrap: "wrap", gap: 3 }}>
-                {displayedPosts.map((post) => (
-                  <Grow in key={post.id} timeout={500}>
+                {posts.map((post) => (
+                  <Grow in key={post._id} timeout={500}>
                     <Box
                       sx={{
                         flex: "1 1 30%",
@@ -98,7 +110,7 @@ const SearchResults = () => {
                   <Pagination
                     count={totalPages}
                     page={page}
-                    onChange={(e, value) => setPage(value)}
+                    onChange={handlePageChange}
                     color="primary"
                   />
                 </Box>

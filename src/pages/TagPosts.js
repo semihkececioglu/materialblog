@@ -1,16 +1,19 @@
-import React, { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import {
-  Box,
   Container,
   Typography,
+  Box,
+  CircularProgress,
+  Pagination,
   Chip,
   useTheme,
-  Pagination,
+  Paper,
 } from "@mui/material";
-import PostCard from "../components/PostCard";
 import axios from "axios";
-import slugify from "slugify";
+import PostCard from "../components/PostCard";
+
+const POSTS_PER_PAGE = 6;
 
 const tagColors = {
   react: "#61dafb",
@@ -22,49 +25,43 @@ const tagColors = {
   seo: "#ff6d00",
 };
 
-const POSTS_PER_PAGE = 6;
-
-const TagPosts = () => {
-  const { tag } = useParams(); // Örn: "full-stack"
+function TagPosts() {
+  const { tag, pageNumber } = useParams();
+  const navigate = useNavigate();
   const theme = useTheme();
-  const [page, setPage] = useState(1);
-  const [filteredPosts, setFilteredPosts] = useState([]);
+
+  const page = parseInt(pageNumber) || 1;
+
+  const [posts, setPosts] = useState([]);
+  const [totalPages, setTotalPages] = useState(1);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchPostsByTag = async () => {
+    const fetchTaggedPosts = async () => {
+      setLoading(true);
       try {
         const res = await axios.get(
-          "https://materialblog-server-production.up.railway.app/api/posts"
+          `https://materialblog-server-production.up.railway.app/api/posts?tag=${tag}&page=${page}&limit=${POSTS_PER_PAGE}`
         );
-        const posts = res.data;
-
-        const tagged = posts.filter(
-          (post) =>
-            Array.isArray(post.tags) &&
-            post.tags
-              .map((t) => slugify(t, { lower: true, strict: true }))
-              .includes(tag)
-        );
-
-        setFilteredPosts(tagged);
-        setPage(1);
+        setPosts(res.data.posts || []);
+        setTotalPages(res.data.totalPages || 1);
       } catch (err) {
-        console.error("Etikete göre postlar alınamadı:", err);
+        console.error("Etikete göre yazılar alınamadı:", err);
+      } finally {
+        setLoading(false);
       }
     };
 
-    fetchPostsByTag();
-  }, [tag]);
+    fetchTaggedPosts();
+  }, [tag, page]);
 
-  const pageCount = Math.ceil(filteredPosts.length / POSTS_PER_PAGE);
-  const paginatedPosts = filteredPosts.slice(
-    (page - 1) * POSTS_PER_PAGE,
-    page * POSTS_PER_PAGE
-  );
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [page]);
 
   const handlePageChange = (event, value) => {
-    setPage(value);
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    const url = value === 1 ? `/tag/${tag}` : `/tag/${tag}/page/${value}`;
+    navigate(url);
   };
 
   const tagLabel = tag
@@ -84,14 +81,40 @@ const TagPosts = () => {
         />
       </Typography>
 
-      {filteredPosts.length === 0 ? (
-        <Typography variant="body1">
-          Bu etikete ait henüz bir yazı yok.
-        </Typography>
+      {loading ? (
+        <Box sx={{ display: "flex", justifyContent: "center", mt: 8 }}>
+          <CircularProgress />
+        </Box>
+      ) : posts.length === 0 ? (
+        <Paper
+          elevation={3}
+          sx={{
+            mt: 6,
+            p: 4,
+            textAlign: "center",
+            borderRadius: 2,
+            bgcolor:
+              theme.palette.mode === "dark"
+                ? "grey.900"
+                : theme.palette.grey[50],
+            border: `1px solid ${
+              theme.palette.mode === "dark"
+                ? theme.palette.grey[800]
+                : theme.palette.grey[300]
+            }`,
+          }}
+        >
+          <Typography variant="h6" gutterBottom>
+            Bu etikete ait yazı bulunamadı!
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            Aradığınız etiket henüz herhangi bir yazıya eklenmemiş olabilir.
+          </Typography>
+        </Paper>
       ) : (
         <>
           <Box sx={{ display: "flex", flexWrap: "wrap", gap: 3, mt: 3 }}>
-            {paginatedPosts.map((post) => (
+            {posts.map((post) => (
               <Box
                 key={post._id}
                 sx={{
@@ -104,10 +127,10 @@ const TagPosts = () => {
             ))}
           </Box>
 
-          {pageCount > 1 && (
+          {totalPages > 1 && (
             <Box sx={{ display: "flex", justifyContent: "center", mt: 5 }}>
               <Pagination
-                count={pageCount}
+                count={totalPages}
                 page={page}
                 onChange={handlePageChange}
                 color="primary"
@@ -118,6 +141,6 @@ const TagPosts = () => {
       )}
     </Container>
   );
-};
+}
 
 export default TagPosts;

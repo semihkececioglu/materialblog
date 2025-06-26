@@ -61,4 +61,27 @@ router.put("/:username", async (req, res) => {
   }
 });
 
+// Users role update
+router.put("/:id/role", async (req, res) => {
+  const { id } = req.params;
+  const { role } = req.body;
+
+  if (!["admin", "user"].includes(role)) {
+    return res.status(400).json({ message: "Geçersiz rol" });
+  }
+  try {
+    const user = await User.findById(id);
+    if (!user)
+      return res.status(404).json({ message: "Kullanıcı bulunamadı " });
+
+    user.role = role;
+    await user.save();
+
+    res.json({ message: "Rol başarıyla güncellendi", user });
+  } catch (error) {
+    console.error("Rol güncelleme hatası:", error);
+    res.status(500).json({ message: "Sunucu hatası" });
+  }
+});
+
 module.exports = router;

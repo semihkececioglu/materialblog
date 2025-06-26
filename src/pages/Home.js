@@ -1,41 +1,54 @@
 import React, { useState, useEffect } from "react";
 import {
   Box,
-  Typography,
   Pagination,
   useTheme,
   Container,
+  CircularProgress,
 } from "@mui/material";
 import PostCard from "../components/PostCard";
 import Sidebar from "../components/sidebar/Sidebar";
-import initialPosts from "../data";
 import axios from "axios";
+import { useParams, useNavigate } from "react-router-dom";
 
 const POSTS_PER_PAGE = 6;
 
 const Home = () => {
-  const [page, setPage] = useState(1);
-  const [allPosts, setAllPosts] = useState([]);
+  const { pageNumber } = useParams();
+  const navigate = useNavigate();
   const theme = useTheme();
 
-  useEffect(() => {
-    axios
-      .get("https://materialblog-server-production.up.railway.app/api/posts")
-      .then((res) => {
-        setAllPosts(res.data);
-      })
-      .catch((err) => {
-        console.error("Yazılar alınamadı:", err);
-      });
-  }, []);
+  const [posts, setPosts] = useState([]);
+  const [totalPages, setTotalPages] = useState(1);
+  const [loading, setLoading] = useState(true);
 
-  const paginatedPosts = allPosts.slice(
-    (page - 1) * POSTS_PER_PAGE,
-    page * POSTS_PER_PAGE
-  );
+  const page = parseInt(pageNumber) || 1;
+
+  useEffect(() => {
+    const fetchPosts = async () => {
+      try {
+        setLoading(true);
+        const res = await axios.get(
+          `https://materialblog-server-production.up.railway.app/api/posts?page=${page}&limit=${POSTS_PER_PAGE}`
+        );
+        setPosts(res.data.posts || []);
+        setTotalPages(res.data.totalPages || 1);
+      } catch (err) {
+        console.error("Yazılar alınamadı:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPosts();
+  }, [page]);
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [page]);
 
   const handleChange = (event, value) => {
-    setPage(value);
+    navigate(value === 1 ? "/" : `/page/${value}`);
   };
 
   return (
@@ -49,36 +62,43 @@ const Home = () => {
       >
         {/* Ana içerik */}
         <Box sx={{ flex: 3 }}>
-          <Typography variant="h4" gutterBottom>
-            Blog Yazıları
-          </Typography>
-
-          <Box
-            sx={{
-              display: "flex",
-              flexWrap: "wrap",
-              gap: 3,
-            }}
-          >
-            {paginatedPosts.map((post) => (
-              <Box
-                key={post._id}
-                sx={{ flex: "1 1 calc(33.333% - 20px)", minWidth: "250px" }}
-              >
-                <PostCard post={post} />
-              </Box>
-            ))}
-          </Box>
-
-          {allPosts.length > POSTS_PER_PAGE && (
-            <Box sx={{ mt: 4, display: "flex", justifyContent: "center" }}>
-              <Pagination
-                count={Math.ceil(allPosts.length / POSTS_PER_PAGE)}
-                page={page}
-                onChange={handleChange}
-                color="primary"
-              />
+          {loading ? (
+            <Box sx={{ textAlign: "center", mt: 6 }}>
+              <CircularProgress />
             </Box>
+          ) : (
+            <>
+              <Box
+                sx={{
+                  display: "flex",
+                  flexWrap: "wrap",
+                  gap: 3,
+                }}
+              >
+                {posts.map((post) => (
+                  <Box
+                    key={post._id}
+                    sx={{
+                      flex: "1 1 calc(33.333% - 20px)",
+                      minWidth: "250px",
+                    }}
+                  >
+                    <PostCard post={post} />
+                  </Box>
+                ))}
+              </Box>
+
+              {totalPages > 1 && (
+                <Box sx={{ mt: 4, display: "flex", justifyContent: "center" }}>
+                  <Pagination
+                    count={totalPages}
+                    page={page}
+                    onChange={handleChange}
+                    color="primary"
+                  />
+                </Box>
+              )}
+            </>
           )}
         </Box>
 
