@@ -47,19 +47,16 @@ const categories = [
 ];
 
 const stringToColor = (string) => {
-  if (!string || typeof string !== "string") return "#ccc"; // 👈 kontrol
-
+  if (!string || typeof string !== "string") return "#ccc";
   let hash = 0;
   for (let i = 0; i < string.length; i++) {
     hash = string.charCodeAt(i) + ((hash << 5) - hash);
   }
-
   let color = "#";
   for (let i = 0; i < 3; i++) {
     const value = (hash >> (i * 8)) & 0xff;
     color += value.toString(16).padStart(2, "0");
   }
-
   return color;
 };
 
@@ -73,10 +70,7 @@ function Header({ toggleTheme, searchTerm, setSearchTerm }) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
-  const handleMenuClick = (event) => {
-    setAnchorEl(event.currentTarget);
-  };
-
+  const handleMenuClick = (event) => setAnchorEl(event.currentTarget);
   const handleCategorySelect = (category) => {
     navigate(`/category/${slugify(category)}`);
     setAnchorEl(null);
@@ -91,10 +85,7 @@ function Header({ toggleTheme, searchTerm, setSearchTerm }) {
     }
   };
 
-  const handleKeyDown = (e) => {
-    if (e.key === "Enter") handleSearch();
-  };
-
+  const handleKeyDown = (e) => e.key === "Enter" && handleSearch();
   const handleProfileNavigate = (path) => {
     navigate(`/profile/${user?.username}${path}`);
     setProfileAnchorEl(null);
@@ -107,26 +98,17 @@ function Header({ toggleTheme, searchTerm, setSearchTerm }) {
         <Toolbar
           sx={{ flexWrap: "wrap", gap: 2, justifyContent: "space-between" }}
         >
-          <Box
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              gap: 2,
-              flexWrap: "wrap",
-            }}
-          >
+          <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
             {isMobile && (
               <IconButton color="inherit" onClick={() => setDrawerOpen(true)}>
                 <MenuIcon />
               </IconButton>
             )}
-
             <Typography variant="h6">
               <Link to="/" style={{ color: "white", textDecoration: "none" }}>
                 Material UI Blog
               </Link>
             </Typography>
-
             {!isMobile && (
               <TextField
                 size="small"
@@ -138,35 +120,36 @@ function Header({ toggleTheme, searchTerm, setSearchTerm }) {
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
-                      <Search sx={{ color: "#ffffffcc" }} />
+                      <Search sx={{ color: "white" }} />
                     </InputAdornment>
                   ),
                   sx: {
-                    bgcolor: "rgba(255, 255, 255, 0.15)",
+                    bgcolor: "rgba(255,255,255,0.15)",
+                    color: "white",
+                    px: 1,
+                    py: 0.2,
                     borderRadius: 2,
-                    color: "#fff",
-                    transition: "all 0.3s ease",
-                    "&:hover": { bgcolor: "rgba(255, 255, 255, 0.25)" },
-                    "&.Mui-focused": {
-                      bgcolor: "rgba(255, 255, 255, 0.3)",
-                      boxShadow: `0 0 0 2px ${theme.palette.primary.main}`,
+                    "& .MuiOutlinedInput-notchedOutline": { border: "none" },
+                    "&:hover": {
+                      bgcolor: "rgba(255,255,255,0.25)",
                     },
-                    "& input::placeholder": { color: "#ffffffaa" },
+                    "&.Mui-focused": {
+                      bgcolor: "rgba(255,255,255,0.3)",
+                      boxShadow: `0 0 0 2px ${theme.palette.primary.light}`,
+                    },
+                    "& input::placeholder": {
+                      color: "#ffffffaa",
+                      fontStyle: "italic",
+                    },
                   },
                 }}
-                sx={{ width: 240, display: { xs: "none", sm: "block" } }}
+                sx={{ width: 250, transition: "all 0.3s ease" }}
               />
             )}
           </Box>
 
           <Box
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              gap: 1,
-              flexWrap: "wrap",
-              ml: "auto",
-            }}
+            sx={{ display: "flex", alignItems: "center", gap: 1, ml: "auto" }}
           >
             {isMobile && (
               <>
@@ -178,13 +161,11 @@ function Header({ toggleTheme, searchTerm, setSearchTerm }) {
                 </IconButton>
               </>
             )}
-
             {!isMobile && (
               <>
                 <IconButton color="inherit" component={Link} to="/">
                   <HomeIcon />
                 </IconButton>
-
                 <Fade in={true} timeout={400}>
                   <Button
                     color="inherit"
@@ -208,7 +189,7 @@ function Header({ toggleTheme, searchTerm, setSearchTerm }) {
                       <Box
                         sx={{ display: "flex", alignItems: "center", gap: 1 }}
                       >
-                        {cat.icon} {cat.name}
+                        {cat.icon} <Typography>{cat.name}</Typography>
                       </Box>
                     </MenuItem>
                   ))}
@@ -223,11 +204,12 @@ function Header({ toggleTheme, searchTerm, setSearchTerm }) {
                         sx={{
                           width: 32,
                           height: 32,
-                          bgcolor: stringToColor(user?.username || "U"), // 🔄
+                          fontSize: 14,
+                          bgcolor: stringToColor(user?.username || "U"),
+                          border: "2px solid white",
                         }}
                       >
-                        {(user?.username || "U").charAt(0).toUpperCase()}{" "}
-                        {/* 🔄 */}
+                        {(user?.username || "U").charAt(0).toUpperCase()}
                       </Avatar>
                       <ArrowDropDown sx={{ color: "white" }} />
                     </IconButton>
@@ -289,11 +271,7 @@ function Header({ toggleTheme, searchTerm, setSearchTerm }) {
         onOpen={() => setDrawerOpen(true)}
         onClose={() => setDrawerOpen(false)}
       >
-        <Box
-          sx={{ width: 250 }}
-          role="presentation"
-          onClick={() => setDrawerOpen(false)}
-        >
+        <Box sx={{ width: 250, py: 2, px: 1.5 }} role="presentation">
           <List>
             <ListItem button component={Link} to="/">
               <ListItemText primary="Ana Sayfa" />
@@ -352,8 +330,9 @@ function Header({ toggleTheme, searchTerm, setSearchTerm }) {
             display: "flex",
             alignItems: "center",
             px: 2,
-            py: 1,
-            bgcolor: "background.default",
+            py: 1.5,
+            bgcolor: theme.palette.background.paper,
+            borderBottom: `1px solid ${theme.palette.divider}`,
           }}
         >
           <IconButton onClick={() => setSearchOpen(false)}>
@@ -363,12 +342,12 @@ function Header({ toggleTheme, searchTerm, setSearchTerm }) {
             autoFocus
             fullWidth
             variant="standard"
-            placeholder="Ara..."
+            placeholder="Aramak için yazın..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             onKeyDown={handleKeyDown}
-            sx={{ mx: 2 }}
             InputProps={{
+              sx: { fontSize: 18, pl: 1 },
               endAdornment: (
                 <InputAdornment position="end">
                   <IconButton onClick={handleSearch}>
