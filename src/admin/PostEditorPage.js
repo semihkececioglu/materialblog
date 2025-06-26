@@ -3,6 +3,7 @@ import {
   TextField,
   Box,
   Button,
+  CircularProgress,
   Container,
   Typography,
   FormControl,
@@ -99,8 +100,9 @@ const PostEditorPage = () => {
   });
 
   const [categories, setCategories] = useState([]);
-  const [allTags, setAllTags] = useState([]); // tüm etiketleri tutar
+  const [allTags, setAllTags] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [isCoverUploading, setIsCoverUploading] = useState(false);
   const [snackbar, setSnackbar] = useState({
     open: false,
     message: "",
@@ -154,11 +156,14 @@ const PostEditorPage = () => {
   const handleCoverUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
+    setIsCoverUploading(true);
     try {
       const url = await uploadToCloudinary(file);
       setForm({ ...form, image: url });
     } catch (err) {
       console.error("Kapak görseli yüklenemedi:", err);
+    } finally {
+      setIsCoverUploading(false);
     }
   };
 
@@ -255,7 +260,16 @@ const PostEditorPage = () => {
                 onChange={handleCoverUpload}
               />
             </Button>
-            {form.image && (
+
+            {/* Yükleme varsa dairesel loading */}
+            {isCoverUploading && (
+              <Box mt={2}>
+                <CircularProgress />
+              </Box>
+            )}
+
+            {/* Görsel varsa göster */}
+            {!isCoverUploading && form.image && (
               <Box mt={2}>
                 <img
                   src={form.image}
@@ -290,6 +304,7 @@ const PostEditorPage = () => {
             modules={quillModules}
             formats={quillFormats}
             theme="snow"
+            style={{ height: "300px", marginBottom: "50px" }}
           />
 
           {/* ✅ Etiket Autocomplete alanı */}
