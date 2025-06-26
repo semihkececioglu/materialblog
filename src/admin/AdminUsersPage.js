@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Typography,
@@ -32,7 +32,6 @@ const AdminUsersPage = () => {
     severity: "success",
   });
 
-  // Dialog state
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
   const [newRole, setNewRole] = useState("");
@@ -60,14 +59,12 @@ const AdminUsersPage = () => {
       });
   };
 
-  // Kullanıcı rolünü seçtiğinde dialog aç
   const handleRoleSelect = (user, role) => {
     setSelectedUser(user);
     setNewRole(role);
     setDialogOpen(true);
   };
 
-  // Onay verildiğinde rolü değiştir
   const handleConfirmRoleChange = () => {
     axios
       .put(
@@ -106,56 +103,92 @@ const AdminUsersPage = () => {
 
   return (
     <Box>
-      <Typography variant="h5" sx={{ mb: 3 }}>
+      <Typography
+        variant="h5"
+        sx={{
+          mb: 3,
+          fontWeight: "bold",
+          textShadow: "1px 1px 2px rgba(0,0,0,0.1)",
+        }}
+      >
         Kullanıcılar
       </Typography>
 
-      <TableContainer component={Paper}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>
-                <strong>Kullanıcı Adı</strong>
-              </TableCell>
-              <TableCell>
-                <strong>Ad Soyad</strong>
-              </TableCell>
-              <TableCell>
-                <strong>Email</strong>
-              </TableCell>
-              <TableCell>
-                <strong>Rol</strong>
-              </TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {users.map((user) => (
-              <TableRow key={user._id}>
-                <TableCell>{user.username}</TableCell>
+      <Paper
+        sx={{
+          backgroundColor: "rgba(255, 255, 255, 0.7)",
+          backdropFilter: "blur(10px)",
+          borderRadius: 3,
+          boxShadow: "0 8px 24px rgba(0, 0, 0, 0.1)",
+          overflow: "hidden",
+        }}
+      >
+        <TableContainer>
+          <Table>
+            <TableHead>
+              <TableRow sx={{ backgroundColor: "#f9f9f9" }}>
                 <TableCell>
-                  {user.firstName && user.lastName
-                    ? `${user.firstName} ${user.lastName}`
-                    : "-"}
+                  <strong>Kullanıcı Adı</strong>
                 </TableCell>
-                <TableCell>{user.email}</TableCell>
                 <TableCell>
-                  <Select
-                    value={user.role}
-                    size="small"
-                    onChange={(e) => handleRoleSelect(user, e.target.value)}
-                  >
-                    <MenuItem value="user">User</MenuItem>
-                    <MenuItem value="admin">Admin</MenuItem>
-                  </Select>
+                  <strong>Ad Soyad</strong>
+                </TableCell>
+                <TableCell>
+                  <strong>Email</strong>
+                </TableCell>
+                <TableCell>
+                  <strong>Rol</strong>
                 </TableCell>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
+            </TableHead>
+            <TableBody>
+              {users.map((user) => (
+                <TableRow
+                  key={user._id}
+                  sx={{
+                    transition: "all 0.2s ease-in-out",
+                    "&:hover": {
+                      backgroundColor: "rgba(0, 0, 0, 0.04)",
+                    },
+                  }}
+                >
+                  <TableCell>{user.username}</TableCell>
+                  <TableCell>
+                    {user.firstName && user.lastName
+                      ? `${user.firstName} ${user.lastName}`
+                      : "-"}
+                  </TableCell>
+                  <TableCell>{user.email}</TableCell>
+                  <TableCell>
+                    <Select
+                      value={user.role}
+                      size="small"
+                      onChange={(e) => handleRoleSelect(user, e.target.value)}
+                    >
+                      <MenuItem value="user">User</MenuItem>
+                      <MenuItem value="admin">Admin</MenuItem>
+                    </Select>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      </Paper>
 
-      {/* Onay Dialogu */}
-      <Dialog open={dialogOpen} onClose={handleDialogClose}>
+      {/* Dialog */}
+      <Dialog
+        open={dialogOpen}
+        onClose={handleDialogClose}
+        PaperProps={{
+          sx: {
+            backgroundColor: "rgba(255, 255, 255, 0.9)",
+            backdropFilter: "blur(10px)",
+            borderRadius: 3,
+            p: 2,
+          },
+        }}
+      >
         <DialogTitle>Rol Değişikliği Onayı</DialogTitle>
         <DialogContent>
           <DialogContentText>

@@ -123,22 +123,21 @@ const PostsPage = () => {
 
   return (
     <Box sx={{ pt: 1 }}>
-      {/* Üst başlık ve ekle butonu */}
       <Box
         sx={{
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
           mb: 3,
-          px: 2,
-          py: 1.5,
-          bgcolor: (theme) => theme.palette.background.paper,
-          borderRadius: 2,
-          boxShadow: 1,
-          border: (theme) => `1px solid ${theme.palette.divider}`,
         }}
       >
-        <Typography variant="h5" fontWeight={700} letterSpacing={0.5}>
+        <Typography
+          variant="h5"
+          sx={{
+            fontWeight: "bold",
+            textShadow: "1px 1px 2px rgba(0,0,0,0.1)",
+          }}
+        >
           Yazılar
         </Typography>
 
@@ -146,26 +145,48 @@ const PostsPage = () => {
           variant="contained"
           startIcon={<AddIcon />}
           onClick={() => navigate("/admin/editor")}
+          sx={{ borderRadius: 3 }}
         >
           Yeni Yazı
         </Button>
       </Box>
 
       {/* Yazılar Tablosu */}
-      <Paper elevation={3} sx={{ p: 2, borderRadius: 3 }}>
+      <Paper
+        elevation={0}
+        sx={{
+          p: 2,
+          borderRadius: 3,
+          backgroundColor: "rgba(255, 255, 255, 0.75)",
+          backdropFilter: "blur(10px)",
+          boxShadow: "0 8px 24px rgba(0, 0, 0, 0.1)",
+        }}
+      >
         <Box sx={{ overflowX: "auto" }}>
           <Table size="small">
             <TableHead>
-              <TableRow>
-                <TableCell>ID</TableCell>
-                <TableCell>Başlık</TableCell>
-                <TableCell>Kategori</TableCell>
-                <TableCell align="right">İşlemler</TableCell>
+              <TableRow sx={{ backgroundColor: "#f9f9f9" }}>
+                <TableCell sx={{ fontWeight: 600 }}>ID</TableCell>
+                <TableCell sx={{ fontWeight: 600 }}>Başlık</TableCell>
+                <TableCell sx={{ fontWeight: 600 }}>Kategori</TableCell>
+                <TableCell align="right" sx={{ fontWeight: 600 }}>
+                  İşlemler
+                </TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {allPosts.map((post) => (
-                <TableRow key={post._id} hover>
+                <TableRow
+                  key={post._id}
+                  hover
+                  sx={{
+                    transition: "all 0.2s ease-in-out",
+                    "&:hover": {
+                      backgroundColor: "rgba(0, 0, 0, 0.04)",
+                    },
+                    "& td": { py: 0.8, px: 1 },
+                  }}
+                >
                   <TableCell>{post._id.slice(-6)}</TableCell>
                   <TableCell>{post.title}</TableCell>
                   <TableCell>
@@ -199,7 +220,18 @@ const PostsPage = () => {
       </Paper>
 
       {/* SİLME ONAY DİYALOĞU */}
-      <Dialog open={confirmDelete} onClose={() => setConfirmDelete(false)}>
+      <Dialog
+        open={confirmDelete}
+        onClose={() => setConfirmDelete(false)}
+        PaperProps={{
+          sx: {
+            backgroundColor: "rgba(255, 255, 255, 0.9)",
+            backdropFilter: "blur(10px)",
+            borderRadius: 3,
+            p: 2,
+          },
+        }}
+      >
         <DialogTitle>Bu yazıyı silmek istediğinize emin misiniz?</DialogTitle>
         <DialogActions>
           <Button onClick={() => setConfirmDelete(false)}>Vazgeç</Button>

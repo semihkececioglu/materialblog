@@ -25,19 +25,17 @@ import ImageResize from "quill-image-resize-module-react";
 
 Quill.register("modules/imageResize", ImageResize);
 
-// ✅ Cloudinary’ye direkt yükleme fonksiyonu
 const uploadToCloudinary = async (file) => {
   const formData = new FormData();
   formData.append("file", file);
-  formData.append("upload_preset", "materialblog"); // Cloudinary’de oluşturduğun unsigned preset adı
+  formData.append("upload_preset", "materialblog");
   const res = await axios.post(
-    "https://api.cloudinary.com/v1_1/da2mjic2e/image/upload", // kendi cloud_name ile değiştir
+    "https://api.cloudinary.com/v1_1/da2mjic2e/image/upload",
     formData
   );
   return res.data.secure_url;
 };
 
-// ✅ Quill ayarları
 const quillModules = {
   toolbar: {
     container: [
@@ -96,7 +94,7 @@ const PostEditorPage = () => {
     image: "",
     summary: "",
     content: "",
-    tags: [], // string[] yerine array olarak
+    tags: [],
   });
 
   const [categories, setCategories] = useState([]);
@@ -111,7 +109,6 @@ const PostEditorPage = () => {
   const navigate = useNavigate();
   const { id } = useParams();
 
-  // Kategoriler
   useEffect(() => {
     axios
       .get(`${BASE_URL}/api/categories`)
@@ -119,15 +116,13 @@ const PostEditorPage = () => {
       .catch((err) => console.error("Kategori alınamadı:", err));
   }, []);
 
-  // Tüm etiketler
   useEffect(() => {
     axios
       .get(`${BASE_URL}/api/tags`)
-      .then((res) => setAllTags(res.data)) // tüm tag objeleri
+      .then((res) => setAllTags(res.data))
       .catch((err) => console.error("Etiketler alınamadı:", err));
   }, []);
 
-  // Yazı verisi
   useEffect(() => {
     if (id) {
       setLoading(true);
@@ -170,7 +165,6 @@ const PostEditorPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Yeni etiketleri backend'e ekle
     for (const tag of form.tags) {
       const exists = allTags.some(
         (t) => t.name.toLowerCase() === tag.toLowerCase()
@@ -219,10 +213,27 @@ const PostEditorPage = () => {
 
   return (
     <Container maxWidth="md" sx={{ py: 4 }}>
-      <Typography variant="h5" gutterBottom>
+      <Typography
+        variant="h5"
+        gutterBottom
+        sx={{
+          fontWeight: "bold",
+          mb: 3,
+          textShadow: "1px 1px 2px rgba(0,0,0,0.1)",
+        }}
+      >
         {id ? "Yazıyı Düzenle" : "Yeni Yazı Oluştur"}
       </Typography>
-      <Paper sx={{ p: 3 }}>
+
+      <Paper
+        sx={{
+          p: 3,
+          borderRadius: 3,
+          backgroundColor: "rgba(255, 255, 255, 0.75)",
+          backdropFilter: "blur(10px)",
+          boxShadow: "0 8px 24px rgba(0, 0, 0, 0.1)",
+        }}
+      >
         <Box component="form" onSubmit={handleSubmit}>
           <TextField
             fullWidth
@@ -261,26 +272,24 @@ const PostEditorPage = () => {
               />
             </Button>
 
-            {/* Yükleme varsa dairesel loading */}
-            {isCoverUploading && (
-              <Box mt={2}>
+            {isCoverUploading ? (
+              <Box mt={2} display="flex" justifyContent="center">
                 <CircularProgress />
               </Box>
-            )}
-
-            {/* Görsel varsa göster */}
-            {!isCoverUploading && form.image && (
-              <Box mt={2}>
-                <img
-                  src={form.image}
-                  alt="Kapak"
-                  style={{
-                    maxHeight: 150,
-                    borderRadius: 8,
-                    border: "1px solid #ccc",
-                  }}
-                />
-              </Box>
+            ) : (
+              form.image && (
+                <Box mt={2}>
+                  <img
+                    src={form.image}
+                    alt="Kapak"
+                    style={{
+                      maxHeight: 150,
+                      borderRadius: 8,
+                      border: "1px solid #ccc",
+                    }}
+                  />
+                </Box>
+              )
             )}
           </Box>
 
@@ -304,10 +313,14 @@ const PostEditorPage = () => {
             modules={quillModules}
             formats={quillFormats}
             theme="snow"
-            style={{ height: "300px", marginBottom: "50px" }}
+            style={{
+              height: "300px",
+              marginBottom: "50px",
+              backgroundColor: "#fff",
+              borderRadius: 8,
+            }}
           />
 
-          {/* ✅ Etiket Autocomplete alanı */}
           <Autocomplete
             multiple
             freeSolo
@@ -319,11 +332,12 @@ const PostEditorPage = () => {
             )}
           />
 
-          <Button variant="contained" type="submit">
+          <Button variant="contained" type="submit" sx={{ borderRadius: 2 }}>
             Gönder
           </Button>
         </Box>
       </Paper>
+
       <Snackbar
         open={snackbar.open}
         autoHideDuration={3000}

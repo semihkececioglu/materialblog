@@ -14,7 +14,7 @@ import axios from "axios";
 const AdminSettingsPage = () => {
   const [siteTitle, setSiteTitle] = useState("");
   const [siteDescription, setSiteDescription] = useState("");
-  const [darkMode, setDarkMode] = useState(false); // Eğer backend destekliyorsa, backend'den çek
+  const [darkMode, setDarkMode] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [snackbar, setSnackbar] = useState({
@@ -24,7 +24,6 @@ const AdminSettingsPage = () => {
   });
 
   useEffect(() => {
-    // Backend'den ayarları çek
     axios
       .get("https://materialblog-server-production.up.railway.app/api/settings")
       .then((res) => {
@@ -35,7 +34,6 @@ const AdminSettingsPage = () => {
         setLoading(false);
       })
       .catch(() => {
-        // Hata olursa localStorage'den oku (fallback)
         const settings = JSON.parse(localStorage.getItem("siteSettings")) || {};
         setSiteTitle(settings.title || "");
         setSiteDescription(settings.description || "");
@@ -51,7 +49,6 @@ const AdminSettingsPage = () => {
       siteDescription,
       darkMode,
     };
-    // Backend'e kaydet
     axios
       .put(
         "https://materialblog-server-production.up.railway.app/api/settings",
@@ -63,8 +60,6 @@ const AdminSettingsPage = () => {
           message: "Ayarlar kaydedildi",
           severity: "success",
         });
-        setSaving(false);
-        // Ayrıca localStorage'i güncelle (isteğe bağlı)
         localStorage.setItem("siteSettings", JSON.stringify(newSettings));
       })
       .catch(() => {
@@ -73,19 +68,35 @@ const AdminSettingsPage = () => {
           message: "Kaydetme hatası",
           severity: "error",
         });
-        setSaving(false);
-      });
+      })
+      .finally(() => setSaving(false));
   };
 
   if (loading) return <CircularProgress />;
 
   return (
     <Box>
-      <Typography variant="h5" fontWeight="bold" mb={2}>
+      <Typography
+        variant="h5"
+        sx={{
+          fontWeight: "bold",
+          mb: 3,
+          textShadow: "1px 1px 2px rgba(0,0,0,0.1)",
+        }}
+      >
         Ayarlar
       </Typography>
 
-      <Paper elevation={3} sx={{ p: 3, borderRadius: 3, maxWidth: 600 }}>
+      <Paper
+        sx={{
+          p: 3,
+          borderRadius: 3,
+          maxWidth: 600,
+          backgroundColor: "rgba(255, 255, 255, 0.7)",
+          backdropFilter: "blur(10px)",
+          boxShadow: "0 8px 24px rgba(0, 0, 0, 0.1)",
+        }}
+      >
         <TextField
           fullWidth
           label="Site Başlığı"
@@ -104,7 +115,12 @@ const AdminSettingsPage = () => {
           sx={{ mb: 2 }}
         />
 
-        <Button variant="contained" onClick={handleSave} disabled={saving}>
+        <Button
+          variant="contained"
+          onClick={handleSave}
+          disabled={saving}
+          sx={{ borderRadius: 2 }}
+        >
           {saving ? "Kaydediliyor..." : "Kaydet"}
         </Button>
       </Paper>

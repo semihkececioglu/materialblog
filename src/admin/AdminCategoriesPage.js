@@ -97,10 +97,16 @@ const AdminCategoriesPage = () => {
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
-          mb: 2,
+          mb: 3,
         }}
       >
-        <Typography variant="h5" fontWeight="bold">
+        <Typography
+          variant="h5"
+          sx={{
+            fontWeight: "bold",
+            textShadow: "1px 1px 2px rgba(0,0,0,0.1)",
+          }}
+        >
           Kategoriler
         </Typography>
         <Button
@@ -111,16 +117,25 @@ const AdminCategoriesPage = () => {
             setCategoryInput("");
             setOpenDialog(true);
           }}
+          sx={{ borderRadius: 3 }}
         >
           Kategori Ekle
         </Button>
       </Box>
 
-      <Paper>
+      <Paper
+        sx={{
+          backgroundColor: "rgba(255, 255, 255, 0.7)",
+          backdropFilter: "blur(10px)",
+          borderRadius: 3,
+          boxShadow: "0 8px 24px rgba(0, 0, 0, 0.1)",
+          overflow: "hidden",
+        }}
+      >
         <TableContainer>
           <Table size="small">
             <TableHead>
-              <TableRow>
+              <TableRow sx={{ backgroundColor: "#f9f9f9" }}>
                 <TableCell>#</TableCell>
                 <TableCell>Adı</TableCell>
                 <TableCell align="right">İşlemler</TableCell>
@@ -128,7 +143,16 @@ const AdminCategoriesPage = () => {
             </TableHead>
             <TableBody>
               {categories.map((category, index) => (
-                <TableRow key={category._id} hover>
+                <TableRow
+                  key={category._id}
+                  hover
+                  sx={{
+                    transition: "all 0.2s ease-in-out",
+                    "&:hover": {
+                      backgroundColor: "rgba(0, 0, 0, 0.04)",
+                    },
+                  }}
+                >
                   <TableCell>{index + 1}</TableCell>
                   <TableCell>{category.name}</TableCell>
                   <TableCell align="right">
@@ -163,7 +187,18 @@ const AdminCategoriesPage = () => {
       </Paper>
 
       {/* Ekle / Düzenle */}
-      <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>
+      <Dialog
+        open={openDialog}
+        onClose={() => setOpenDialog(false)}
+        PaperProps={{
+          sx: {
+            backgroundColor: "rgba(255, 255, 255, 0.85)",
+            backdropFilter: "blur(12px)",
+            borderRadius: 3,
+            p: 2,
+          },
+        }}
+      >
         <DialogTitle>
           {editingCategory ? "Kategoriyi Düzenle" : "Yeni Kategori"}
         </DialogTitle>
@@ -185,7 +220,18 @@ const AdminCategoriesPage = () => {
       </Dialog>
 
       {/* Silme onayı */}
-      <Dialog open={confirmDelete} onClose={() => setConfirmDelete(false)}>
+      <Dialog
+        open={confirmDelete}
+        onClose={() => setConfirmDelete(false)}
+        PaperProps={{
+          sx: {
+            backgroundColor: "rgba(255, 255, 255, 0.9)",
+            backdropFilter: "blur(8px)",
+            borderRadius: 3,
+            p: 2,
+          },
+        }}
+      >
         <DialogTitle>
           Bu kategoriyi silmek istediğinize emin misiniz?
         </DialogTitle>

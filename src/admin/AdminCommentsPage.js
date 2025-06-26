@@ -37,7 +37,6 @@ const AdminCommentsPage = () => {
       const commentList = res.data;
       setComments(commentList);
 
-      // Her unique postId için başlıkları çek
       const uniquePostIds = [...new Set(commentList.map((c) => c.postId))];
       const titleMap = {};
 
@@ -74,15 +73,30 @@ const AdminCommentsPage = () => {
 
   return (
     <Box>
-      <Typography variant="h5" fontWeight="bold" sx={{ mb: 2 }}>
+      <Typography
+        variant="h5"
+        sx={{
+          fontWeight: "bold",
+          mb: 3,
+          textShadow: "1px 1px 2px rgba(0,0,0,0.1)",
+        }}
+      >
         Yorumlar
       </Typography>
 
-      <Paper>
+      <Paper
+        sx={{
+          backgroundColor: "rgba(255, 255, 255, 0.7)",
+          backdropFilter: "blur(10px)",
+          borderRadius: 3,
+          boxShadow: "0 8px 24px rgba(0, 0, 0, 0.1)",
+          overflow: "hidden",
+        }}
+      >
         <TableContainer>
           <Table size="small">
             <TableHead>
-              <TableRow>
+              <TableRow sx={{ backgroundColor: "#f9f9f9" }}>
                 <TableCell>Ad</TableCell>
                 <TableCell>Yorum</TableCell>
                 <TableCell>Yazı Başlığı</TableCell>
@@ -98,7 +112,15 @@ const AdminCommentsPage = () => {
             <TableBody>
               {comments.length > 0 ? (
                 comments.map((comment) => (
-                  <TableRow key={comment._id}>
+                  <TableRow
+                    key={comment._id}
+                    sx={{
+                      transition: "all 0.2s ease-in-out",
+                      "&:hover": {
+                        backgroundColor: "rgba(0, 0, 0, 0.04)",
+                      },
+                    }}
+                  >
                     <TableCell>
                       {comment.username || comment.name || "Anonim"}
                     </TableCell>
@@ -139,6 +161,14 @@ const AdminCommentsPage = () => {
       <Dialog
         open={deleteInfo.open}
         onClose={() => setDeleteInfo({ open: false, id: null })}
+        PaperProps={{
+          sx: {
+            backgroundColor: "rgba(255, 255, 255, 0.9)",
+            backdropFilter: "blur(8px)",
+            borderRadius: 3,
+            p: 2,
+          },
+        }}
       >
         <DialogTitle>Bu yorumu silmek istiyor musunuz?</DialogTitle>
         <DialogActions>
