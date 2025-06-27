@@ -23,6 +23,7 @@ import PostEditorPage from "./admin/PostEditorPage";
 import AdminRoute from "./auth/AdminRoute";
 import AdminUsersPage from "./admin/AdminUsersPage";
 import { AuthProvider } from "./contexts/AuthContext";
+import NotFound from "./pages/NotFound";
 
 function App() {
   const [mode, setMode] = useState("light");
@@ -66,6 +67,7 @@ function App() {
                 element={<EditProfilePage />}
               />
               <Route path="/page/:pageNumber" element={<Home />} />
+              <Route path="*" element={<NotFound />} />
             </Route>
 
             {/* Admin Layout */}
