@@ -7,19 +7,30 @@ import { useLocation, Outlet } from "react-router-dom";
 function Layout({ toggleTheme, searchTerm, setSearchTerm }) {
   const location = useLocation();
   const isAdmin = location.pathname.startsWith("/admin");
+  const isAuthPage =
+    location.pathname === "/login" || location.pathname === "/register";
+  const isProfilePage = location.pathname.startsWith("/profile");
+
+  const hideHeader = isAdmin || isAuthPage;
+  const hideFooter = isAdmin || isAuthPage || isProfilePage;
+  const hideScrollButton = isAuthPage || isProfilePage;
 
   return (
     <>
-      <Header
-        toggleTheme={toggleTheme}
-        searchTerm={searchTerm}
-        setSearchTerm={setSearchTerm}
-      />
+      {!hideHeader && (
+        <Header
+          toggleTheme={toggleTheme}
+          searchTerm={searchTerm}
+          setSearchTerm={setSearchTerm}
+        />
+      )}
+
       <main style={{ minHeight: "80vh" }}>
         <Outlet />
       </main>
-      <ScrollToTopButton />
-      {!isAdmin && <Footer />}
+
+      {!hideScrollButton && <ScrollToTopButton />}
+      {!hideFooter && <Footer />}
     </>
   );
 }
