@@ -65,9 +65,9 @@ const AdminLayout = () => {
                   mb: 1,
                   px: 2,
                   py: 1,
-                  transition: "0.2s",
+                  transition: "transform 0.2s ease, background-color 0.2s ease",
                   backgroundColor: isActive
-                    ? "rgba(25, 118, 210, 0.1)"
+                    ? theme.palette.action.selected
                     : "transparent",
                   "&:hover": {
                     bgcolor: theme.palette.action.hover,
@@ -97,14 +97,19 @@ const AdminLayout = () => {
     <Box sx={{ display: "flex", minHeight: "100vh" }}>
       <CssBaseline />
 
+      {/* AppBar with Glassmorphism */}
       <AppBar
         position="fixed"
         sx={{
           width: { md: `calc(100% - ${drawerWidth}px)` },
           ml: { md: `${drawerWidth}px` },
-          bgcolor: theme.palette.mode === "dark" ? "#1f1f1f" : "#1976d2",
-          color: "#fff",
-          boxShadow: "0 4px 16px rgba(0,0,0,0.2)",
+          backgroundColor:
+            theme.palette.mode === "dark"
+              ? "rgba(18, 18, 28, 0.7)"
+              : "rgba(255, 255, 255, 0.75)",
+          backdropFilter: "blur(12px)",
+          color: theme.palette.text.primary,
+          boxShadow: "0 4px 20px rgba(0,0,0,0.15)",
           borderBottom: `1px solid ${theme.palette.divider}`,
           zIndex: theme.zIndex.drawer + 1,
         }}
@@ -146,7 +151,7 @@ const AdminLayout = () => {
         </Toolbar>
       </AppBar>
 
-      {/* DRAWER */}
+      {/* DRAWER – MOBILE */}
       <Box
         component="nav"
         sx={{ width: { md: drawerWidth }, flexShrink: { md: 0 } }}
@@ -160,8 +165,11 @@ const AdminLayout = () => {
             display: { xs: "block", md: "none" },
             "& .MuiDrawer-paper": {
               width: drawerWidth,
-              backgroundColor: "rgba(255, 255, 255, 0.85)",
-              backdropFilter: "blur(12px)",
+              backgroundColor:
+                theme.palette.mode === "dark"
+                  ? "rgba(18,18,28,0.85)"
+                  : "rgba(255, 255, 255, 0.8)",
+              backdropFilter: "blur(10px)",
               boxShadow: "0 8px 24px rgba(0, 0, 0, 0.1)",
               borderRight: `1px solid ${theme.palette.divider}`,
             },
@@ -170,13 +178,17 @@ const AdminLayout = () => {
           {drawerContent}
         </Drawer>
 
+        {/* DRAWER – DESKTOP */}
         <Drawer
           variant="permanent"
           sx={{
             display: { xs: "none", md: "block" },
             "& .MuiDrawer-paper": {
               width: drawerWidth,
-              backgroundColor: "rgba(255, 255, 255, 0.8)",
+              backgroundColor:
+                theme.palette.mode === "dark"
+                  ? "rgba(18,18,28,0.85)"
+                  : "rgba(255, 255, 255, 0.8)",
               backdropFilter: "blur(10px)",
               boxShadow: "0 8px 24px rgba(0, 0, 0, 0.05)",
               borderRight: `1px solid ${theme.palette.divider}`,
