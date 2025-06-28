@@ -10,6 +10,7 @@ import PostCard from "../components/PostCard";
 import Sidebar from "../components/sidebar/Sidebar";
 import axios from "axios";
 import { useParams, useNavigate } from "react-router-dom";
+import HomeSlider from "../components/HomeSlider";
 
 const POSTS_PER_PAGE = 6;
 
@@ -53,6 +54,7 @@ const Home = () => {
 
   return (
     <Container maxWidth="lg" sx={{ mt: 4 }}>
+      <HomeSlider />
       <Box
         sx={{
           display: "flex",
