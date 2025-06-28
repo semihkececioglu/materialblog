@@ -3,14 +3,13 @@ import Slider from "react-slick";
 import {
   Box,
   Typography,
-  Button,
-  CircularProgress,
   IconButton,
+  CircularProgress,
   useTheme,
 } from "@mui/material";
 import { ArrowBackIos, ArrowForwardIos } from "@mui/icons-material";
-import { Link } from "react-router-dom";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 
@@ -19,11 +18,12 @@ const HomeSlider = () => {
   const [loading, setLoading] = useState(true);
   const sliderRef = useRef();
   const theme = useTheme();
+  const navigate = useNavigate();
 
   useEffect(() => {
     axios
       .get(
-        "https://materialblog-server-production.up.railway.app/api/posts?limit=5"
+        "https://materialblog-server-production.up.railway.app/api/posts?limit=6"
       )
       .then((res) => {
         setPosts(res.data.posts || []);
@@ -39,40 +39,43 @@ const HomeSlider = () => {
     dots: true,
     infinite: true,
     autoplay: true,
-    speed: 800,
-    slidesToShow: 1,
+    speed: 600,
+    slidesToShow: 2,
     slidesToScroll: 1,
     arrows: false,
-    pauseOnHover: false,
-    customPaging: () => (
-      <div
-        style={{
-          width: "10px",
-          height: "10px",
-          borderRadius: "50%",
-          backgroundColor: "rgba(255,255,255,0.5)",
-          margin: "0 5px",
-        }}
-      />
-    ),
+    responsive: [
+      {
+        breakpoint: 768,
+        settings: {
+          slidesToShow: 1,
+        },
+      },
+    ],
     appendDots: (dots) => (
       <Box
         component="ul"
         sx={{
-          position: "absolute",
-          bottom: 16,
-          left: "50%",
-          transform: "translateX(-50%)",
-          display: "flex !important",
+          display: "flex",
           justifyContent: "center",
-          p: 0,
-          m: 0,
+          gap: 0.5,
+          mt: 3,
+          mb: -1,
           listStyle: "none",
-          zIndex: 3,
+          p: 0,
         }}
       >
         {dots}
       </Box>
+    ),
+    customPaging: () => (
+      <div
+        style={{
+          width: 6,
+          height: 6,
+          borderRadius: "50%",
+          backgroundColor: "rgba(0,0,0,0.3)",
+        }}
+      />
     ),
   };
 
@@ -86,25 +89,40 @@ const HomeSlider = () => {
 
   return (
     <Box
-      sx={{ position: "relative", mb: 4, borderRadius: 3, overflow: "hidden" }}
+      sx={{
+        position: "relative",
+        borderRadius: 4,
+        overflow: "hidden",
+        px: 2,
+        py: 4,
+        mb: 6,
+        backgroundColor:
+          theme.palette.mode === "dark"
+            ? "rgba(255,255,255,0.02)"
+            : "rgba(255,255,255,0.4)",
+        backdropFilter: "blur(14px)",
+        boxShadow: "0 12px 24px rgba(0,0,0,0.1)",
+      }}
     >
-      {/* Custom Arrows */}
+      {/* Ok Butonları */}
       <IconButton
         onClick={() => sliderRef.current?.slickPrev()}
         sx={{
           position: "absolute",
           top: "50%",
-          left: 16,
-          zIndex: 2,
+          left: 8,
           transform: "translateY(-50%)",
+          zIndex: 2,
           bgcolor: "rgba(255,255,255,0.25)",
           backdropFilter: "blur(6px)",
-          "&:hover": { bgcolor: "rgba(255,255,255,0.4)" },
-          width: 40,
-          height: 40,
+          width: 36,
+          height: 36,
+          "&:hover": {
+            bgcolor: "rgba(255,255,255,0.5)",
+          },
         }}
       >
-        <ArrowBackIos sx={{ fontSize: "16px", ml: "2px" }} />
+        <ArrowBackIos sx={{ fontSize: "16px", ml: "1px" }} />
       </IconButton>
 
       <IconButton
@@ -112,17 +130,19 @@ const HomeSlider = () => {
         sx={{
           position: "absolute",
           top: "50%",
-          right: 16,
-          zIndex: 2,
+          right: 8,
           transform: "translateY(-50%)",
+          zIndex: 2,
           bgcolor: "rgba(255,255,255,0.25)",
           backdropFilter: "blur(6px)",
-          "&:hover": { bgcolor: "rgba(255,255,255,0.4)" },
-          width: 40,
-          height: 40,
+          width: 36,
+          height: 36,
+          "&:hover": {
+            bgcolor: "rgba(255,255,255,0.5)",
+          },
         }}
       >
-        <ArrowForwardIos sx={{ fontSize: "16px", mr: "2px" }} />
+        <ArrowForwardIos sx={{ fontSize: "16px", mr: "1px" }} />
       </IconButton>
 
       {/* Slider */}
@@ -130,80 +150,70 @@ const HomeSlider = () => {
         {posts.map((post) => (
           <Box
             key={post._id}
-            sx={{
-              height: { xs: 220, sm: 300, md: 420 },
-              position: "relative",
-            }}
+            onClick={() => navigate(`/post/${post.slug}`)}
+            sx={{ px: 1, cursor: "pointer" }}
           >
-            {/* Background */}
             <Box
               sx={{
-                position: "absolute",
-                inset: 0,
-                backgroundImage: `url(${post.image || "/default.jpg"})`,
-                backgroundSize: "cover",
-                backgroundPosition: "center",
-                filter: "brightness(0.6)",
-              }}
-            />
-
-            {/* Glass Content */}
-            <Box
-              sx={{
-                position: "absolute",
-                bottom: 32,
-                left: 32,
-                zIndex: 2,
-                px: 3,
-                py: 2,
+                position: "relative",
+                height: 240,
                 borderRadius: 3,
-                backdropFilter: "blur(10px)",
-                backgroundColor: "rgba(255, 255, 255, 0.15)",
-                color: "#fff",
-                maxWidth: "70%",
-                boxShadow: "0 8px 24px rgba(0,0,0,0.3)",
+                overflow: "hidden",
+                "&:hover .slider-img": {
+                  filter: "blur(4px)",
+                  transform: "scale(1.05)",
+                },
               }}
             >
-              <Typography
-                variant="h5"
-                fontWeight="bold"
-                sx={{ textShadow: "0 2px 8px rgba(0,0,0,0.5)" }}
-              >
-                {post.title}
-              </Typography>
-              <Button
-                variant="outlined"
-                size="small"
-                component={Link}
-                to={`/post/${post.slug}`}
+              <Box
+                component="img"
+                src={post.image || "/default.jpg"}
+                alt={post.title}
+                className="slider-img"
                 sx={{
-                  mt: 1,
-                  color: "#fff",
-                  borderColor: "#fff",
-                  textTransform: "none",
-                  backdropFilter: "blur(2px)",
-                  "&:hover": {
-                    bgcolor: "rgba(255,255,255,0.2)",
-                    borderColor: "#fff",
-                  },
+                  width: "100%",
+                  height: "100%",
+                  objectFit: "cover",
+                  transition: "all 0.4s ease",
+                  borderRadius: 3,
+                  display: "block",
+                }}
+              />
+              <Box
+                sx={{
+                  position: "absolute",
+                  bottom: 16,
+                  left: 16,
+                  right: 16,
+                  bgcolor: "rgba(255, 255, 255, 0.08)",
+                  backdropFilter: "blur(6px)",
+                  px: 2,
+                  py: 1,
+                  borderRadius: 2,
+                  boxShadow: "0 4px 12px rgba(0,0,0,0.2)",
                 }}
               >
-                Yazıyı Oku
-              </Button>
+                <Typography
+                  variant="subtitle2"
+                  fontWeight={600}
+                  color="#fff"
+                  noWrap
+                >
+                  {post.title}
+                </Typography>
+              </Box>
             </Box>
           </Box>
         ))}
       </Slider>
 
-      {/* Dot stil override */}
-      <style>
-        {`
+      {/* Dot aktif stili */}
+      <style>{`
         .slick-dots li.slick-active div {
           background-color: ${theme.palette.primary.main} !important;
-          transform: scale(1.4);
+          transform: scale(1.3);
         }
-      `}
-      </style>
+      `}</style>
     </Box>
   );
 };
