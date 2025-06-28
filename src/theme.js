@@ -7,7 +7,7 @@ export const getTheme = (mode) =>
       ...(mode === "light"
         ? {
             primary: {
-              main: "#1976d2",
+              main: "#1e1e1e",
             },
             background: {
               default: "#f9f9f9",
@@ -25,6 +25,7 @@ export const getTheme = (mode) =>
           }),
     },
     typography: {
-      fontFamily: "Arial, sans-serif",
+      fontFamily: '"Inter", sans-serif',
+      fontSize: 14,
     },
   });
