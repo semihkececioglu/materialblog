@@ -1,24 +1,25 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import {
-  Container,
+  Box,
   TextField,
   Button,
   Typography,
-  Paper,
   useTheme,
   Alert,
+  Paper,
 } from "@mui/material";
+import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import axios from "axios";
 
 const Login = () => {
+  const theme = useTheme();
   const { login } = useAuth();
+  const navigate = useNavigate();
+
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const navigate = useNavigate();
-  const theme = useTheme();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -39,31 +40,43 @@ const Login = () => {
       );
 
       const { token, user } = res.data;
-
-      // AuthContext'e login bilgisini gönder
       login(user, token);
-
       navigate("/");
+      window.scrollTo(0, 0);
     } catch (err) {
-      if (err.response && err.response.data?.message) {
-        setError(err.response.data.message);
-      } else {
-        setError("Giriş sırasında bir hata oluştu.");
-      }
+      setError(
+        err.response?.data?.message || "Giriş sırasında bir hata oluştu."
+      );
     }
   };
 
   return (
-    <Container maxWidth="sm" sx={{ mt: 10 }}>
+    <Box
+      sx={{
+        minHeight: "100vh",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        fontFamily: "Inter, sans-serif",
+        px: 2,
+      }}
+    >
       <Paper
-        elevation={3}
+        elevation={0}
         sx={{
+          maxWidth: 400,
+          width: "100%",
           p: 4,
-          borderRadius: 2,
-          bgcolor: theme.palette.mode === "dark" ? "grey.900" : "grey.100",
+          borderRadius: 4,
+          background:
+            theme.palette.mode === "dark"
+              ? "rgba(30,30,30,0.7)"
+              : "rgba(255,255,255,0.6)",
+          backdropFilter: "blur(16px)",
+          boxShadow: "0 8px 32px rgba(0,0,0,0.2)",
         }}
       >
-        <Typography variant="h5" gutterBottom align="center">
+        <Typography variant="h5" align="center" sx={{ mb: 3, fontWeight: 600 }}>
           Giriş Yap
         </Typography>
 
@@ -77,24 +90,50 @@ const Login = () => {
           <TextField
             label="Kullanıcı Adı"
             fullWidth
-            sx={{ mb: 2 }}
             value={username}
             onChange={(e) => setUsername(e.target.value)}
+            sx={{ mb: 2 }}
           />
           <TextField
             label="Şifre"
             type="password"
             fullWidth
-            sx={{ mb: 3 }}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            sx={{ mb: 3 }}
           />
-          <Button type="submit" variant="contained" fullWidth>
+          <Button
+            type="submit"
+            fullWidth
+            variant="contained"
+            sx={{
+              py: 1.3,
+              textTransform: "none",
+              fontWeight: 500,
+              background:
+                theme.palette.mode === "dark"
+                  ? "linear-gradient(to right, #111, #333)"
+                  : "linear-gradient(to right, #000, #222)",
+              "&:hover": {
+                background:
+                  theme.palette.mode === "dark"
+                    ? "linear-gradient(to right, #222, #444)"
+                    : "linear-gradient(to right, #111, #333)",
+              },
+            }}
+          >
             Giriş Yap
           </Button>
         </form>
+
+        <Typography variant="body2" align="center" sx={{ mt: 3 }}>
+          Hesabınız yok mu?{" "}
+          <Link to="/register" style={{ textDecoration: "underline" }}>
+            Kayıt Ol
+          </Link>
+        </Typography>
       </Paper>
-    </Container>
+    </Box>
   );
 };
 

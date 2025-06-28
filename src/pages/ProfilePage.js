@@ -4,13 +4,18 @@ import {
   Typography,
   Avatar,
   useTheme,
-  Paper,
+  Card,
+  CardContent,
+  CircularProgress,
   List,
   ListItem,
+  ListItemAvatar,
   ListItemText,
   Divider,
-  CircularProgress,
 } from "@mui/material";
+import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
+import FavoriteIcon from "@mui/icons-material/Favorite";
+import BookmarkIcon from "@mui/icons-material/Bookmark";
 import { useParams, Link } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import axios from "axios";
@@ -44,9 +49,8 @@ const ProfilePage = () => {
         const userInfo = userRes.data;
         setUserData(userInfo);
 
-        // Eğer likedPosts varsa post detaylarını çek
         if (isOwnProfile) {
-          const likedPostDetails = await Promise.all(
+          const liked = await Promise.all(
             (userInfo.likedPosts || []).map((id) =>
               axios
                 .get(
@@ -57,7 +61,7 @@ const ProfilePage = () => {
             )
           );
 
-          const savedPostDetails = await Promise.all(
+          const saved = await Promise.all(
             (userInfo.savedPosts || []).map((id) =>
               axios
                 .get(
@@ -68,8 +72,8 @@ const ProfilePage = () => {
             )
           );
 
-          setLikedPosts(likedPostDetails.filter(Boolean));
-          setSavedPosts(savedPostDetails.filter(Boolean));
+          setLikedPosts(liked.filter(Boolean));
+          setSavedPosts(saved.filter(Boolean));
         }
 
         setLoading(false);
@@ -99,15 +103,18 @@ const ProfilePage = () => {
   }
 
   return (
-    <Box sx={{ p: 4 }}>
-      <Paper
-        elevation={3}
+    <Box sx={{ p: 4, maxWidth: 600, mx: "auto" }}>
+      <Card
+        elevation={6}
         sx={{
-          p: 4,
-          borderRadius: 3,
-          maxWidth: 500,
-          mx: "auto",
-          bgcolor: theme.palette.mode === "dark" ? "grey.900" : "grey.100",
+          p: 3,
+          borderRadius: 4,
+          backdropFilter: "blur(16px)",
+          backgroundColor:
+            theme.palette.mode === "dark"
+              ? "rgba(255,255,255,0.04)"
+              : "rgba(255,255,255,0.5)",
+          border: "1px solid rgba(255,255,255,0.2)",
         }}
       >
         <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 3 }}>
@@ -117,12 +124,13 @@ const ProfilePage = () => {
               height: 64,
               bgcolor: stringToColor(userData.username),
               color: "white",
+              fontWeight: 600,
             }}
           >
             {userData.username.charAt(0).toUpperCase()}
           </Avatar>
           <Box>
-            <Typography variant="h6">
+            <Typography variant="h6" fontWeight={600}>
               {userData.firstName} {userData.lastName}
             </Typography>
             <Typography variant="body2" color="text.secondary">
@@ -133,7 +141,12 @@ const ProfilePage = () => {
 
         {isOwnProfile && (
           <>
-            <Typography variant="subtitle1" gutterBottom>
+            <Typography
+              variant="h6"
+              gutterBottom
+              sx={{ display: "flex", alignItems: "center", gap: 1 }}
+            >
+              <FavoriteIcon color="error" fontSize="small" />
               Beğenilen Yazılar
             </Typography>
 
@@ -150,14 +163,23 @@ const ProfilePage = () => {
                       component={Link}
                       to={`/post/${post.slug}`}
                       sx={{
-                        borderRadius: 1,
-                        mb: 1,
-                        transition: "all 0.3s ease",
+                        borderRadius: 2,
+                        px: 2,
                         "&:hover": {
-                          bgcolor: theme.palette.action.hover,
+                          backgroundColor:
+                            theme.palette.mode === "dark"
+                              ? "rgba(255,255,255,0.08)"
+                              : "rgba(0,0,0,0.04)",
                         },
                       }}
                     >
+                      <ListItemAvatar>
+                        <ArrowForwardIosIcon
+                          fontSize="small"
+                          color="action"
+                          sx={{ mt: 0.5 }}
+                        />
+                      </ListItemAvatar>
                       <ListItemText primary={post.title} />
                     </ListItem>
                     <Divider />
@@ -166,7 +188,12 @@ const ProfilePage = () => {
               </List>
             )}
 
-            <Typography variant="subtitle1" gutterBottom sx={{ mt: 3 }}>
+            <Typography
+              variant="h6"
+              gutterBottom
+              sx={{ display: "flex", alignItems: "center", gap: 1, mt: 4 }}
+            >
+              <BookmarkIcon color="primary" fontSize="small" />
               Kaydedilen Yazılar
             </Typography>
 
@@ -183,14 +210,23 @@ const ProfilePage = () => {
                       component={Link}
                       to={`/post/${post.slug}`}
                       sx={{
-                        borderRadius: 1,
-                        mb: 1,
-                        transition: "all 0.3s ease",
+                        borderRadius: 2,
+                        px: 2,
                         "&:hover": {
-                          bgcolor: theme.palette.action.hover,
+                          backgroundColor:
+                            theme.palette.mode === "dark"
+                              ? "rgba(255,255,255,0.08)"
+                              : "rgba(0,0,0,0.04)",
                         },
                       }}
                     >
+                      <ListItemAvatar>
+                        <ArrowForwardIosIcon
+                          fontSize="small"
+                          color="action"
+                          sx={{ mt: 0.5 }}
+                        />
+                      </ListItemAvatar>
                       <ListItemText primary={post.title} />
                     </ListItem>
                     <Divider />
@@ -200,7 +236,7 @@ const ProfilePage = () => {
             )}
           </>
         )}
-      </Paper>
+      </Card>
     </Box>
   );
 };

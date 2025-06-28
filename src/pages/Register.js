@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import {
+  Box,
   Container,
   TextField,
   Button,
@@ -8,7 +9,7 @@ import {
   useTheme,
   Alert,
 } from "@mui/material";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import axios from "axios";
 
 const Register = () => {
@@ -45,8 +46,9 @@ const Register = () => {
       );
 
       navigate("/login");
+      window.scrollTo(0, 0);
     } catch (err) {
-      if (err.response && err.response.data && err.response.data.message) {
+      if (err.response?.data?.message) {
         setError(err.response.data.message);
       } else {
         setError("Kayıt işlemi sırasında bir hata oluştu.");
@@ -55,16 +57,32 @@ const Register = () => {
   };
 
   return (
-    <Container maxWidth="sm" sx={{ mt: 10 }}>
+    <Box
+      sx={{
+        minHeight: "100vh",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        fontFamily: "Inter, sans-serif",
+        px: 2,
+      }}
+    >
       <Paper
-        elevation={3}
+        elevation={0}
         sx={{
+          width: "100%",
+          maxWidth: 400,
           p: 4,
-          borderRadius: 2,
-          bgcolor: theme.palette.mode === "dark" ? "grey.900" : "grey.100",
+          borderRadius: 4,
+          background:
+            theme.palette.mode === "dark"
+              ? "rgba(30, 30, 30, 0.7)"
+              : "rgba(255, 255, 255, 0.6)",
+          backdropFilter: "blur(16px)",
+          boxShadow: "0 8px 32px rgba(0,0,0,0.15)",
         }}
       >
-        <Typography variant="h5" gutterBottom align="center">
+        <Typography variant="h6" align="center" sx={{ mb: 3, fontWeight: 600 }}>
           Kayıt Ol
         </Typography>
 
@@ -112,12 +130,39 @@ const Register = () => {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
-          <Button type="submit" variant="contained" fullWidth>
+
+          <Button
+            type="submit"
+            fullWidth
+            variant="contained"
+            sx={{
+              py: 1.3,
+              textTransform: "none",
+              fontWeight: 500,
+              background:
+                theme.palette.mode === "dark"
+                  ? "linear-gradient(to right, #111, #333)"
+                  : "linear-gradient(to right, #000, #222)",
+              "&:hover": {
+                background:
+                  theme.palette.mode === "dark"
+                    ? "linear-gradient(to right, #222, #444)"
+                    : "linear-gradient(to right, #111, #333)",
+              },
+            }}
+          >
             Kayıt Ol
           </Button>
+
+          <Typography variant="body2" align="center" sx={{ mt: 3 }}>
+            Zaten bir hesabınız var mı?{" "}
+            <Link to="/login" style={{ textDecoration: "underline" }}>
+              Giriş Yap
+            </Link>
+          </Typography>
         </form>
       </Paper>
-    </Container>
+    </Box>
   );
 };
 
