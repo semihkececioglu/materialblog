@@ -1,53 +1,45 @@
-import { slugify } from "../utils";
 import React, { useState } from "react";
 import {
   AppBar,
+  Box,
   Toolbar,
   Typography,
-  IconButton,
-  TextField,
   Button,
+  IconButton,
   Menu,
   MenuItem,
-  Box,
-  InputAdornment,
   useTheme,
   useMediaQuery,
-  Avatar,
-  SwipeableDrawer,
+  Drawer,
   List,
   ListItem,
   ListItemText,
+  Avatar,
   Dialog,
-  Divider,
-  Slide,
+  TextField,
+  InputAdornment,
   Fade,
-  Grow,
+  Slide,
+  Collapse,
+  Divider,
 } from "@mui/material";
 import {
-  Brightness4,
-  ExpandMore,
-  Search,
-  ArrowDropDown,
   Menu as MenuIcon,
+  Search as SearchIcon,
   Close as CloseIcon,
-  Code as CodeIcon,
-  DesignServices as DesignIcon,
-  Javascript as JsIcon,
+  ArrowDropDown,
+  Brightness4,
   Send as SendIcon,
-  Home as HomeIcon,
+  ExpandLess,
+  ExpandMore,
 } from "@mui/icons-material";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
+import { slugify } from "../utils";
 
-const categories = [
-  { name: "React", icon: <CodeIcon fontSize="small" /> },
-  { name: "Tasarım", icon: <DesignIcon fontSize="small" /> },
-  { name: "Javascript", icon: <JsIcon fontSize="small" /> },
-];
+const categories = ["React", "Tasarım", "Javascript"];
 
 const stringToColor = (string) => {
-  if (!string || typeof string !== "string") return "#ccc";
   let hash = 0;
   for (let i = 0; i < string.length; i++) {
     hash = string.charCodeAt(i) + ((hash << 5) - hash);
@@ -60,307 +52,425 @@ const stringToColor = (string) => {
   return color;
 };
 
-function Header({ toggleTheme, searchTerm, setSearchTerm }) {
+const Header = ({ toggleTheme, searchTerm, setSearchTerm }) => {
   const [anchorEl, setAnchorEl] = useState(null);
   const [profileAnchorEl, setProfileAnchorEl] = useState(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [drawerCatOpen, setDrawerCatOpen] = useState(false);
+  const [drawerUserOpen, setDrawerUserOpen] = useState(false);
+
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
-  const handleMenuClick = (event) => setAnchorEl(event.currentTarget);
-  const handleCategorySelect = (category) => {
+  const handleSearch = () => {
+    if (searchTerm.trim()) {
+      navigate(`/search?q=${encodeURIComponent(searchTerm)}`);
+      window.scrollTo(0, 0);
+      setSearchTerm("");
+      setSearchOpen(false);
+    }
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter") handleSearch();
+  };
+
+  const handleCategoryClick = (category) => {
     navigate(`/category/${slugify(category)}`);
+    window.scrollTo(0, 0);
     setAnchorEl(null);
     setDrawerOpen(false);
   };
 
-  const handleSearch = () => {
-    if (searchTerm.trim()) {
-      setSearchOpen(false);
-      navigate(`/search?q=${encodeURIComponent(searchTerm)}`);
-      setSearchTerm("");
-    }
-  };
-
-  const handleKeyDown = (e) => e.key === "Enter" && handleSearch();
   const handleProfileNavigate = (path) => {
-    navigate(`/profile/${user?.username}${path}`);
+    navigate(`/profile/${user.username}${path}`);
+    window.scrollTo(0, 0);
     setProfileAnchorEl(null);
     setDrawerOpen(false);
   };
 
   return (
     <>
-      <AppBar position={isMobile ? "sticky" : "static"}>
-        <Toolbar
-          sx={{ flexWrap: "wrap", gap: 2, justifyContent: "space-between" }}
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "center",
+          position: "sticky",
+          top: 16,
+          zIndex: 1100,
+          px: 2,
+        }}
+      >
+        <AppBar
+          position="static"
+          sx={{
+            width: "100%",
+            maxWidth: "1152px",
+            borderRadius: "16px",
+            background:
+              theme.palette.mode === "dark"
+                ? "rgba(30,30,30,0.6)"
+                : "rgba(255,255,255,0.75)",
+            backdropFilter: "blur(16px)",
+            boxShadow:
+              theme.palette.mode === "dark"
+                ? "0 4px 20px rgba(0,0,0,0.6)"
+                : "0 8px 32px rgba(0,0,0,0.1)",
+            color: theme.palette.text.primary,
+            fontFamily: '"Inter", sans-serif',
+          }}
         >
-          <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-            {isMobile && (
-              <IconButton color="inherit" onClick={() => setDrawerOpen(true)}>
-                <MenuIcon />
-              </IconButton>
-            )}
-            <Typography variant="h6">
-              <Link to="/" style={{ color: "white", textDecoration: "none" }}>
-                Material UI Blog
-              </Link>
-            </Typography>
-            {!isMobile && (
-              <TextField
-                size="small"
-                variant="outlined"
-                placeholder="Ara..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                onKeyDown={handleKeyDown}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <Search sx={{ color: "white" }} />
-                    </InputAdornment>
-                  ),
-                  sx: {
-                    bgcolor: "rgba(255,255,255,0.15)",
-                    color: "white",
-                    px: 1,
-                    py: 0.2,
-                    borderRadius: 2,
-                    "& .MuiOutlinedInput-notchedOutline": { border: "none" },
-                    "&:hover": {
-                      bgcolor: "rgba(255,255,255,0.25)",
-                    },
-                    "&.Mui-focused": {
-                      bgcolor: "rgba(255,255,255,0.3)",
-                      boxShadow: `0 0 0 2px ${theme.palette.primary.light}`,
-                    },
-                    "& input::placeholder": {
-                      color: "#ffffffaa",
-                      fontStyle: "italic",
-                    },
-                  },
-                }}
-                sx={{ width: 250, transition: "all 0.3s ease" }}
-              />
-            )}
-          </Box>
-
-          <Box
-            sx={{ display: "flex", alignItems: "center", gap: 1, ml: "auto" }}
+          <Toolbar
+            disableGutters
+            sx={{ px: 2, display: "flex", justifyContent: "space-between" }}
           >
-            {isMobile && (
-              <>
-                <IconButton color="inherit" onClick={() => setSearchOpen(true)}>
-                  <Search />
+            {/* SOL TARAF */}
+            <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+              {isMobile && (
+                <IconButton onClick={() => setDrawerOpen(true)} color="inherit">
+                  <MenuIcon />
                 </IconButton>
-                <IconButton color="inherit" onClick={toggleTheme}>
-                  <Brightness4 />
-                </IconButton>
-              </>
-            )}
-            {!isMobile && (
-              <>
-                <IconButton color="inherit" component={Link} to="/">
-                  <HomeIcon />
-                </IconButton>
-                <Fade in={true} timeout={400}>
+              )}
+              <Typography
+                variant="h6"
+                component={Link}
+                to="/"
+                onClick={() => window.scrollTo(0, 0)}
+                sx={{
+                  textDecoration: "none",
+                  color: theme.palette.text.primary,
+                  fontWeight: 600,
+                  fontFamily: "inherit",
+                }}
+              >
+                Material Blog
+              </Typography>
+              {!isMobile && (
+                <>
                   <Button
-                    color="inherit"
-                    endIcon={<ExpandMore />}
-                    onClick={handleMenuClick}
+                    component={Link}
+                    to="/"
+                    onClick={() => window.scrollTo(0, 0)}
+                    sx={{
+                      color: theme.palette.text.primary,
+                      textTransform: "none",
+                      fontFamily: "inherit",
+                    }}
+                  >
+                    Ana Sayfa
+                  </Button>
+                  <Button
+                    endIcon={<ArrowDropDown />}
+                    onClick={(e) => setAnchorEl(e.currentTarget)}
+                    sx={{
+                      color: theme.palette.text.primary,
+                      textTransform: "none",
+                      fontFamily: "inherit",
+                    }}
                   >
                     Kategoriler
                   </Button>
-                </Fade>
-                <Menu
-                  anchorEl={anchorEl}
-                  open={Boolean(anchorEl)}
-                  onClose={() => setAnchorEl(null)}
-                  TransitionComponent={Grow}
-                >
-                  {categories.map((cat) => (
-                    <MenuItem
-                      key={cat.name}
-                      onClick={() => handleCategorySelect(cat.name)}
-                    >
-                      <Box
-                        sx={{ display: "flex", alignItems: "center", gap: 1 }}
-                      >
-                        {cat.icon} <Typography>{cat.name}</Typography>
-                      </Box>
-                    </MenuItem>
-                  ))}
-                </Menu>
-
-                {user ? (
-                  <Box sx={{ display: "flex", alignItems: "center" }}>
-                    <IconButton
-                      onClick={(e) => setProfileAnchorEl(e.currentTarget)}
-                    >
-                      <Avatar
-                        sx={{
-                          width: 32,
-                          height: 32,
-                          fontSize: 14,
-                          bgcolor: stringToColor(user?.username || "U"),
-                          border: "2px solid white",
-                        }}
-                      >
-                        {(user?.username || "U").charAt(0).toUpperCase()}
-                      </Avatar>
-                      <ArrowDropDown sx={{ color: "white" }} />
-                    </IconButton>
-                    <Menu
-                      anchorEl={profileAnchorEl}
-                      open={Boolean(profileAnchorEl)}
-                      onClose={() => setProfileAnchorEl(null)}
-                    >
-                      <MenuItem onClick={() => handleProfileNavigate("")}>
-                        Profili Görüntüle
-                      </MenuItem>
-                      <MenuItem onClick={() => handleProfileNavigate("/edit")}>
-                        Profili Düzenle
-                      </MenuItem>
+                  <Menu
+                    anchorEl={anchorEl}
+                    open={Boolean(anchorEl)}
+                    onClose={() => setAnchorEl(null)}
+                    TransitionComponent={Fade}
+                  >
+                    {categories.map((cat) => (
                       <MenuItem
-                        onClick={() => {
-                          logout();
-                          setProfileAnchorEl(null);
-                        }}
+                        key={cat}
+                        onClick={() => handleCategoryClick(cat)}
+                        sx={{ fontFamily: "inherit", fontSize: 14 }}
                       >
-                        Çıkış Yap
+                        {cat}
                       </MenuItem>
-                    </Menu>
-                  </Box>
-                ) : (
-                  <Box sx={{ display: "flex", gap: 1 }}>
-                    <Button
-                      component={Link}
-                      to="/login"
-                      color="inherit"
-                      variant="outlined"
-                      size="small"
-                    >
-                      Giriş Yap
-                    </Button>
-                    <Button
-                      component={Link}
-                      to="/register"
-                      color="inherit"
-                      variant="outlined"
-                      size="small"
-                    >
-                      Kayıt Ol
-                    </Button>
-                  </Box>
-                )}
-                <IconButton color="inherit" onClick={toggleTheme}>
-                  <Brightness4 />
-                </IconButton>
-              </>
-            )}
-          </Box>
-        </Toolbar>
-      </AppBar>
+                    ))}
+                  </Menu>
+                </>
+              )}
+            </Box>
 
-      <SwipeableDrawer
+            {/* SAĞ TARAF */}
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+              {!user && !isMobile && (
+                <>
+                  <Button
+                    component={Link}
+                    to="/login"
+                    onClick={() => window.scrollTo(0, 0)}
+                    sx={{
+                      color: theme.palette.text.primary,
+                      textTransform: "none",
+                      fontFamily: "inherit",
+                    }}
+                  >
+                    Giriş Yap
+                  </Button>
+                  <Button
+                    component={Link}
+                    to="/register"
+                    onClick={() => window.scrollTo(0, 0)}
+                    variant="contained"
+                    sx={{
+                      bgcolor: "#1e1e1e",
+                      color: "#fff",
+                      borderRadius: "12px",
+                      textTransform: "none",
+                      fontFamily: "inherit",
+                      "&:hover": { bgcolor: "#333" },
+                    }}
+                  >
+                    Kayıt Ol
+                  </Button>
+                </>
+              )}
+
+              <IconButton color="inherit" onClick={() => setSearchOpen(true)}>
+                <SearchIcon />
+              </IconButton>
+
+              <IconButton color="inherit" onClick={toggleTheme}>
+                <Brightness4 />
+              </IconButton>
+
+              {user && (
+                <>
+                  <IconButton
+                    onClick={(e) => setProfileAnchorEl(e.currentTarget)}
+                  >
+                    <Avatar
+                      sx={{
+                        width: 32,
+                        height: 32,
+                        bgcolor: stringToColor(user.username),
+                        fontSize: "0.875rem",
+                      }}
+                    >
+                      {user.username.charAt(0).toUpperCase()}
+                    </Avatar>
+                  </IconButton>
+                  <Menu
+                    anchorEl={profileAnchorEl}
+                    open={Boolean(profileAnchorEl)}
+                    onClose={() => setProfileAnchorEl(null)}
+                    TransitionComponent={Fade}
+                  >
+                    <MenuItem
+                      onClick={() => handleProfileNavigate("")}
+                      sx={{
+                        fontFamily: "inherit",
+                        fontSize: 14,
+                        color: theme.palette.text.primary,
+                      }}
+                    >
+                      Profili Görüntüle
+                    </MenuItem>
+                    <MenuItem
+                      onClick={() => handleProfileNavigate("/edit")}
+                      sx={{ fontFamily: "inherit", fontSize: 14 }}
+                    >
+                      Profili Düzenle
+                    </MenuItem>
+                    <MenuItem
+                      onClick={() => {
+                        logout();
+                        setProfileAnchorEl(null);
+                      }}
+                      sx={{ fontFamily: "inherit", fontSize: 14 }}
+                    >
+                      Çıkış Yap
+                    </MenuItem>
+                  </Menu>
+                </>
+              )}
+            </Box>
+          </Toolbar>
+        </AppBar>
+      </Box>
+
+      {/* MOBİL DRAWER */}
+      <Drawer
         anchor="left"
         open={drawerOpen}
-        onOpen={() => setDrawerOpen(true)}
         onClose={() => setDrawerOpen(false)}
+        PaperProps={{
+          sx: {
+            bgcolor:
+              theme.palette.mode === "dark"
+                ? "rgba(30,30,30,0.85)"
+                : "rgba(255,255,255,0.8)",
+            backdropFilter: "blur(16px)",
+            borderTopRightRadius: 12,
+            borderBottomRightRadius: 12,
+          },
+        }}
       >
-        <Box sx={{ width: 250, py: 2, px: 1.5 }} role="presentation">
-          <List>
-            <ListItem button component={Link} to="/">
-              <ListItemText primary="Ana Sayfa" />
-            </ListItem>
-            <Divider />
-            <ListItem>
-              <ListItemText primary="Kategoriler" />
-            </ListItem>
-            {categories.map((cat) => (
+        <List sx={{ width: 250 }}>
+          <ListItem
+            button
+            component={Link}
+            to="/"
+            onClick={() => {
+              window.scrollTo(0, 0);
+              setDrawerOpen(false);
+            }}
+          >
+            <ListItemText primary="Ana Sayfa" />
+          </ListItem>
+
+          <ListItem button onClick={() => setDrawerCatOpen(!drawerCatOpen)}>
+            <ListItemText primary="Kategoriler" />
+            {drawerCatOpen ? <ExpandLess /> : <ExpandMore />}
+          </ListItem>
+          <Collapse in={drawerCatOpen} timeout="auto" unmountOnExit>
+            <List component="div" disablePadding>
+              {categories.map((cat) => (
+                <ListItem
+                  key={cat}
+                  button
+                  sx={{ pl: 4 }}
+                  onClick={() => {
+                    handleCategoryClick(cat);
+                    setDrawerOpen(false);
+                  }}
+                >
+                  <ListItemText primary={cat} />
+                </ListItem>
+              ))}
+            </List>
+          </Collapse>
+
+          <Divider sx={{ my: 1 }} />
+
+          {!user ? (
+            <>
               <ListItem
                 button
-                key={cat.name}
-                onClick={() => handleCategorySelect(cat.name)}
+                component={Link}
+                to="/login"
+                onClick={() => {
+                  window.scrollTo(0, 0);
+                  setDrawerOpen(false);
+                }}
               >
-                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                  {cat.icon}
-                  <ListItemText primary={cat.name} />
-                </Box>
+                <ListItemText primary="Giriş Yap" />
               </ListItem>
-            ))}
-            <Divider />
-            {user ? (
-              <>
-                <ListItem button onClick={() => handleProfileNavigate("")}>
-                  Profili Görüntüle
-                </ListItem>
-                <ListItem button onClick={() => handleProfileNavigate("/edit")}>
-                  Profili Düzenle
-                </ListItem>
-                <ListItem button onClick={logout}>
-                  Çıkış Yap
-                </ListItem>
-              </>
-            ) : (
-              <>
-                <ListItem button component={Link} to="/login">
-                  Giriş Yap
-                </ListItem>
-                <ListItem button component={Link} to="/register">
-                  Kayıt Ol
-                </ListItem>
-              </>
-            )}
-          </List>
-        </Box>
-      </SwipeableDrawer>
+              <ListItem
+                button
+                component={Link}
+                to="/register"
+                onClick={() => {
+                  window.scrollTo(0, 0);
+                  setDrawerOpen(false);
+                }}
+              >
+                <ListItemText primary="Kayıt Ol" />
+              </ListItem>
+            </>
+          ) : (
+            <>
+              <ListItem
+                button
+                onClick={() => setDrawerUserOpen(!drawerUserOpen)}
+              >
+                <ListItemText primary="Hesabım" />
+                {drawerUserOpen ? <ExpandLess /> : <ExpandMore />}
+              </ListItem>
+              <Collapse in={drawerUserOpen} timeout="auto" unmountOnExit>
+                <List component="div" disablePadding>
+                  <ListItem
+                    button
+                    sx={{ pl: 4 }}
+                    onClick={() => handleProfileNavigate("")}
+                  >
+                    <ListItemText primary="Profili Görüntüle" />
+                  </ListItem>
+                  <ListItem
+                    button
+                    sx={{ pl: 4 }}
+                    onClick={() => handleProfileNavigate("/edit")}
+                  >
+                    <ListItemText primary="Profili Düzenle" />
+                  </ListItem>
+                  <ListItem
+                    button
+                    sx={{ pl: 4 }}
+                    onClick={() => {
+                      logout();
+                      setDrawerOpen(false);
+                    }}
+                  >
+                    <ListItemText primary="Çıkış Yap" />
+                  </ListItem>
+                </List>
+              </Collapse>
+            </>
+          )}
+        </List>
+      </Drawer>
 
+      {/* ARAMA POPUP */}
       <Dialog
         fullScreen
         open={searchOpen}
         onClose={() => setSearchOpen(false)}
         TransitionComponent={Slide}
+        PaperProps={{
+          sx: {
+            background: "rgba(0, 0, 0, 0.4)",
+            backdropFilter: "blur(12px)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          },
+        }}
       >
         <Box
           sx={{
+            width: "90%",
+            maxWidth: 500,
+            bgcolor:
+              theme.palette.mode === "dark"
+                ? "rgba(30,30,30,0.95)"
+                : "rgba(255,255,255,0.95)",
+            backdropFilter: "blur(20px)",
+            p: 3,
+            borderRadius: 3,
             display: "flex",
             alignItems: "center",
-            px: 2,
-            py: 1.5,
-            bgcolor: theme.palette.background.paper,
-            borderBottom: `1px solid ${theme.palette.divider}`,
+            gap: 2,
           }}
         >
           <IconButton onClick={() => setSearchOpen(false)}>
-            <CloseIcon />
+            <CloseIcon sx={{ color: "#000" }} />
           </IconButton>
           <TextField
             autoFocus
             fullWidth
-            variant="standard"
-            placeholder="Aramak için yazın..."
+            placeholder="Ara..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             onKeyDown={handleKeyDown}
+            variant="standard"
             InputProps={{
-              sx: { fontSize: 18, pl: 1 },
               endAdornment: (
                 <InputAdornment position="end">
                   <IconButton onClick={handleSearch}>
-                    <SendIcon />
+                    <SendIcon sx={{ color: theme.palette.text.primary }} />
                   </IconButton>
                 </InputAdornment>
               ),
+              disableUnderline: true,
+              sx: { color: theme.palette.text.primary },
             }}
           />
         </Box>
       </Dialog>
     </>
   );
-}
+};
 
 export default Header;
