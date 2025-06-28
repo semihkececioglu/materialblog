@@ -4,10 +4,9 @@ import {
   CardMedia,
   CardContent,
   Typography,
-  CardActions,
-  IconButton,
   useTheme,
   Box,
+  Button,
 } from "@mui/material";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import ImageNotSupportedIcon from "@mui/icons-material/ImageNotSupported";
@@ -40,23 +39,25 @@ const PostCard = ({ post }) => {
       onClick={handleClick}
       sx={{
         width: "100%",
+        height: 420, // Sabit yükseklik
         display: "flex",
         flexDirection: "column",
         justifyContent: "space-between",
-        borderRadius: 2,
+        borderRadius: 3,
         cursor: "pointer",
-        bgcolor:
-          theme.palette.mode === "dark" ? "grey.900" : "background.paper",
-        border: `1px solid ${
+        overflow: "hidden",
+        backdropFilter: "blur(10px)",
+        backgroundColor:
           theme.palette.mode === "dark"
-            ? theme.palette.grey[800]
-            : theme.palette.grey[300]
-        }`,
-        transition: "all 0.35s ease",
+            ? "rgba(255,255,255,0.04)"
+            : "rgba(255,255,255,0.6)",
+        border: "1px solid rgba(255,255,255,0.15)",
+        boxShadow: 6,
+        transition: "all 0.3s ease",
         transform: "translateY(0)",
         "&:hover": {
-          boxShadow: 6,
-          transform: "translateY(-4px) scale(1.01)",
+          transform: "translateY(-5px)",
+          boxShadow: 10,
         },
       }}
     >
@@ -66,7 +67,13 @@ const PostCard = ({ post }) => {
           height="160"
           image={imageUrl}
           alt={post.title}
-          sx={{ objectFit: "cover", transition: "transform 0.3s ease" }}
+          sx={{
+            objectFit: "cover",
+            transition: "transform 0.3s ease",
+            "&:hover": {
+              transform: "scale(1.03)",
+            },
+          }}
         />
       ) : (
         <Box
@@ -84,8 +91,8 @@ const PostCard = ({ post }) => {
         </Box>
       )}
 
-      <CardContent>
-        <Typography variant="h6" gutterBottom>
+      <CardContent sx={{ flexGrow: 1 }}>
+        <Typography variant="h6" fontWeight={600} gutterBottom>
           {post.title}
         </Typography>
         <Typography variant="body2" color="text.secondary">
@@ -96,29 +103,29 @@ const PostCard = ({ post }) => {
         </Typography>
       </CardContent>
 
-      <CardActions sx={{ justifyContent: "flex-end" }}>
-        <IconButton
+      <Box sx={{ px: 2, pb: 2 }}>
+        <Button
+          variant="contained"
           onClick={(e) => {
             e.stopPropagation();
             handleClick();
           }}
-          aria-label="Devamını oku"
+          fullWidth
+          endIcon={<ArrowForwardIcon />}
           sx={{
+            borderRadius: 2,
+            fontWeight: 600,
+            textTransform: "none",
             bgcolor: theme.palette.primary.main,
             color: theme.palette.getContrastText(theme.palette.primary.main),
-            borderRadius: "50%",
-            width: 40,
-            height: 40,
-            transition: "all 0.3s ease",
             "&:hover": {
-              transform: "scale(1.15) rotate(5deg)",
               bgcolor: theme.palette.primary.dark,
             },
           }}
         >
-          <ArrowForwardIcon />
-        </IconButton>
-      </CardActions>
+          Devamını Oku
+        </Button>
+      </Box>
     </Card>
   );
 };
