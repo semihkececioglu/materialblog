@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Box,
   Typography,
@@ -6,7 +6,6 @@ import {
   Button,
   Avatar,
   useTheme,
-  Paper,
   Snackbar,
 } from "@mui/material";
 import { useAuth } from "../contexts/AuthContext";
@@ -31,10 +30,11 @@ const EditProfilePage = () => {
   const [lastName, setLastName] = useState("");
   const [open, setOpen] = useState(false);
 
+  const containerRef = useRef(null); // Snackbar'ın bağlanacağı alan
+
   useEffect(() => {
     if (!user || user.username !== username) return;
 
-    // Kullanıcının mevcut bilgilerini backend'den çek
     axios
       .get(
         `https://materialblog-server-production.up.railway.app/api/users/${username}`
@@ -64,41 +64,66 @@ const EditProfilePage = () => {
         { firstName, lastName }
       );
       setOpen(true);
-      setTimeout(() => navigate(`/profile/${username}`), 1500);
+      setTimeout(() => {
+        setOpen(false);
+        navigate(`/profile/${username}`);
+      }, 1500);
     } catch (err) {
       console.error("Güncelleme hatası:", err);
     }
   };
 
   return (
-    <Box sx={{ p: 4 }}>
-      <Paper
-        elevation={3}
+    <Box sx={{ p: 4, mt: { xs: 1, md: 2 } }}>
+      <Box
+        ref={containerRef}
         sx={{
           p: 4,
-          borderRadius: 3,
           maxWidth: 500,
           mx: "auto",
-          bgcolor: theme.palette.mode === "dark" ? "grey.900" : "grey.100",
+          borderRadius: 4,
+          backdropFilter: "blur(20px)",
+          backgroundColor:
+            theme.palette.mode === "dark"
+              ? "rgba(255,255,255,0.04)"
+              : "rgba(255,255,255,0.6)",
+          border: "1px solid rgba(255,255,255,0.2)",
+          boxShadow: 10,
+          position: "relative",
         }}
       >
-        <Typography variant="h6" gutterBottom>
+        <Typography
+          variant="h5"
+          fontWeight={600}
+          gutterBottom
+          sx={{ textAlign: "center", mb: 3 }}
+        >
           Profili Düzenle
         </Typography>
 
-        <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 2 }}>
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: 1,
+            mb: 3,
+          }}
+        >
           <Avatar
             sx={{
-              width: 64,
-              height: 64,
+              width: 72,
+              height: 72,
               bgcolor: stringToColor(user.username),
               color: "white",
+              fontWeight: 600,
+              fontSize: 28,
             }}
           >
             {user.username.charAt(0).toUpperCase()}
           </Avatar>
-          <Typography>
-            {user.firstName} {user.lastName}
+          <Typography variant="subtitle1" color="text.secondary">
+            @{user.username}
           </Typography>
         </Box>
 
@@ -106,6 +131,7 @@ const EditProfilePage = () => {
           <TextField
             fullWidth
             label="Ad"
+            variant="outlined"
             value={firstName}
             onChange={(e) => setFirstName(e.target.value)}
             sx={{ mb: 2 }}
@@ -113,20 +139,58 @@ const EditProfilePage = () => {
           <TextField
             fullWidth
             label="Soyad"
+            variant="outlined"
             value={lastName}
             onChange={(e) => setLastName(e.target.value)}
-            sx={{ mb: 2 }}
+            sx={{ mb: 3 }}
           />
-          <Button type="submit" variant="contained">
+          <Button
+            type="submit"
+            variant="contained"
+            fullWidth
+            sx={{
+              fontWeight: 600,
+              py: 1,
+              borderRadius: 2,
+            }}
+          >
             Kaydet
           </Button>
         </form>
-      </Paper>
-      <Snackbar
-        open={open}
-        autoHideDuration={3000}
-        message="Profil başarıyla güncellendi"
-      />
+      </Box>
+
+      {/* Snackbar Card'ın altına ortalı şekilde */}
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "center",
+          mt: 2,
+        }}
+      >
+        <Snackbar
+          open={open}
+          autoHideDuration={3000}
+          message="Profil başarıyla güncellendi"
+          anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+          ContentProps={{
+            sx: {
+              bgcolor:
+                theme.palette.mode === "dark"
+                  ? "rgba(255,255,255,0.1)"
+                  : "rgba(0,0,0,0.04)",
+              color: theme.palette.text.primary,
+              backdropFilter: "blur(6px)",
+              borderRadius: 2,
+              px: 3,
+              py: 1.5,
+              boxShadow: 3,
+              border: "1px solid rgba(255, 255, 255, 0.2)",
+              textAlign: "center",
+            },
+          }}
+          container={containerRef.current}
+        />
+      </Box>
     </Box>
   );
 };
