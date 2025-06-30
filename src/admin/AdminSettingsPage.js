@@ -14,7 +14,7 @@ import {
   fetchSettings,
   updateSettings,
   clearSuccess,
-} from "../../redux/slices/settingsSlice";
+} from "../redux/settingsSlice";
 
 const AdminSettingsPage = () => {
   const dispatch = useDispatch();
