@@ -18,54 +18,44 @@ import {
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import FavoriteIcon from "@mui/icons-material/Favorite";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchComments, deleteComment } from "../redux/commentSlice";
 import axios from "axios";
 
 const AdminCommentsPage = () => {
-  const [comments, setComments] = useState([]);
+  const dispatch = useDispatch();
+  const { items: comments } = useSelector((state) => state.comments);
   const [postTitles, setPostTitles] = useState({});
   const [deleteInfo, setDeleteInfo] = useState({ open: false, id: null });
 
   useEffect(() => {
-    fetchComments();
-  }, []);
+    dispatch(fetchComments()); // ✅ postId'siz tüm yorumlar
+  }, [dispatch]);
 
-  const fetchComments = async () => {
-    try {
-      const res = await axios.get(
-        "https://materialblog-server-production.up.railway.app/api/comments"
-      );
-      const commentList = res.data;
-      setComments(commentList);
-
-      const uniquePostIds = [...new Set(commentList.map((c) => c.postId))];
+  useEffect(() => {
+    if (comments.length > 0) {
+      const uniquePostIds = [...new Set(comments.map((c) => c.postId))];
       const titleMap = {};
 
-      await Promise.all(
+      Promise.all(
         uniquePostIds.map(async (postId) => {
           try {
-            const postRes = await axios.get(
+            const res = await axios.get(
               `https://materialblog-server-production.up.railway.app/api/posts/${postId}`
             );
-            titleMap[postId] = postRes.data.title;
+            titleMap[postId] = res.data.title;
           } catch {
             titleMap[postId] = "Bilinmeyen Yazı";
           }
         })
-      );
-
-      setPostTitles(titleMap);
-    } catch (err) {
-      console.error("Yorumlar alınamadı:", err);
+      ).then(() => setPostTitles(titleMap));
     }
-  };
+  }, [comments]);
 
   const handleDelete = async () => {
     try {
-      await axios.delete(
-        `https://materialblog-server-production.up.railway.app/api/comments/${deleteInfo.id}`
-      );
+      await dispatch(deleteComment(deleteInfo.id));
       setDeleteInfo({ open: false, id: null });
-      fetchComments();
     } catch (err) {
       console.error("Yorum silinemedi:", err);
     }

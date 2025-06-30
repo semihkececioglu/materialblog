@@ -9,13 +9,15 @@ import {
   Paper,
 } from "@mui/material";
 import { useNavigate, Link } from "react-router-dom";
-import { useAuth } from "../contexts/AuthContext";
 import axios from "axios";
+
+import { useDispatch } from "react-redux"; // ✅ Redux
+import { login } from "../redux/userSlice"; // ✅ Redux
 
 const Login = () => {
   const theme = useTheme();
-  const { login } = useAuth();
   const navigate = useNavigate();
+  const dispatch = useDispatch(); // ✅ Redux
 
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -40,9 +42,16 @@ const Login = () => {
       );
 
       const { token, user } = res.data;
-      login(user, token);
-      navigate("/");
-      window.scrollTo(0, 0);
+
+      // Redux'a yaz
+      dispatch(login({ user, token }));
+
+      // localStorage'a yaz
+      localStorage.setItem("user", JSON.stringify(user));
+      localStorage.setItem("token", token);
+
+      // Sayfayı tam anlamıyla yeniden yükle (InteractionBar doğru çalışsın)
+      window.location.href = "/";
     } catch (err) {
       setError(
         err.response?.data?.message || "Giriş sırasında bir hata oluştu."

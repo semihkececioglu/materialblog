@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect } from "react";
 import {
   Box,
   Pagination,
@@ -6,11 +6,13 @@ import {
   Container,
   CircularProgress,
 } from "@mui/material";
+import { useParams, useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+
 import PostCard from "../components/PostCard";
 import Sidebar from "../components/sidebar/Sidebar";
-import axios from "axios";
-import { useParams, useNavigate } from "react-router-dom";
 import HomeSlider from "../components/HomeSlider";
+import { fetchPosts } from "../redux/postSlice";
 
 const POSTS_PER_PAGE = 6;
 
@@ -18,31 +20,17 @@ const Home = () => {
   const { pageNumber } = useParams();
   const navigate = useNavigate();
   const theme = useTheme();
-
-  const [posts, setPosts] = useState([]);
-  const [totalPages, setTotalPages] = useState(1);
-  const [loading, setLoading] = useState(true);
+  const dispatch = useDispatch();
 
   const page = parseInt(pageNumber) || 1;
 
-  useEffect(() => {
-    const fetchPosts = async () => {
-      try {
-        setLoading(true);
-        const res = await axios.get(
-          `https://materialblog-server-production.up.railway.app/api/posts?page=${page}&limit=${POSTS_PER_PAGE}`
-        );
-        setPosts(res.data.posts || []);
-        setTotalPages(res.data.totalPages || 1);
-      } catch (err) {
-        console.error("Yazılar alınamadı:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const { posts, totalPages, loading, error } = useSelector(
+    (state) => state.posts
+  );
 
-    fetchPosts();
-  }, [page]);
+  useEffect(() => {
+    dispatch(fetchPosts({ page, limit: POSTS_PER_PAGE }));
+  }, [dispatch, page]);
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -68,15 +56,13 @@ const Home = () => {
             <Box sx={{ textAlign: "center", mt: 6 }}>
               <CircularProgress />
             </Box>
+          ) : error ? (
+            <Box sx={{ textAlign: "center", mt: 6 }}>
+              <p>Hata: {error}</p>
+            </Box>
           ) : (
             <>
-              <Box
-                sx={{
-                  display: "flex",
-                  flexWrap: "wrap",
-                  gap: 3,
-                }}
-              >
+              <Box sx={{ display: "flex", flexWrap: "wrap", gap: 3 }}>
                 {posts.map((post) => (
                   <Box
                     key={post._id}

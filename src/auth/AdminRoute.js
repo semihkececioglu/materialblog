@@ -1,16 +1,12 @@
 import React from "react";
 import { Navigate } from "react-router-dom";
-import { useAuth } from "../contexts/AuthContext";
+import { useSelector } from "react-redux";
 
 const AdminRoute = ({ children }) => {
-  const { user, loading } = useAuth();
-
-  if (loading) {
-    return null; // veya <div>Yükleniyor...</div>
-  }
+  const user = useSelector((state) => state.user.currentUser);
 
   if (!user || user.role !== "admin") {
-    return <Navigate to="/" />;
+    return <Navigate to="/" replace />;
   }
 
   return children;

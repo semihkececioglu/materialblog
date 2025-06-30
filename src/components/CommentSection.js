@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   Box,
   Button,
@@ -14,69 +14,46 @@ import {
   Alert,
 } from "@mui/material";
 import { Link } from "react-router-dom";
-import axios from "axios";
+import { useDispatch, useSelector } from "react-redux";
+import {
+  fetchComments,
+  addComment,
+  deleteComment,
+} from "../redux/commentSlice";
 import CommentItem from "./CommentItem";
-import { useAuth } from "../contexts/AuthContext";
 
 const CommentSection = ({ postId }) => {
-  const [comments, setComments] = useState([]);
+  const dispatch = useDispatch();
+  const theme = useTheme();
+  const user = useSelector((state) => state.user.currentUser);
+  const { items: flatComments, loading } = useSelector(
+    (state) => state.comments
+  );
+
   const [text, setText] = useState("");
   const [replyingTo, setReplyingTo] = useState(null);
   const [sortOrder, setSortOrder] = useState("newest");
   const [snackbar, setSnackbar] = useState({ open: false, message: "" });
 
-  const theme = useTheme();
-  const { user } = useAuth();
-
-  // Yorumları çek
   useEffect(() => {
-    fetchComments();
-  }, [postId]);
-
-  const fetchComments = async () => {
-    try {
-      const res = await axios.get(
-        `https://materialblog-server-production.up.railway.app/api/comments?postId=${postId}`
-      );
-      const tree = buildNestedComments(res.data);
-      setComments(tree);
-    } catch (err) {
-      console.error("Yorumlar alınamadı:", err);
+    if (postId) {
+      dispatch(fetchComments(postId));
     }
-  };
-
-  const buildNestedComments = (flatComments) => {
-    const map = {};
-    flatComments.forEach((c) => (map[c._id] = { ...c, replies: [] }));
-    const nested = [];
-    flatComments.forEach((c) => {
-      if (c.parentId) {
-        map[c.parentId]?.replies.push(map[c._id]);
-      } else {
-        nested.push(map[c._id]);
-      }
-    });
-    return nested;
-  };
+  }, [dispatch, postId]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!text.trim()) return;
 
-    const payload = {
+    const newComment = {
       postId,
       username: user.username,
       email: user.email,
       text,
-      date: new Date().toISOString(),
     };
 
     try {
-      await axios.post(
-        "https://materialblog-server-production.up.railway.app/api/comments",
-        payload
-      );
-      await fetchComments();
+      await dispatch(addComment(newComment));
       setText("");
       setSnackbar({ open: true, message: "Yorum eklendi" });
     } catch (err) {
@@ -85,18 +62,16 @@ const CommentSection = ({ postId }) => {
   };
 
   const handleReplySubmit = async (parentId, replyObj) => {
-    const payload = {
-      ...replyObj,
+    const newReply = {
       postId,
       parentId,
+      username: replyObj.username,
+      email: replyObj.email,
+      text: replyObj.text,
     };
 
     try {
-      await axios.post(
-        "https://materialblog-server-production.up.railway.app/api/comments",
-        payload
-      );
-      await fetchComments();
+      await dispatch(addComment(newReply));
       setSnackbar({ open: true, message: "Yanıt eklendi" });
     } catch (err) {
       console.error("Yanıt eklenemedi:", err);
@@ -105,10 +80,7 @@ const CommentSection = ({ postId }) => {
 
   const handleDelete = async (id) => {
     try {
-      await axios.delete(
-        `https://materialblog-server-production.up.railway.app/api/comments/${id}`
-      );
-      await fetchComments();
+      await dispatch(deleteComment(id));
       setSnackbar({ open: true, message: "Yorum silindi" });
     } catch (err) {
       console.error("Silme başarısız:", err);
@@ -119,18 +91,39 @@ const CommentSection = ({ postId }) => {
     setSnackbar({ open: true, message });
   };
 
-  const sortedComments = [...comments].sort((a, b) => {
-    if (sortOrder === "newest") {
-      return new Date(b.date) - new Date(a.date);
-    } else if (sortOrder === "oldest") {
-      return new Date(a.date) - new Date(b.date);
-    } else if (sortOrder === "mostLiked") {
-      const aCount = a.likes?.length || 0;
-      const bCount = b.likes?.length || 0;
-      return bCount - aCount;
-    }
-    return 0;
-  });
+  // Yorumları nested yapıya çevir
+  const buildNestedComments = (comments) => {
+    const map = {};
+    comments.forEach((c) => (map[c._id] = { ...c, replies: [] }));
+    const nested = [];
+    comments.forEach((c) => {
+      if (c.parentId) {
+        map[c.parentId]?.replies.push(map[c._id]);
+      } else {
+        nested.push(map[c._id]);
+      }
+    });
+    return nested;
+  };
+
+  // Yorumları sıralı ve nested olarak hazırla
+  const sortedComments = useMemo(() => {
+    const nested = buildNestedComments(flatComments);
+    return nested.sort((a, b) => {
+      if (sortOrder === "newest") {
+        return new Date(b.date) - new Date(a.date);
+      }
+      if (sortOrder === "oldest") {
+        return new Date(a.date) - new Date(b.date);
+      }
+      if (sortOrder === "mostLiked") {
+        const aLikes = a.likes?.length || 0;
+        const bLikes = b.likes?.length || 0;
+        return bLikes - aLikes;
+      }
+      return 0;
+    });
+  }, [flatComments, sortOrder]);
 
   return (
     <Box sx={{ mt: 4 }}>

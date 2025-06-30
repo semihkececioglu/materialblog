@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { ThemeProvider, CssBaseline } from "@mui/material";
 import { getTheme } from "./theme";
@@ -22,8 +22,39 @@ import AdminSettingsPage from "./admin/AdminSettingsPage";
 import PostEditorPage from "./admin/PostEditorPage";
 import AdminRoute from "./auth/AdminRoute";
 import AdminUsersPage from "./admin/AdminUsersPage";
-import { AuthProvider } from "./contexts/AuthContext";
 import NotFound from "./pages/NotFound";
+
+// Redux
+import { Provider, useDispatch } from "react-redux";
+import store from "./redux/store";
+import { login } from "./redux/userSlice"; // 🧠 login action'ı
+
+// Kullanıcıyı localStorage'dan alıp Redux'a yazan iç bileşen
+const AuthLoader = ({ children }) => {
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    const storedUser = localStorage.getItem("user");
+    const storedToken = localStorage.getItem("token");
+
+    if (storedUser && storedToken) {
+      try {
+        const parsedUser = JSON.parse(storedUser);
+
+        // 🔧 id → _id düzeltmesi
+        if (parsedUser.id && !parsedUser._id) {
+          parsedUser._id = parsedUser.id;
+        }
+
+        dispatch(login({ user: parsedUser, token: storedToken }));
+      } catch (error) {
+        console.error("Local user parse hatası:", error);
+      }
+    }
+  }, [dispatch]);
+
+  return children;
+};
 
 function App() {
   const [mode, setMode] = useState("light");
@@ -32,67 +63,75 @@ function App() {
   const theme = useMemo(() => getTheme(mode), [mode]);
 
   return (
-    <ThemeProvider theme={theme}>
-      <CssBaseline />
-      <AuthProvider>
+    <Provider store={store}>
+      <ThemeProvider theme={theme}>
+        <CssBaseline />
         <Router>
-          <Routes>
-            {/* Blog Layout */}
-            <Route
-              element={
-                <Layout
-                  toggleTheme={() =>
-                    setMode(mode === "light" ? "dark" : "light")
-                  }
-                  searchTerm={searchTerm}
-                  setSearchTerm={setSearchTerm}
+          <AuthLoader>
+            <Routes>
+              {/* Blog Layout */}
+              <Route
+                element={
+                  <Layout
+                    toggleTheme={() =>
+                      setMode(mode === "light" ? "dark" : "light")
+                    }
+                    searchTerm={searchTerm}
+                    setSearchTerm={setSearchTerm}
+                  />
+                }
+              >
+                <Route path="/" element={<Home />} />
+                <Route path="/post/:slug" element={<PostDetail />} />
+                <Route
+                  path="/category/:kategoriAdi"
+                  element={<CategoryPage />}
                 />
-              }
-            >
-              <Route path="/" element={<Home />} />
-              <Route path="/post/:slug" element={<PostDetail />} />
-              <Route path="/category/:kategoriAdi" element={<CategoryPage />} />
-              <Route
-                path="/category/:kategoriAdi/page/:pageNumber"
-                element={<CategoryPage />}
-              />
-              <Route path="/tag/:tag" element={<TagPosts />} />
-              <Route path="/tag/:tag/page/:pageNumber" element={<TagPosts />} />
-              <Route path="/register" element={<Register />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/search" element={<SearchResults />} />
-              <Route path="/profile/:username" element={<ProfilePage />} />
-              <Route
-                path="/profile/:username/edit"
-                element={<EditProfilePage />}
-              />
-              <Route path="/page/:pageNumber" element={<Home />} />
-              <Route path="*" element={<NotFound />} />
-            </Route>
+                <Route
+                  path="/category/:kategoriAdi/page/:pageNumber"
+                  element={<CategoryPage />}
+                />
+                <Route path="/tag/:tag" element={<TagPosts />} />
+                <Route
+                  path="/tag/:tag/page/:pageNumber"
+                  element={<TagPosts />}
+                />
+                <Route path="/register" element={<Register />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/search" element={<SearchResults />} />
+                <Route path="/profile/:username" element={<ProfilePage />} />
+                <Route
+                  path="/profile/:username/edit"
+                  element={<EditProfilePage />}
+                />
+                <Route path="/page/:pageNumber" element={<Home />} />
+                <Route path="*" element={<NotFound />} />
+              </Route>
 
-            {/* Admin Layout */}
-            <Route
-              path="/admin/*"
-              element={
-                <AdminRoute>
-                  <AdminLayout />
-                </AdminRoute>
-              }
-            >
-              <Route index element={<DashboardPage />} />
-              <Route path="posts" element={<PostsPage />} />
-              <Route path="categories" element={<AdminCategoriesPage />} />
-              <Route path="tags" element={<AdminTagsPage />} />
-              <Route path="comments" element={<AdminCommentsPage />} />
-              <Route path="users" element={<AdminUsersPage />} />
-              <Route path="settings" element={<AdminSettingsPage />} />
-              <Route path="editor" element={<PostEditorPage />} />
-              <Route path="posts/edit/:id" element={<PostEditorPage />} />
-            </Route>
-          </Routes>
+              {/* Admin Layout */}
+              <Route
+                path="/admin/*"
+                element={
+                  <AdminRoute>
+                    <AdminLayout />
+                  </AdminRoute>
+                }
+              >
+                <Route index element={<DashboardPage />} />
+                <Route path="posts" element={<PostsPage />} />
+                <Route path="categories" element={<AdminCategoriesPage />} />
+                <Route path="tags" element={<AdminTagsPage />} />
+                <Route path="comments" element={<AdminCommentsPage />} />
+                <Route path="users" element={<AdminUsersPage />} />
+                <Route path="settings" element={<AdminSettingsPage />} />
+                <Route path="editor" element={<PostEditorPage />} />
+                <Route path="posts/edit/:id" element={<PostEditorPage />} />
+              </Route>
+            </Routes>
+          </AuthLoader>
         </Router>
-      </AuthProvider>
-    </ThemeProvider>
+      </ThemeProvider>
+    </Provider>
   );
 }
 

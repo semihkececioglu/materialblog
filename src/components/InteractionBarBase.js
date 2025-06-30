@@ -1,126 +1,138 @@
-import React, { useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import {
   Box,
   IconButton,
   Tooltip,
   Typography,
   Divider,
-  useTheme,
+  Snackbar,
+  Alert,
   Popover,
   List,
   ListItem,
   ListItemText,
-  Snackbar,
-  Alert,
 } from "@mui/material";
 import {
   Favorite,
   FavoriteBorder,
-  ChatBubbleOutline,
   Bookmark,
   BookmarkBorder,
+  ChatBubbleOutline,
   Share,
   KeyboardArrowUp,
   ContentCopy,
 } from "@mui/icons-material";
-import XIcon from "@mui/icons-material/X";
 import WhatsAppIcon from "@mui/icons-material/WhatsApp";
 import TelegramIcon from "@mui/icons-material/Telegram";
-import { useInteractionBar } from "../contexts/InteractionBarContext";
-import { useAuth } from "../contexts/AuthContext";
+import XIcon from "@mui/icons-material/X";
+
+import { useSelector, useDispatch } from "react-redux";
+import {
+  setLiked,
+  setSaved,
+  setLikeCount,
+  fetchInteractionData,
+} from "../redux/interactionSlice";
+
 import axios from "axios";
 
-const InteractionBarBase = ({ visible = true, position = "fixed" }) => {
-  const theme = useTheme();
-  const [anchorEl, setAnchorEl] = useState(null);
+const InteractionBarBase = ({ position = "fixed", visible = true, postId }) => {
+  const dispatch = useDispatch();
+  const user = useSelector((state) => state.user.currentUser);
+  const liked = useSelector((state) => state.interaction.liked);
+  const saved = useSelector((state) => state.interaction.saved);
+  const likeCount = useSelector((state) => state.interaction.likeCount);
+  const commentCount = useSelector((state) => state.interaction.commentCount);
+
   const [snackbar, setSnackbar] = useState({ open: false, message: "" });
+  const [anchorEl, setAnchorEl] = useState(null);
+  const prevUserIdRef = useRef(null);
 
-  const {
-    liked,
-    setLiked,
-    likeCount,
-    setLikeCount,
-    commentCount,
-    saved,
-    setSaved,
-  } = useInteractionBar();
+  // İlk yüklemede tüm interaction verilerini getir
+  useEffect(() => {
+    if (postId && user?._id) {
+      dispatch(fetchInteractionData({ postId, userId: user._id }));
+      prevUserIdRef.current = user._id;
+    }
+  }, [postId]);
 
-  const { user } = useAuth();
-  const slug = window.location.pathname.split("/").pop();
+  // Kullanıcı değiştiğinde sadece durum güncelle (sayılar sabit)
+  useEffect(() => {
+    const currentUserId = user?._id;
+    const prevUserId = prevUserIdRef.current;
+
+    if (postId && currentUserId && currentUserId !== prevUserId) {
+      axios
+        .get(
+          `https://materialblog-server-production.up.railway.app/api/posts/${postId}/like-status`,
+          { params: { userId: currentUserId } }
+        )
+        .then((res) => {
+          dispatch(setLiked(res.data.liked));
+          dispatch(setLikeCount(res.data.likeCount));
+        });
+
+      axios
+        .get(
+          `https://materialblog-server-production.up.railway.app/api/users/id/${currentUserId}`
+        )
+        .then((res) => {
+          const isSaved = res.data.savedPosts?.includes(postId);
+          dispatch(setSaved(isSaved));
+        });
+
+      prevUserIdRef.current = currentUserId;
+    }
+  }, [user?._id, postId, dispatch]);
 
   const handleLike = async () => {
-    if (!user) {
-      setSnackbar({ open: true, message: "Beğenmek için giriş yapmalısınız." });
-      return;
+    if (!user?._id) {
+      return setSnackbar({ open: true, message: "Beğenmek için giriş yapın." });
     }
-
-    console.log("➡️ [handleLike] Başladı");
-    console.log("Slug:", slug);
-    console.log("User ID:", user._id);
 
     try {
       const res = await axios.post(
-        `https://materialblog-server-production.up.railway.app/api/posts/slug/${slug}/like`,
+        `https://materialblog-server-production.up.railway.app/api/posts/${postId}/like`,
         { userId: user._id }
       );
-
-      console.log("✅ [handleLike] Yanıt:", res.data);
-
-      setLiked(res.data.liked);
-      setLikeCount(res.data.likeCount);
-    } catch (error) {
-      console.error(
-        "❌ [handleLike] Hata:",
-        error?.response?.data || error.message
-      );
-      setSnackbar({ open: true, message: "Beğeni işlemi başarısız oldu." });
+      dispatch(setLiked(res.data.liked));
+      dispatch(setLikeCount(res.data.likeCount));
+    } catch {
+      setSnackbar({ open: true, message: "Beğeni hatası" });
     }
   };
 
   const handleSave = async () => {
-    if (!user) {
-      setSnackbar({
+    if (!user?._id) {
+      return setSnackbar({
         open: true,
-        message: "Kaydetmek için giriş yapmalısınız.",
+        message: "Kaydetmek için giriş yapın.",
       });
-      return;
     }
-
-    console.log("➡️ [handleSave] Başladı");
-    console.log("Slug:", slug);
-    console.log("User ID:", user._id);
 
     try {
       const res = await axios.post(
-        `https://materialblog-server-production.up.railway.app/api/posts/slug/${slug}/save`,
+        `https://materialblog-server-production.up.railway.app/api/posts/${postId}/save`,
         { userId: user._id }
       );
-
-      console.log("✅ [handleSave] Yanıt:", res.data);
-
-      setSaved(res.data.saved);
-    } catch (error) {
-      console.error(
-        "❌ [handleSave] Hata:",
-        error?.response?.data || error.message
-      );
-      setSnackbar({ open: true, message: "Kaydetme işlemi başarısız oldu." });
+      dispatch(setSaved(res.data.saved));
+    } catch {
+      setSnackbar({ open: true, message: "Kaydetme hatası" });
     }
   };
 
+  const handleScrollTop = () => window.scrollTo({ top: 0, behavior: "smooth" });
   const handleScrollToComments = () => {
     const form = document.getElementById("comment-form");
     if (form) form.scrollIntoView({ behavior: "smooth" });
   };
 
-  const handleScrollTop = () => window.scrollTo({ top: 0, behavior: "smooth" });
-
-  const handleShareClick = (event) => setAnchorEl(event.currentTarget);
+  const handleShareClick = (e) => setAnchorEl(e.currentTarget);
   const handleShareClose = () => setAnchorEl(null);
   const handleCopyLink = () => {
     navigator.clipboard.writeText(window.location.href);
-    handleShareClose();
     setSnackbar({ open: true, message: "Bağlantı kopyalandı" });
+    handleShareClose();
   };
 
   return (
@@ -133,21 +145,21 @@ const InteractionBarBase = ({ visible = true, position = "fixed" }) => {
         display: "flex",
         justifyContent: position === "static" ? "center" : undefined,
         opacity: visible ? 1 : 0,
+        pointerEvents: visible ? "auto" : "none",
         transition: "opacity 0.4s ease",
         zIndex: 1300,
-        pointerEvents: visible ? "auto" : "none",
         mt: position === "static" ? 4 : 0,
       }}
     >
       <Box
         sx={{
-          bgcolor: theme.palette.background.paper,
-          borderRadius: "999px",
-          boxShadow: 3,
-          px: 1.5,
-          py: 0.5,
           display: "flex",
           alignItems: "center",
+          bgcolor: "background.paper",
+          boxShadow: 3,
+          borderRadius: 999,
+          px: 2,
+          py: 1,
           gap: 1,
         }}
       >
@@ -196,15 +208,6 @@ const InteractionBarBase = ({ visible = true, position = "fixed" }) => {
           anchorEl={anchorEl}
           onClose={handleShareClose}
           anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
-          PaperProps={{
-            sx: {
-              borderRadius: 2,
-              p: 1,
-              boxShadow: 5,
-              bgcolor: theme.palette.background.paper,
-              minWidth: 250,
-            },
-          }}
         >
           <List dense disablePadding>
             <ListItem button onClick={handleCopyLink}>
@@ -216,15 +219,17 @@ const InteractionBarBase = ({ visible = true, position = "fixed" }) => {
               component="a"
               href={`https://x.com/share?url=${window.location.href}`}
               target="_blank"
+              rel="noopener noreferrer"
             >
               <XIcon fontSize="small" sx={{ mr: 1 }} />
-              <ListItemText primary="X (Twitter) ile Paylaş" />
+              <ListItemText primary="X ile Paylaş" />
             </ListItem>
             <ListItem
               button
               component="a"
               href={`https://wa.me/?text=${window.location.href}`}
               target="_blank"
+              rel="noopener noreferrer"
             >
               <WhatsAppIcon fontSize="small" sx={{ mr: 1 }} />
               <ListItemText primary="WhatsApp ile Paylaş" />
@@ -234,6 +239,7 @@ const InteractionBarBase = ({ visible = true, position = "fixed" }) => {
               component="a"
               href={`https://t.me/share/url?url=${window.location.href}`}
               target="_blank"
+              rel="noopener noreferrer"
             >
               <TelegramIcon fontSize="small" sx={{ mr: 1 }} />
               <ListItemText primary="Telegram ile Paylaş" />

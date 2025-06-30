@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import {
   Box,
@@ -9,9 +9,12 @@ import {
   Container,
   CircularProgress,
 } from "@mui/material";
-import axios from "axios";
 import PostCard from "../components/PostCard";
 import Sidebar from "../components/sidebar/Sidebar";
+
+// Redux
+import { useDispatch, useSelector } from "react-redux";
+import { fetchPosts } from "../redux/postSlice";
 
 const POSTS_PER_PAGE = 6;
 
@@ -20,31 +23,14 @@ const SearchResults = () => {
   const searchTerm = searchParams.get("q")?.toLowerCase() || "";
   const page = parseInt(searchParams.get("page")) || 1;
 
-  const [posts, setPosts] = useState([]);
-  const [totalPages, setTotalPages] = useState(1);
-  const [loading, setLoading] = useState(true);
-
+  const dispatch = useDispatch();
   const theme = useTheme();
 
-  useEffect(() => {
-    const fetchPosts = async () => {
-      try {
-        setLoading(true);
-        const res = await axios.get(
-          `https://materialblog-server-production.up.railway.app/api/posts?search=${searchTerm}&page=${page}&limit=${POSTS_PER_PAGE}`
-        );
-        setPosts(res.data.posts || []);
-        setTotalPages(res.data.totalPages || 1);
-      } catch (error) {
-        console.error("Arama sonuçları alınamadı:", error);
-        setPosts([]);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const { posts, totalPages, loading } = useSelector((state) => state.posts);
 
-    fetchPosts();
-  }, [searchTerm, page]);
+  useEffect(() => {
+    dispatch(fetchPosts({ search: searchTerm, page, limit: POSTS_PER_PAGE }));
+  }, [dispatch, searchTerm, page]);
 
   const handlePageChange = (event, value) => {
     setSearchParams({ q: searchTerm, page: value });

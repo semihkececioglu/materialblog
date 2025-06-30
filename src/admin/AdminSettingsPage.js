@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Box,
   Typography,
@@ -9,13 +9,23 @@ import {
   Alert,
   CircularProgress,
 } from "@mui/material";
-import axios from "axios";
+import { useDispatch, useSelector } from "react-redux";
+import {
+  fetchSettings,
+  updateSettings,
+  clearSuccess,
+} from "../../redux/slices/settingsSlice";
 
 const AdminSettingsPage = () => {
+  const dispatch = useDispatch();
+  const {
+    data: settings,
+    loading,
+    success,
+  } = useSelector((state) => state.settings);
+
   const [siteTitle, setSiteTitle] = useState("");
   const [siteDescription, setSiteDescription] = useState("");
-  const [darkMode, setDarkMode] = useState(false);
-  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [snackbar, setSnackbar] = useState({
     open: false,
@@ -23,53 +33,47 @@ const AdminSettingsPage = () => {
     severity: "success",
   });
 
+  // Ayarları Redux üzerinden çek
   useEffect(() => {
-    axios
-      .get("https://materialblog-server-production.up.railway.app/api/settings")
-      .then((res) => {
-        const settings = res.data || {};
-        setSiteTitle(settings.siteTitle || "");
-        setSiteDescription(settings.siteDescription || "");
-        setDarkMode(settings.darkMode || false);
-        setLoading(false);
-      })
-      .catch(() => {
-        const settings = JSON.parse(localStorage.getItem("siteSettings")) || {};
-        setSiteTitle(settings.title || "");
-        setSiteDescription(settings.description || "");
-        setDarkMode(settings.darkMode || false);
-        setLoading(false);
+    dispatch(fetchSettings());
+  }, [dispatch]);
+
+  // Redux verileri geldiğinde inputlara aktar
+  useEffect(() => {
+    if (settings) {
+      setSiteTitle(settings.siteTitle || "");
+      setSiteDescription(settings.siteDescription || "");
+    }
+  }, [settings]);
+
+  // Başarılı güncelleme sonrası snackbar göster
+  useEffect(() => {
+    if (success) {
+      setSnackbar({
+        open: true,
+        message: "Ayarlar kaydedildi",
+        severity: "success",
       });
-  }, []);
+      dispatch(clearSuccess());
+      setSaving(false);
+    }
+  }, [success, dispatch]);
 
   const handleSave = () => {
     setSaving(true);
-    const newSettings = {
-      siteTitle,
-      siteDescription,
-      darkMode,
-    };
-    axios
-      .put(
-        "https://materialblog-server-production.up.railway.app/api/settings",
-        newSettings
-      )
-      .then(() => {
-        setSnackbar({
-          open: true,
-          message: "Ayarlar kaydedildi",
-          severity: "success",
-        });
-        localStorage.setItem("siteSettings", JSON.stringify(newSettings));
+    dispatch(
+      updateSettings({
+        siteTitle,
+        siteDescription,
       })
-      .catch(() => {
-        setSnackbar({
-          open: true,
-          message: "Kaydetme hatası",
-          severity: "error",
-        });
-      })
-      .finally(() => setSaving(false));
+    ).catch(() => {
+      setSnackbar({
+        open: true,
+        message: "Kaydetme hatası",
+        severity: "error",
+      });
+      setSaving(false);
+    });
   };
 
   if (loading) return <CircularProgress />;

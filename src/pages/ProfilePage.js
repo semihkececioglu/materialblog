@@ -17,7 +17,7 @@ import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
 import FavoriteIcon from "@mui/icons-material/Favorite";
 import BookmarkIcon from "@mui/icons-material/Bookmark";
 import { useParams, Link } from "react-router-dom";
-import { useAuth } from "../contexts/AuthContext";
+import { useSelector } from "react-redux";
 import axios from "axios";
 
 const stringToColor = (name) => {
@@ -30,7 +30,7 @@ const stringToColor = (name) => {
 
 const ProfilePage = () => {
   const { username } = useParams();
-  const { user } = useAuth();
+  const user = useSelector((state) => state.user.currentUser);
   const theme = useTheme();
 
   const [userData, setUserData] = useState(null);

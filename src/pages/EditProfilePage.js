@@ -8,7 +8,7 @@ import {
   useTheme,
   Snackbar,
 } from "@mui/material";
-import { useAuth } from "../contexts/AuthContext";
+import { useSelector } from "react-redux";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 
@@ -21,7 +21,7 @@ const stringToColor = (name) => {
 };
 
 const EditProfilePage = () => {
-  const { user } = useAuth();
+  const user = useSelector((state) => state.user.currentUser);
   const { username } = useParams();
   const navigate = useNavigate();
   const theme = useTheme();
@@ -30,7 +30,7 @@ const EditProfilePage = () => {
   const [lastName, setLastName] = useState("");
   const [open, setOpen] = useState(false);
 
-  const containerRef = useRef(null); // Snackbar'ın bağlanacağı alan
+  const containerRef = useRef(null);
 
   useEffect(() => {
     if (!user || user.username !== username) return;
@@ -159,14 +159,7 @@ const EditProfilePage = () => {
         </form>
       </Box>
 
-      {/* Snackbar Card'ın altına ortalı şekilde */}
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "center",
-          mt: 2,
-        }}
-      >
+      <Box sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
         <Snackbar
           open={open}
           autoHideDuration={3000}

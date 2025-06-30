@@ -1,8 +1,12 @@
 import React from "react";
 import InteractionBarBase from "./InteractionBarBase";
 
-const FloatingInteractionBar = ({ visible = true }) => {
-  return <InteractionBarBase visible={visible} position="fixed" />;
+const FloatingInteractionBar = ({ visible = true, postId }) => {
+  if (!postId) return null; // Güvenlik: postId olmadan interaction bar yüklenmesin
+
+  return (
+    <InteractionBarBase visible={visible} position="fixed" postId={postId} />
+  );
 };
 
 export default FloatingInteractionBar;

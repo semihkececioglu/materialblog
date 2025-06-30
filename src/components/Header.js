@@ -34,8 +34,9 @@ import {
   ExpandMore,
 } from "@mui/icons-material";
 import { Link, useNavigate } from "react-router-dom";
-import { useAuth } from "../contexts/AuthContext";
 import { slugify } from "../utils";
+import { useSelector, useDispatch } from "react-redux";
+import { logout } from "../redux/userSlice";
 
 const categories = ["React", "Tasarım", "Javascript"];
 
@@ -62,7 +63,8 @@ const Header = ({ toggleTheme, searchTerm, setSearchTerm }) => {
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
-  const { user, logout } = useAuth();
+  const user = useSelector((state) => state.user.currentUser);
+  const dispatch = useDispatch();
   const navigate = useNavigate();
 
   const handleSearch = () => {
@@ -276,7 +278,7 @@ const Header = ({ toggleTheme, searchTerm, setSearchTerm }) => {
                     </MenuItem>
                     <MenuItem
                       onClick={() => {
-                        logout();
+                        dispatch(logout());
                         setProfileAnchorEl(null);
                       }}
                       sx={{ fontFamily: "inherit", fontSize: 14 }}
@@ -399,7 +401,7 @@ const Header = ({ toggleTheme, searchTerm, setSearchTerm }) => {
                     button
                     sx={{ pl: 4 }}
                     onClick={() => {
-                      logout();
+                      dispatch(logout());
                       setDrawerOpen(false);
                     }}
                   >

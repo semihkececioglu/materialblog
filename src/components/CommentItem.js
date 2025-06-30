@@ -22,9 +22,13 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
 import ChatBubbleOutlineIcon from "@mui/icons-material/ChatBubbleOutline";
 import FavoriteIcon from "@mui/icons-material/Favorite";
-import axios from "axios";
+import { useDispatch, useSelector } from "react-redux";
+import {
+  toggleLikeComment,
+  deleteComment,
+  editComment,
+} from "../redux/commentSlice";
 import getTimeAgo from "../utils/getTimeAgo";
-import { useAuth } from "../contexts/AuthContext";
 
 const stringToColor = (name) => {
   if (!name || typeof name !== "string") return "#888";
@@ -40,17 +44,16 @@ const CommentItem = ({
   onReplySubmit,
   replyingTo,
   setReplyingTo,
-  onDelete,
   onNotify,
 }) => {
-  const { user } = useAuth();
+  const dispatch = useDispatch();
+  const user = useSelector((state) => state.user.currentUser);
   const isOwner = user?.username === comment.username;
   const isAdmin = user?.role === "admin";
 
   const [replyText, setReplyText] = useState("");
   const [replyEmail, setReplyEmail] = useState("");
   const [replyName, setReplyName] = useState("");
-
   const [editMode, setEditMode] = useState(false);
   const [editedText, setEditedText] = useState(comment.text);
   const [liked, setLiked] = useState(false);
@@ -66,21 +69,23 @@ const CommentItem = ({
     setLikeCount(comment.likes?.length || 0);
   }, [comment.likes, user?.username]);
 
-  const handleLike = async () => {
+  const handleLike = () => {
     if (!user) return setShowAlert(true);
     if (isOwner) return;
 
-    try {
-      const res = await axios.put(
-        `https://materialblog-server-production.up.railway.app/api/comments/${comment._id}/like`,
-        { username: user.username }
+    dispatch(
+      toggleLikeComment({ commentId: comment._id, username: user.username })
+    ).then((res) => {
+      const updated = res.payload;
+      if (!updated?.likes) return;
+      setLiked(updated.likes.includes(user.username));
+      setLikeCount(updated.likes.length);
+      onNotify?.(
+        updated.likes.includes(user.username)
+          ? "Beğenildi"
+          : "Beğenme geri alındı"
       );
-      setLiked(res.data.liked);
-      setLikeCount(res.data.likes.length);
-      onNotify?.(res.data.liked ? "Beğenildi" : "Beğenme geri alındı");
-    } catch (err) {
-      console.error("Beğeni hatası:", err);
-    }
+    });
   };
 
   const handleReply = () => {
@@ -91,8 +96,10 @@ const CommentItem = ({
       username: responderUsername,
       email: user?.email || replyEmail,
       text: replyText,
-      date: new Date().toISOString(),
+      parentId: comment._id,
+      postId: comment.postId, // ✅ reply'nin bağlandığı postId
     };
+
     onReplySubmit(comment._id, newReply);
     setReplyText("");
     setReplyName("");
@@ -103,16 +110,18 @@ const CommentItem = ({
 
   const handleEditSubmit = async () => {
     try {
-      await axios.put(
-        `https://materialblog-server-production.up.railway.app/api/comments/${comment._id}`,
-        { text: editedText }
-      );
-      comment.text = editedText;
+      await dispatch(editComment({ id: comment._id, text: editedText }));
       setEditMode(false);
       setSnackbar({ open: true, message: "Yorum güncellendi" });
     } catch (err) {
       console.error("Güncelleme hatası:", err);
     }
+  };
+
+  const handleDelete = () => {
+    dispatch(deleteComment(comment._id));
+    setOpenDialog(false);
+    setSnackbar({ open: true, message: "Yorum silindi" });
   };
 
   return (
@@ -276,7 +285,6 @@ const CommentItem = ({
                 onReplySubmit={onReplySubmit}
                 replyingTo={replyingTo}
                 setReplyingTo={setReplyingTo}
-                onDelete={onDelete}
                 onNotify={onNotify}
               />
             ))}
@@ -292,15 +300,7 @@ const CommentItem = ({
           </DialogContent>
           <DialogActions>
             <Button onClick={() => setOpenDialog(false)}>Vazgeç</Button>
-            <Button
-              onClick={() => {
-                onDelete(comment._id);
-                setOpenDialog(false);
-                setSnackbar({ open: true, message: "Yorum silindi" });
-              }}
-              autoFocus
-              color="error"
-            >
+            <Button onClick={handleDelete} autoFocus color="error">
               Evet, Sil
             </Button>
           </DialogActions>

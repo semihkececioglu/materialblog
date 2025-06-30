@@ -1,6 +1,5 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import axios from "axios";
 import PostCard from "../components/PostCard";
 import {
   Container,
@@ -11,36 +10,31 @@ import {
   CircularProgress,
 } from "@mui/material";
 
+// Redux
+import { useDispatch, useSelector } from "react-redux";
+import { fetchPosts } from "../redux/postSlice";
+
 const POSTS_PER_PAGE = 6;
 
 function CategoryPage() {
   const { kategoriAdi, pageNumber } = useParams();
   const navigate = useNavigate();
   const theme = useTheme();
+  const dispatch = useDispatch();
 
   const page = parseInt(pageNumber) || 1;
-  const [posts, setPosts] = useState([]);
-  const [totalPages, setTotalPages] = useState(1);
-  const [loading, setLoading] = useState(true);
+
+  const { posts, totalPages, loading } = useSelector((state) => state.posts);
 
   useEffect(() => {
-    const fetchPostsByCategory = async () => {
-      setLoading(true);
-      try {
-        const res = await axios.get(
-          `https://materialblog-server-production.up.railway.app/api/posts?category=${kategoriAdi}&page=${page}&limit=${POSTS_PER_PAGE}`
-        );
-        setPosts(res.data.posts || []);
-        setTotalPages(res.data.totalPages || 1);
-      } catch (err) {
-        console.error("Kategoriye göre postlar alınamadı:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchPostsByCategory();
-  }, [kategoriAdi, page]);
+    dispatch(
+      fetchPosts({
+        category: decodeURIComponent(kategoriAdi),
+        page,
+        limit: POSTS_PER_PAGE,
+      })
+    );
+  }, [dispatch, kategoriAdi, page]);
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -54,13 +48,14 @@ function CategoryPage() {
     navigate(pageUrl);
   };
 
+  const formattedCategoryName = decodeURIComponent(kategoriAdi)
+    .replace(/-/g, " ")
+    .replace(/\b\w/g, (l) => l.toUpperCase());
+
   return (
     <Container sx={{ mt: 4 }}>
       <Typography variant="h4" gutterBottom>
-        {decodeURIComponent(kategoriAdi)
-          .replace(/-/g, " ")
-          .replace(/\b\w/g, (l) => l.toUpperCase())}{" "}
-        Kategorisi
+        {formattedCategoryName} Kategorisi
       </Typography>
 
       {loading ? (

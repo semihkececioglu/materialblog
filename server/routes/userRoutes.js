@@ -84,4 +84,18 @@ router.put("/:id/role", async (req, res) => {
   }
 });
 
+// ✅ GET /api/users/id/:id → ID ile kullanıcıyı getir
+router.get("/id/:id", async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id).select("-password");
+    if (!user) {
+      return res.status(404).json({ message: "Kullanıcı bulunamadı" });
+    }
+    res.json(user);
+  } catch (error) {
+    console.error("ID ile kullanıcı alma hatası:", error.message);
+    res.status(500).json({ message: "Sunucu hatası" });
+  }
+});
+
 module.exports = router;

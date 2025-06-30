@@ -16,35 +16,29 @@ import {
   DialogTitle,
   TextField,
   Button,
+  CircularProgress,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchTags, deleteTag } from "../redux/tagSlice";
 import axios from "axios";
 
 const AdminTagsPage = () => {
-  const [tags, setTags] = useState([]);
+  const dispatch = useDispatch();
+  const { items: tags, loading } = useSelector((state) => state.tags);
+
   const [openDialog, setOpenDialog] = useState(false);
   const [editingTag, setEditingTag] = useState(null);
   const [tagInput, setTagInput] = useState("");
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleteTagId, setDeleteTagId] = useState(null);
 
-  // Etiketleri backend'den çek
-  const fetchTags = async () => {
-    try {
-      const res = await axios.get(
-        "https://materialblog-server-production.up.railway.app/api/tags"
-      );
-      setTags(res.data);
-    } catch (err) {
-      console.error("Etiketler alınamadı:", err);
-    }
-  };
-
+  // Redux üzerinden etiketleri çek
   useEffect(() => {
-    fetchTags();
-  }, []);
+    dispatch(fetchTags());
+  }, [dispatch]);
 
   const handleSave = async () => {
     if (tagInput.trim() === "") return;
@@ -61,7 +55,7 @@ const AdminTagsPage = () => {
           { name: tagInput }
         );
       }
-      fetchTags();
+      dispatch(fetchTags());
       setOpenDialog(false);
       setTagInput("");
       setEditingTag(null);
@@ -71,16 +65,9 @@ const AdminTagsPage = () => {
   };
 
   const handleDelete = async () => {
-    try {
-      await axios.delete(
-        `https://materialblog-server-production.up.railway.app/api/tags/${deleteTagId}`
-      );
-      fetchTags();
-      setConfirmDelete(false);
-      setDeleteTagId(null);
-    } catch (err) {
-      console.error("Etiket silme hatası:", err);
-    }
+    dispatch(deleteTag(deleteTagId));
+    setConfirmDelete(false);
+    setDeleteTagId(null);
   };
 
   const openEditDialog = (tag) => {
@@ -99,13 +86,7 @@ const AdminTagsPage = () => {
           mb: 3,
         }}
       >
-        <Typography
-          variant="h5"
-          sx={{
-            fontWeight: "bold",
-            textShadow: "1px 1px 2px rgba(0,0,0,0.1)",
-          }}
-        >
+        <Typography variant="h5" sx={{ fontWeight: "bold" }}>
           Etiketler
         </Typography>
         <Button
@@ -141,44 +122,51 @@ const AdminTagsPage = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {tags.map((tag, index) => (
-                <TableRow
-                  key={tag._id}
-                  hover
-                  sx={{
-                    transition: "all 0.2s ease-in-out",
-                    "&:hover": {
-                      backgroundColor: "rgba(0, 0, 0, 0.04)",
-                    },
-                  }}
-                >
-                  <TableCell>{index + 1}</TableCell>
-                  <TableCell>{tag.name}</TableCell>
-                  <TableCell align="right">
-                    <IconButton
-                      color="primary"
-                      onClick={() => openEditDialog(tag)}
-                    >
-                      <EditIcon />
-                    </IconButton>
-                    <IconButton
-                      color="error"
-                      onClick={() => {
-                        setDeleteTagId(tag._id);
-                        setConfirmDelete(true);
-                      }}
-                    >
-                      <DeleteIcon />
-                    </IconButton>
+              {loading ? (
+                <TableRow>
+                  <TableCell colSpan={3} align="center">
+                    <CircularProgress size={24} />
                   </TableCell>
                 </TableRow>
-              ))}
-              {tags.length === 0 && (
+              ) : tags.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={3} align="center">
                     Henüz etiket eklenmedi.
                   </TableCell>
                 </TableRow>
+              ) : (
+                tags.map((tag, index) => (
+                  <TableRow
+                    key={tag._id}
+                    hover
+                    sx={{
+                      transition: "all 0.2s ease-in-out",
+                      "&:hover": {
+                        backgroundColor: "rgba(0, 0, 0, 0.04)",
+                      },
+                    }}
+                  >
+                    <TableCell>{index + 1}</TableCell>
+                    <TableCell>{tag.name}</TableCell>
+                    <TableCell align="right">
+                      <IconButton
+                        color="primary"
+                        onClick={() => openEditDialog(tag)}
+                      >
+                        <EditIcon />
+                      </IconButton>
+                      <IconButton
+                        color="error"
+                        onClick={() => {
+                          setDeleteTagId(tag._id);
+                          setConfirmDelete(true);
+                        }}
+                      >
+                        <DeleteIcon />
+                      </IconButton>
+                    </TableCell>
+                  </TableRow>
+                ))
               )}
             </TableBody>
           </Table>
@@ -186,18 +174,7 @@ const AdminTagsPage = () => {
       </Paper>
 
       {/* Etiket Ekle / Düzenle Dialog */}
-      <Dialog
-        open={openDialog}
-        onClose={() => setOpenDialog(false)}
-        PaperProps={{
-          sx: {
-            backgroundColor: "rgba(255, 255, 255, 0.85)",
-            backdropFilter: "blur(12px)",
-            borderRadius: 3,
-            p: 2,
-          },
-        }}
-      >
+      <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>
         <DialogTitle>
           {editingTag ? "Etiketi Düzenle" : "Yeni Etiket"}
         </DialogTitle>
@@ -219,18 +196,7 @@ const AdminTagsPage = () => {
       </Dialog>
 
       {/* Silme onayı */}
-      <Dialog
-        open={confirmDelete}
-        onClose={() => setConfirmDelete(false)}
-        PaperProps={{
-          sx: {
-            backgroundColor: "rgba(255, 255, 255, 0.9)",
-            backdropFilter: "blur(8px)",
-            borderRadius: 3,
-            p: 2,
-          },
-        }}
-      >
+      <Dialog open={confirmDelete} onClose={() => setConfirmDelete(false)}>
         <DialogTitle>Bu etiketi silmek istediğinize emin misiniz?</DialogTitle>
         <DialogActions>
           <Button onClick={() => setConfirmDelete(false)}>Vazgeç</Button>

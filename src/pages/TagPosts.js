@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   Container,
@@ -10,8 +10,11 @@ import {
   useTheme,
   Paper,
 } from "@mui/material";
-import axios from "axios";
 import PostCard from "../components/PostCard";
+
+// Redux
+import { useDispatch, useSelector } from "react-redux";
+import { fetchPosts } from "../redux/postSlice";
 
 const POSTS_PER_PAGE = 6;
 
@@ -29,31 +32,21 @@ function TagPosts() {
   const { tag, pageNumber } = useParams();
   const navigate = useNavigate();
   const theme = useTheme();
+  const dispatch = useDispatch();
 
   const page = parseInt(pageNumber) || 1;
 
-  const [posts, setPosts] = useState([]);
-  const [totalPages, setTotalPages] = useState(1);
-  const [loading, setLoading] = useState(true);
+  const { posts, totalPages, loading } = useSelector((state) => state.posts);
 
   useEffect(() => {
-    const fetchTaggedPosts = async () => {
-      setLoading(true);
-      try {
-        const res = await axios.get(
-          `https://materialblog-server-production.up.railway.app/api/posts?tag=${tag}&page=${page}&limit=${POSTS_PER_PAGE}`
-        );
-        setPosts(res.data.posts || []);
-        setTotalPages(res.data.totalPages || 1);
-      } catch (err) {
-        console.error("Etikete göre yazılar alınamadı:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchTaggedPosts();
-  }, [tag, page]);
+    dispatch(
+      fetchPosts({
+        tag: decodeURIComponent(tag),
+        page,
+        limit: POSTS_PER_PAGE,
+      })
+    );
+  }, [dispatch, tag, page]);
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });

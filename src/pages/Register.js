@@ -10,18 +10,20 @@ import {
   Alert,
 } from "@mui/material";
 import { useNavigate, Link } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import { login } from "../redux/userSlice";
 import axios from "axios";
 
 const Register = () => {
   const theme = useTheme();
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-
   const [error, setError] = useState("");
 
   const handleSubmit = async (e) => {
@@ -45,14 +47,13 @@ const Register = () => {
         }
       );
 
-      navigate("/login");
+      dispatch(login({ user: res.data.user, token: res.data.token }));
+      navigate("/");
       window.scrollTo(0, 0);
     } catch (err) {
-      if (err.response?.data?.message) {
-        setError(err.response.data.message);
-      } else {
-        setError("Kayıt işlemi sırasında bir hata oluştu.");
-      }
+      setError(
+        err.response?.data?.message || "Kayıt işlemi sırasında bir hata oluştu."
+      );
     }
   };
 

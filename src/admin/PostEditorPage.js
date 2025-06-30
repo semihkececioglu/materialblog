@@ -1,3 +1,4 @@
+// 🔁 Redux + Axios entegre, senkron sorunsuz PostEditorPage.js
 import React, { useState, useEffect } from "react";
 import {
   TextField,
@@ -22,6 +23,15 @@ import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 import Quill from "quill";
 import ImageResize from "quill-image-resize-module-react";
+
+// Redux
+import { useDispatch, useSelector } from "react-redux";
+import {
+  fetchPostById,
+  clearSelectedPost,
+  createPost,
+  updatePost,
+} from "../redux/postSlice";
 
 Quill.register("modules/imageResize", ImageResize);
 
@@ -88,6 +98,12 @@ const quillFormats = [
 ];
 
 const PostEditorPage = () => {
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const { id } = useParams();
+
+  const loading = useSelector((state) => state.posts.loading);
+
   const [form, setForm] = useState({
     title: "",
     category: "",
@@ -99,37 +115,32 @@ const PostEditorPage = () => {
 
   const [categories, setCategories] = useState([]);
   const [allTags, setAllTags] = useState([]);
-  const [loading, setLoading] = useState(false);
   const [isCoverUploading, setIsCoverUploading] = useState(false);
   const [snackbar, setSnackbar] = useState({
     open: false,
     message: "",
     severity: "success",
   });
-  const navigate = useNavigate();
-  const { id } = useParams();
 
+  // Kategori ve etiketleri al
   useEffect(() => {
     axios
       .get(`${BASE_URL}/api/categories`)
       .then((res) => setCategories(res.data.map((c) => c.name)))
       .catch((err) => console.error("Kategori alınamadı:", err));
-  }, []);
 
-  useEffect(() => {
     axios
       .get(`${BASE_URL}/api/tags`)
       .then((res) => setAllTags(res.data))
       .catch((err) => console.error("Etiketler alınamadı:", err));
   }, []);
 
+  // Düzenlenecek postu al
   useEffect(() => {
-    if (id) {
-      setLoading(true);
-      axios
-        .get(`${BASE_URL}/api/posts/${id}`)
-        .then((res) => {
-          const post = res.data;
+    const fetchData = async () => {
+      if (id) {
+        try {
+          const post = await dispatch(fetchPostById(id)).unwrap();
           setForm({
             title: post.title || "",
             category: post.category || "",
@@ -138,11 +149,25 @@ const PostEditorPage = () => {
             content: post.content || "",
             tags: post.tags || [],
           });
-        })
-        .catch((err) => console.error("Yazı çekilemedi:", err))
-        .finally(() => setLoading(false));
-    }
-  }, [id]);
+        } catch (err) {
+          console.error("Yazı alınamadı:", err);
+        }
+      } else {
+        setForm({
+          title: "",
+          category: "",
+          image: "",
+          summary: "",
+          content: "",
+          tags: [],
+        });
+      }
+    };
+
+    fetchData();
+
+    return () => dispatch(clearSelectedPost());
+  }, [id, dispatch]);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -185,22 +210,24 @@ const PostEditorPage = () => {
 
     try {
       if (id) {
-        await axios.put(`${BASE_URL}/api/posts/${id}`, payload);
+        await dispatch(updatePost({ id, updatedPost: payload })).unwrap();
         setSnackbar({
           open: true,
           message: "Yazı güncellendi!",
           severity: "success",
         });
       } else {
-        await axios.post(`${BASE_URL}/api/posts`, payload);
+        await dispatch(createPost(payload)).unwrap();
         setSnackbar({
           open: true,
           message: "Yazı oluşturuldu!",
           severity: "success",
         });
       }
+
       setTimeout(() => navigate("/admin/posts"), 1500);
     } catch (err) {
+      console.error("Gönderim hatası:", err);
       setSnackbar({
         open: true,
         message: "İşlem başarısız",
@@ -209,7 +236,13 @@ const PostEditorPage = () => {
     }
   };
 
-  if (loading) return <Typography>Yükleniyor...</Typography>;
+  if (loading || (id && form.title === "")) {
+    return (
+      <Box sx={{ display: "flex", justifyContent: "center", mt: 8 }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
 
   return (
     <Container maxWidth="md" sx={{ py: 4 }}>
@@ -271,7 +304,6 @@ const PostEditorPage = () => {
                 onChange={handleCoverUpload}
               />
             </Button>
-
             {isCoverUploading ? (
               <Box mt={2} display="flex" justifyContent="center">
                 <CircularProgress />

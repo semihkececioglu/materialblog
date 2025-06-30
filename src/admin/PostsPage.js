@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Paper,
   Typography,
@@ -21,8 +21,11 @@ import {
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import AddIcon from "@mui/icons-material/Add";
-import axios from "axios";
 import { useNavigate } from "react-router-dom";
+
+// Redux
+import { useDispatch, useSelector } from "react-redux";
+import { fetchPosts, deletePost } from "../redux/postSlice";
 
 const categoryColors = {
   React: "primary",
@@ -37,32 +40,19 @@ const Transition = React.forwardRef(function Transition(props, ref) {
 
 const PostsPage = () => {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
-  const [allPosts, setAllPosts] = useState([]);
-  const [open, setOpen] = useState(false);
-  const [editingPost, setEditingPost] = useState(null);
+  const { posts: allPosts, loading } = useSelector((state) => state.posts);
+
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [postToDelete, setPostToDelete] = useState(null);
-
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [snackbarSeverity, setSnackbarSeverity] = useState("success");
 
   useEffect(() => {
-    fetchPosts();
-  }, []);
-
-  const fetchPosts = async () => {
-    try {
-      const res = await axios.get(
-        "https://materialblog-server-production.up.railway.app/api/posts?limit=1000"
-      );
-      setAllPosts(res.data.posts || []);
-    } catch (err) {
-      console.error("Yazılar çekilemedi:", err);
-      showSnackbar("Yazılar alınamadı", "error");
-    }
-  };
+    dispatch(fetchPosts({ page: 1, limit: 1000 }));
+  }, [dispatch]);
 
   const showSnackbar = (message, severity = "success") => {
     setSnackbarMessage(message);
@@ -70,38 +60,11 @@ const PostsPage = () => {
     setSnackbarOpen(true);
   };
 
-  const handleAddPost = async (newPost) => {
-    try {
-      if (editingPost) {
-        await axios.put(
-          `https://materialblog-server-production.up.railway.app/api/posts/${editingPost._id}`,
-          newPost
-        );
-        showSnackbar("Yazı güncellendi!");
-      } else {
-        await axios.post(
-          "https://materialblog-server-production.up.railway.app/api/posts",
-          newPost
-        );
-        showSnackbar("Yazı başarıyla eklendi!");
-        window.scrollTo({ top: 0, behavior: "smooth" });
-      }
-      fetchPosts();
-      setOpen(false);
-      setEditingPost(null);
-    } catch (err) {
-      console.error("Ekleme/Güncelleme hatası:", err);
-      showSnackbar("İşlem sırasında hata oluştu", "error");
-    }
-  };
-
   const handleDeleteConfirm = async () => {
     if (!postToDelete) return;
     try {
-      await axios.delete(
-        `https://materialblog-server-production.up.railway.app/api/posts/${postToDelete}`
-      );
-      fetchPosts();
+      await dispatch(deletePost(postToDelete)).unwrap();
+      dispatch(fetchPosts({ page: 1, limit: 1000 }));
       showSnackbar("Yazı başarıyla silindi!", "info");
     } catch (err) {
       console.error("Silme hatası:", err);
@@ -151,7 +114,6 @@ const PostsPage = () => {
         </Button>
       </Box>
 
-      {/* Yazılar Tablosu */}
       <Paper
         elevation={0}
         sx={{
@@ -219,7 +181,7 @@ const PostsPage = () => {
         </Box>
       </Paper>
 
-      {/* SİLME ONAY DİYALOĞU */}
+      {/* Silme Onay */}
       <Dialog
         open={confirmDelete}
         onClose={() => setConfirmDelete(false)}
@@ -245,7 +207,7 @@ const PostsPage = () => {
         </DialogActions>
       </Dialog>
 
-      {/* SNACKBAR BİLDİRİM */}
+      {/* Snackbar */}
       <Snackbar
         open={snackbarOpen}
         autoHideDuration={3000}

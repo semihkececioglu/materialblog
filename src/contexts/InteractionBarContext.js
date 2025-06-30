@@ -1,100 +1,72 @@
+// src/contexts/InteractionBarContext.js
 import React, { createContext, useContext, useEffect, useState } from "react";
 import axios from "axios";
-import { useAuth } from "./AuthContext";
+import { useSelector } from "react-redux";
 
 const InteractionBarContext = createContext();
 
-export const InteractionBarProvider = ({ children }) => {
-  const { user, loading } = useAuth(); // 🔄 loading eklendi
+export const InteractionBarProvider = ({ children, postId }) => {
+  const user = useSelector((state) => state.user.currentUser);
   const [liked, setLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(0);
   const [saved, setSaved] = useState(false);
   const [commentCount, setCommentCount] = useState(0);
 
-  const slug = window.location.pathname.split("/").pop();
-
-  // ✅ Beğeni durumu
-  const fetchLikeStatus = async () => {
-    try {
-      const res = await axios.get(
-        `https://materialblog-server-production.up.railway.app/api/posts/slug/${slug}/like-status`,
-        { params: { userId: user?._id } }
-      );
-      setLiked(res.data.liked);
-      setLikeCount(res.data.likeCount);
-    } catch (err) {
-      console.error("Beğeni durumu alınamadı:", err);
-    }
-  };
-
-  // ✅ Kaydetme durumu
-  const fetchSaveStatus = async () => {
-    try {
-      // 1. Kullanıcı verisini al
-      const userRes = await axios.get(
-        `https://materialblog-server-production.up.railway.app/api/users/${user?._id}`
-      );
-      const savedPostIds =
-        userRes.data.savedPosts?.map((id) => id.toString()) || [];
-
-      // 2. Slug'a göre post'u al
-      const postRes = await axios.get(
-        `https://materialblog-server-production.up.railway.app/api/posts`
-      );
-      const currentPost = postRes.data.find((p) => p.slug === slug);
-
-      // 3. Slug eşleştiyse, o post'un _id'si savedPostIds içinde mi kontrol et
-      if (currentPost) {
-        const isSaved = savedPostIds.includes(currentPost._id.toString());
-        setSaved(isSaved);
-      } else {
-        console.warn("Slug eşleşen yazı bulunamadı:", slug);
-      }
-    } catch (err) {
-      console.error("Kaydetme durumu alınamadı:", err);
-    }
-  };
-
-  // ✅ Yorum sayısı
-  const fetchCommentCount = async () => {
-    try {
-      const postRes = await axios.get(
-        `https://materialblog-server-production.up.railway.app/api/posts`
-      );
-      const currentPost = postRes.data.find((p) => p.slug === slug);
-      if (!currentPost) return;
-
-      const res = await axios.get(
-        `https://materialblog-server-production.up.railway.app/api/comments?postId=${currentPost._id}`
-      );
-
-      const calculateTotalComments = (comments) => {
-        let total = 0;
-        const countRecursive = (arr) => {
-          arr.forEach((c) => {
-            total += 1;
-            if (Array.isArray(c.replies)) {
-              countRecursive(c.replies);
-            }
-          });
-        };
-        countRecursive(res.data || []);
-        return total;
-      };
-
-      setCommentCount(calculateTotalComments(res.data));
-    } catch (err) {
-      console.error("Yorum sayısı alınamadı:", err);
-    }
-  };
-
   useEffect(() => {
-    if (!slug || loading) return;
+    if (!postId || !user) return;
 
-    fetchLikeStatus();
-    fetchCommentCount();
-    if (user) fetchSaveStatus();
-  }, [slug, user, loading]);
+    // Beğeni durumu
+    axios
+      .get(
+        `https://materialblog-server-production.up.railway.app/api/posts/${postId}/like-status`,
+        { params: { userId: user._id } }
+      )
+      .then((res) => {
+        setLiked(res.data.liked);
+        setLikeCount(res.data.likeCount);
+      })
+      .catch((err) => {
+        console.error("[Beğeni] Hata:", err);
+      });
+
+    // Kaydetme durumu
+    axios
+      .get(
+        `https://materialblog-server-production.up.railway.app/api/users/${user._id}`
+      )
+      .then((res) => {
+        const savedPostIds = res.data.savedPosts?.map((id) => String(id)) || [];
+        setSaved(savedPostIds.includes(postId));
+      })
+      .catch((err) => {
+        console.error("[Kaydet] Hata:", err);
+      });
+  }, [postId, user]);
+
+  // Yorum sayısı
+  useEffect(() => {
+    if (!postId) return;
+    axios
+      .get(
+        `https://materialblog-server-production.up.railway.app/api/comments?postId=${postId}`
+      )
+      .then((res) => {
+        const countReplies = (comments) => {
+          let count = 0;
+          const traverse = (arr) =>
+            arr.forEach((c) => {
+              count++;
+              if (Array.isArray(c.replies)) traverse(c.replies);
+            });
+          traverse(comments);
+          return count;
+        };
+        setCommentCount(countReplies(res.data || []));
+      })
+      .catch((err) => {
+        console.error("[Yorum Sayısı] Hata:", err);
+      });
+  }, [postId]);
 
   return (
     <InteractionBarContext.Provider
@@ -103,9 +75,10 @@ export const InteractionBarProvider = ({ children }) => {
         setLiked,
         likeCount,
         setLikeCount,
-        commentCount,
         saved,
         setSaved,
+        commentCount,
+        postId,
       }}
     >
       {children}
