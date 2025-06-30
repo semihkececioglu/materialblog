@@ -6,9 +6,12 @@ import {
   Typography,
   useTheme,
   Box,
-  Button,
+  IconButton,
+  Chip,
+  Tooltip,
 } from "@mui/material";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
+import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import ImageNotSupportedIcon from "@mui/icons-material/ImageNotSupported";
 import { useNavigate } from "react-router-dom";
 import slugify from "../utils/slugify";
@@ -18,9 +21,9 @@ const getFirstImageFromHTML = (html) => {
   return match ? match[1] : null;
 };
 
-const truncateText = (text, maxLength) => {
-  if (!text) return "";
-  return text.length > maxLength ? text.substring(0, maxLength) + "..." : text;
+const formatDate = (isoString) => {
+  const options = { day: "numeric", month: "long", year: "numeric" };
+  return new Date(isoString).toLocaleDateString("tr-TR", options);
 };
 
 const PostCard = ({ post }) => {
@@ -39,32 +42,31 @@ const PostCard = ({ post }) => {
       onClick={handleClick}
       sx={{
         width: "100%",
-        height: 420, // Sabit yükseklik
+        height: 360,
         display: "flex",
         flexDirection: "column",
         justifyContent: "space-between",
-        borderRadius: 3,
+        borderRadius: 4,
         cursor: "pointer",
         overflow: "hidden",
-        backdropFilter: "blur(10px)",
+        backdropFilter: "blur(16px)",
         backgroundColor:
           theme.palette.mode === "dark"
-            ? "rgba(255,255,255,0.04)"
-            : "rgba(255,255,255,0.6)",
+            ? "rgba(255,255,255,0.08)"
+            : "rgba(255,255,255,0.4)",
         border: "1px solid rgba(255,255,255,0.15)",
-        boxShadow: 6,
+        boxShadow: "0 8px 20px rgba(0,0,0,0.1)",
         transition: "all 0.3s ease",
-        transform: "translateY(0)",
         "&:hover": {
-          transform: "translateY(-5px)",
-          boxShadow: 10,
+          transform: "translateY(-6px)",
+          boxShadow: "0 12px 24px rgba(0,0,0,0.2)",
         },
       }}
     >
       {imageUrl ? (
         <CardMedia
           component="img"
-          height="160"
+          height="140"
           image={imageUrl}
           alt={post.title}
           sx={{
@@ -78,7 +80,7 @@ const PostCard = ({ post }) => {
       ) : (
         <Box
           sx={{
-            height: 160,
+            height: 140,
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
@@ -91,40 +93,86 @@ const PostCard = ({ post }) => {
         </Box>
       )}
 
-      <CardContent sx={{ flexGrow: 1 }}>
-        <Typography variant="h6" fontWeight={600} gutterBottom>
+      <CardContent sx={{ flexGrow: 1, px: 2, py: 1.5 }}>
+        {/* Kategori Chip */}
+        {post.category && (
+          <Chip
+            label={post.category}
+            size="small"
+            sx={{
+              mb: 1,
+              backgroundColor: theme.palette.primary.light,
+              color: theme.palette.getContrastText(theme.palette.primary.light),
+              fontWeight: 500,
+            }}
+          />
+        )}
+
+        {/* Başlık */}
+        <Typography
+          variant="h6"
+          fontWeight={600}
+          gutterBottom
+          sx={{ fontSize: "1rem", lineHeight: 1.4 }}
+        >
           {post.title}
         </Typography>
-        <Typography variant="body2" color="text.secondary">
-          {truncateText(
-            post.summary || post.content?.replace(/<[^>]+>/g, ""),
-            100
-          )}
+
+        {/* Özet */}
+        <Typography
+          variant="body2"
+          color="text.secondary"
+          sx={{
+            display: "-webkit-box",
+            WebkitLineClamp: 2,
+            WebkitBoxOrient: "vertical",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            fontSize: "0.875rem",
+          }}
+        >
+          {post.summary || post.content?.replace(/<[^>]+>/g, "") || ""}
         </Typography>
       </CardContent>
 
-      <Box sx={{ px: 2, pb: 2 }}>
-        <Button
-          variant="contained"
-          onClick={(e) => {
-            e.stopPropagation();
-            handleClick();
-          }}
-          fullWidth
-          endIcon={<ArrowForwardIcon />}
-          sx={{
-            borderRadius: 2,
-            fontWeight: 600,
-            textTransform: "none",
-            bgcolor: theme.palette.primary.main,
-            color: theme.palette.getContrastText(theme.palette.primary.main),
-            "&:hover": {
-              bgcolor: theme.palette.primary.dark,
-            },
-          }}
-        >
-          Devamını Oku
-        </Button>
+      {/* Alt bar: tarih + ok icon */}
+      <Box
+        sx={{
+          px: 2,
+          pb: 1.5,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+        }}
+      >
+        {post.date && (
+          <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+            <CalendarMonthIcon sx={{ fontSize: 16, color: "text.secondary" }} />
+            <Typography variant="caption" color="text.secondary">
+              {formatDate(post.date)}
+            </Typography>
+          </Box>
+        )}
+
+        <Tooltip title="Devamını Oku">
+          <IconButton
+            onClick={(e) => {
+              e.stopPropagation();
+              handleClick();
+            }}
+            sx={{
+              bgcolor: theme.palette.primary.main,
+              color: theme.palette.getContrastText(theme.palette.primary.main),
+              "&:hover": {
+                bgcolor: theme.palette.primary.dark,
+                boxShadow: "0 0 8px rgba(0,0,0,0.3)",
+              },
+              borderRadius: 2,
+            }}
+          >
+            <ArrowForwardIcon />
+          </IconButton>
+        </Tooltip>
       </Box>
     </Card>
   );
