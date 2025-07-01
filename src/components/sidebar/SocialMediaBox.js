@@ -72,18 +72,9 @@ const SocialMediaBox = () => {
         fontWeight={700}
         sx={{ display: "flex", alignItems: "center", mb: 2 }}
       >
-        <Box
-          sx={{
-            width: 6,
-            height: 20,
-            bgcolor: "#f81ce5",
-            borderRadius: 2,
-            mr: 1,
-          }}
-        />
-        Follow me!
+        Takip Et!
       </Typography>
-      <Divider sx={{ mb: 2 }} />
+      <Divider sx={{ my: 1 }} />
 
       <Box
         sx={{

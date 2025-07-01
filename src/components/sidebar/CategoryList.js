@@ -14,6 +14,30 @@ import CodeIcon from "@mui/icons-material/Code";
 import JavascriptIcon from "@mui/icons-material/Javascript";
 import DesignServicesIcon from "@mui/icons-material/DesignServices";
 
+// Kategori sluglaştırma fonksiyonu
+const toSlug = (text) =>
+  text
+    .toLowerCase()
+    .replace(/[çÇğĞıİöÖşŞüÜ]/g, (c) => {
+      const map = {
+        ç: "c",
+        Ç: "c",
+        ğ: "g",
+        Ğ: "g",
+        ı: "i",
+        İ: "i",
+        ö: "o",
+        Ö: "o",
+        ş: "s",
+        Ş: "s",
+        ü: "u",
+        Ü: "u",
+      };
+      return map[c] || c;
+    })
+    .replace(/\s+/g, "-")
+    .replace(/[^\w-]+/g, "");
+
 const categories = [
   {
     name: "React",
@@ -57,7 +81,11 @@ const CategoryList = () => {
             : "0 4px 20px rgba(0,0,0,0.1)",
       }}
     >
-      <Typography variant="h6" gutterBottom fontWeight="bold">
+      <Typography
+        variant="h6"
+        fontWeight={700}
+        sx={{ display: "flex", alignItems: "center", mb: 2 }}
+      >
         Kategoriler
       </Typography>
       <Divider sx={{ my: 1 }} />
@@ -66,22 +94,22 @@ const CategoryList = () => {
           <ListItem
             key={index}
             component={Link}
-            to={`/category/${category.name.toLowerCase()}`}
+            to={`/category/${toSlug(category.name)}`}
             sx={{
               mb: 2,
               borderRadius: 2,
               px: 2,
               py: 1.5,
               backdropFilter: "blur(8px)",
-              backgroundColor: `${category.color}22`, // %13 saydamlık
-              border: `1px solid ${category.color}66`, // %40 saydamlık
+              backgroundColor: `${category.color}22`,
+              border: `1px solid ${category.color}66`,
               color: theme.palette.getContrastText(category.color),
               transition: "all 0.3s ease",
               textDecoration: "none",
               boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
               "&:hover": {
                 transform: "scale(1.03)",
-                backgroundColor: `${category.color}44`, // %26 saydamlık
+                backgroundColor: `${category.color}44`,
               },
               display: "flex",
               alignItems: "center",
