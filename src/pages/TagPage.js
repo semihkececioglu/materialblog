@@ -12,7 +12,6 @@ import {
 } from "@mui/material";
 import PostCard from "../components/PostCard";
 
-// Redux
 import { useDispatch, useSelector } from "react-redux";
 import { fetchPosts } from "../redux/postSlice";
 

@@ -94,7 +94,7 @@ const PostCard = ({ post }) => {
       )}
 
       <CardContent sx={{ flexGrow: 1, px: 2, py: 1.5 }}>
-        {/* Kategori Chip */}
+        {/* Chip */}
         {post.category && (
           <Chip
             label={post.category}

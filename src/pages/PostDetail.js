@@ -22,7 +22,6 @@ import ScrollProgressBar from "../components/ScrollProgressBar";
 import TableOfContents from "../components/TableOfContents";
 import slugify from "../utils/slugify";
 
-// Redux
 import { useDispatch, useSelector } from "react-redux";
 import {
   fetchPostBySlug,
@@ -45,7 +44,6 @@ function PostDetail() {
 
   const [showEmbeddedBar, setShowEmbeddedBar] = useState(false);
 
-  // Redux üzerinden yazıyı çek
   useEffect(() => {
     dispatch(fetchPostBySlug(slug));
     dispatch(fetchPosts({ page: 1, limit: 1000 }));

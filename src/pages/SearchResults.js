@@ -34,13 +34,11 @@ const SearchResults = () => {
     (state) => state.search
   );
 
-  // İlk yüklemede URL'den gelen veriyi store'a yaz
   useEffect(() => {
     dispatch(setSearchTerm(searchTermFromURL));
     dispatch(setPage(pageFromURL));
   }, [dispatch, searchTermFromURL, pageFromURL]);
 
-  // Arama sonuçlarını çek
   useEffect(() => {
     if (searchTerm) {
       dispatch(fetchSearchResults({ searchTerm, page, limit: POSTS_PER_PAGE }));

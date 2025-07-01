@@ -3,7 +3,7 @@ const router = express.Router();
 const Post = require("../models/Post");
 const User = require("../models/User");
 
-// 🔹 SLUG ile post getir
+// SLUG ile post getir
 router.get("/slug/:slug", async (req, res) => {
   try {
     const post = await Post.findOne({ slug: req.params.slug });
@@ -15,7 +15,7 @@ router.get("/slug/:slug", async (req, res) => {
   }
 });
 
-// 🔹 BEĞENİ DURUMU (GET)
+// BEĞENİ DURUMU (GET)
 router.get("/:postId/like-status", async (req, res) => {
   const { postId } = req.params;
   const { userId } = req.query;
@@ -35,7 +35,7 @@ router.get("/:postId/like-status", async (req, res) => {
   }
 });
 
-// 🔹 BEĞEN / BEĞENME (TOGGLE)
+// BEĞEN / BEĞENME (TOGGLE)
 router.post("/:postId/like", async (req, res) => {
   const { postId } = req.params;
   const { userId } = req.body;
@@ -67,7 +67,7 @@ router.post("/:postId/like", async (req, res) => {
   }
 });
 
-// 🔹 KAYDET / KAYDETME (TOGGLE)
+// KAYDET / KAYDETME (TOGGLE)
 router.post("/:postId/save", async (req, res) => {
   const { postId } = req.params;
   const { userId } = req.body;
@@ -95,7 +95,7 @@ router.post("/:postId/save", async (req, res) => {
   }
 });
 
-// 🔹 TÜM POSTLARI GETİR (ARAMA + FİLTRE + SAYFALAMA)
+// TÜM POSTLARI GETİR (ARAMA + FİLTRE + SAYFALAMA)
 router.get("/", async (req, res) => {
   try {
     const { search = "", category, tag, page = 1, limit = 6 } = req.query;
@@ -132,7 +132,7 @@ router.get("/", async (req, res) => {
   }
 });
 
-// 🔹 ID İLE POST GETİR
+// ID İLE POST GETİR
 router.get("/:id", async (req, res) => {
   try {
     const post = await Post.findById(req.params.id);
@@ -144,7 +144,7 @@ router.get("/:id", async (req, res) => {
   }
 });
 
-// 🔹 POST OLUŞTUR
+// POST OLUŞTUR
 router.post("/", async (req, res) => {
   try {
     const newPost = new Post(req.body);
@@ -156,7 +156,7 @@ router.post("/", async (req, res) => {
   }
 });
 
-// 🔹 POST GÜNCELLE
+// POST GÜNCELLE
 router.put("/:id", async (req, res) => {
   try {
     const updatedPost = await Post.findByIdAndUpdate(req.params.id, req.body, {
@@ -170,7 +170,7 @@ router.put("/:id", async (req, res) => {
   }
 });
 
-// 🔹 POST SİL
+// POST SİL
 router.delete("/:id", async (req, res) => {
   try {
     const deletedPost = await Post.findByIdAndDelete(req.params.id);

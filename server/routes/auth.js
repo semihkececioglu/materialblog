@@ -5,7 +5,7 @@ const jwt = require("jsonwebtoken");
 
 const JWT_SECRET = process.env.JWT_SECRET || "dev_secret";
 
-//Kayıt
+// Register
 router.post("/register", async (req, res) => {
   try {
     const { username, email, password, firstName, lastName } = req.body;
@@ -29,7 +29,7 @@ router.post("/register", async (req, res) => {
   }
 });
 
-// Giriş
+// Login
 router.post("/login", async (req, res) => {
   try {
     const { usernameOrEmail, password } = req.body;

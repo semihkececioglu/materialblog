@@ -16,7 +16,6 @@ const dashboardRoutes = require("./routes/dashboardRoutes");
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// ✅ CORS ayarları (geliştirme aşaması için * yeterli)
 app.use(
   cors({
     origin: "*",
@@ -25,7 +24,6 @@ app.use(
   })
 );
 
-// ✅ JSON parse middleware (body verisini okuyabilmek için)
 app.use(express.json());
 
 // ✅ Statik dosyalar

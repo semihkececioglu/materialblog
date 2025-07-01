@@ -35,7 +35,6 @@ const AdminTagsPage = () => {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleteTagId, setDeleteTagId] = useState(null);
 
-  // Redux üzerinden etiketleri çek
   useEffect(() => {
     dispatch(fetchTags());
   }, [dispatch]);

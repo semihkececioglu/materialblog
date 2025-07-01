@@ -97,7 +97,7 @@ const CommentItem = ({
       email: user?.email || replyEmail,
       text: replyText,
       parentId: comment._id,
-      postId: comment.postId, // ✅ reply'nin bağlandığı postId
+      postId: comment.postId,
     };
 
     onReplySubmit(comment._id, newReply);

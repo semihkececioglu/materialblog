@@ -110,7 +110,7 @@ const Header = ({ toggleTheme }) => {
             disableGutters
             sx={{ px: 2, display: "flex", justifyContent: "space-between" }}
           >
-            {/* SOL TARAF */}
+            {/* Left side */}
             <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
               {isMobile && (
                 <IconButton onClick={() => setDrawerOpen(true)} color="inherit">
@@ -174,7 +174,7 @@ const Header = ({ toggleTheme }) => {
               )}
             </Box>
 
-            {/* SAĞ TARAF */}
+            {/* Right Side */}
             <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
               {!user && !isMobile && (
                 <>
@@ -254,7 +254,7 @@ const Header = ({ toggleTheme }) => {
         </AppBar>
       </Box>
 
-      {/* MOBİL DRAWER */}
+      {/* Mobile Drawer */}
       <Drawer
         anchor="left"
         open={drawerOpen}
@@ -364,7 +364,6 @@ const Header = ({ toggleTheme }) => {
         </List>
       </Drawer>
 
-      {/* Arama dialog bileşeni */}
       <SearchDialog open={searchOpen} onClose={() => setSearchOpen(false)} />
     </>
   );

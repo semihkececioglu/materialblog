@@ -16,7 +16,7 @@ router.post("/", async (req, res) => {
   res.status(201).json(newCategory);
 });
 
-//Update category
+// Update category
 router.put("/:id", async (req, res) => {
   const updated = await Category.findByIdAndUpdate(
     req.params.id,

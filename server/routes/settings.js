@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const Settings = require("../models/Settings"); // Mongoose model
+const Settings = require("../models/Settings");
 
 // Get settings
 router.get("/", async (req, res) => {

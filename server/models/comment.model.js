@@ -12,7 +12,6 @@ const commentSchema = new mongoose.Schema({
     default: null,
   },
   username: {
-    // 🔁 name ➜ username
     type: String,
     required: true,
   },
@@ -21,13 +20,13 @@ const commentSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  avatar: String, // opsiyonel, ileride kullanılabilir
+  avatar: String,
   date: {
     type: Date,
     default: Date.now,
   },
   likes: {
-    type: [String], // kullanıcı adı listesi
+    type: [String],
     default: [],
   },
 });

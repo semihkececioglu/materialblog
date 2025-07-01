@@ -33,12 +33,10 @@ const AdminSettingsPage = () => {
     severity: "success",
   });
 
-  // Ayarları Redux üzerinden çek
   useEffect(() => {
     dispatch(fetchSettings());
   }, [dispatch]);
 
-  // Redux verileri geldiğinde inputlara aktar
   useEffect(() => {
     if (settings) {
       setSiteTitle(settings.siteTitle || "");
@@ -46,7 +44,6 @@ const AdminSettingsPage = () => {
     }
   }, [settings]);
 
-  // Başarılı güncelleme sonrası snackbar göster
   useEffect(() => {
     if (success) {
       setSnackbar({

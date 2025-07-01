@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const Tag = require("../models/Tags");
 
-// Tüm etiketleri getir
+// Get all tags
 router.get("/", async (req, res) => {
   try {
     const tags = await Tag.find().sort({ name: 1 });
@@ -12,7 +12,7 @@ router.get("/", async (req, res) => {
   }
 });
 
-// Yeni etiket ekle
+// Add new tag
 router.post("/", async (req, res) => {
   try {
     const newTag = new Tag({ name: req.body.name });
@@ -23,7 +23,7 @@ router.post("/", async (req, res) => {
   }
 });
 
-// Etiket güncelle
+// Update tag
 router.put("/:id", async (req, res) => {
   try {
     const updated = await Tag.findByIdAndUpdate(
@@ -37,7 +37,7 @@ router.put("/:id", async (req, res) => {
   }
 });
 
-// Etiket sil
+// Delete tag
 router.delete("/:id", async (req, res) => {
   try {
     await Tag.findByIdAndDelete(req.params.id);

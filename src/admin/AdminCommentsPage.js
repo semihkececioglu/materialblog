@@ -29,7 +29,7 @@ const AdminCommentsPage = () => {
   const [deleteInfo, setDeleteInfo] = useState({ open: false, id: null });
 
   useEffect(() => {
-    dispatch(fetchComments()); // ✅ postId'siz tüm yorumlar
+    dispatch(fetchComments());
   }, [dispatch]);
 
   useEffect(() => {

@@ -14,7 +14,6 @@ import CodeIcon from "@mui/icons-material/Code";
 import JavascriptIcon from "@mui/icons-material/Javascript";
 import DesignServicesIcon from "@mui/icons-material/DesignServices";
 
-// Kategori sluglaştırma fonksiyonu
 const toSlug = (text) =>
   text
     .toLowerCase()

@@ -17,7 +17,6 @@ const postSchema = new mongoose.Schema({
   likes: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
 });
 
-// Her post kaydedilmeden önce categorySlug otomatik üret
 postSchema.pre("save", function (next) {
   if (this.title && !this.slug) {
     this.slug = slugify(this.title, { lower: true, strict: true });

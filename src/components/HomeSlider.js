@@ -104,7 +104,7 @@ const HomeSlider = () => {
         boxShadow: "0 12px 24px rgba(0,0,0,0.1)",
       }}
     >
-      {/* Ok Butonları */}
+      {/* Arrows */}
       <IconButton
         onClick={() => sliderRef.current?.slickPrev()}
         sx={{
@@ -207,7 +207,7 @@ const HomeSlider = () => {
         ))}
       </Slider>
 
-      {/* Dot aktif stili */}
+      {/* Dots */}
       <style>{`
         .slick-dots li.slick-active div {
           background-color: ${theme.palette.primary.main} !important;

@@ -1,8 +1,7 @@
 const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
 
-const { Schema } = mongoose; // 🔧 burada Schema'yı çıkarıyoruz
-
+const { Schema } = mongoose;
 const UserSchema = new Schema(
   {
     username: { type: String, required: true, unique: true },
@@ -14,11 +13,18 @@ const UserSchema = new Schema(
 
     likedPosts: [{ type: Schema.Types.ObjectId, ref: "Post" }],
     savedPosts: [{ type: Schema.Types.ObjectId, ref: "Post" }],
+    bio: {
+      type: String,
+      default: "",
+    },
+    profileImage: {
+      type: String,
+      default: "",
+    },
   },
   { timestamps: true }
 );
 
-//Hash
 UserSchema.pre("save", async function (next) {
   if (!this.isModified("password")) return next();
   const salt = await bcrypt.genSalt(10);

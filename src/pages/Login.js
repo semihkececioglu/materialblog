@@ -11,13 +11,13 @@ import {
 import { useNavigate, Link } from "react-router-dom";
 import axios from "axios";
 
-import { useDispatch } from "react-redux"; // ✅ Redux
-import { login } from "../redux/userSlice"; // ✅ Redux
+import { useDispatch } from "react-redux";
+import { login } from "../redux/userSlice";
 
 const Login = () => {
   const theme = useTheme();
   const navigate = useNavigate();
-  const dispatch = useDispatch(); // ✅ Redux
+  const dispatch = useDispatch();
 
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -43,10 +43,8 @@ const Login = () => {
 
       const { token, user } = res.data;
 
-      // Redux'a yaz
       dispatch(login({ user, token }));
 
-      // localStorage'a yaz
       localStorage.setItem("user", JSON.stringify(user));
       localStorage.setItem("token", token);
 
