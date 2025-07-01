@@ -5,7 +5,6 @@ import {
   Avatar,
   useTheme,
   Card,
-  CardContent,
   CircularProgress,
   List,
   ListItem,
@@ -117,17 +116,22 @@ const ProfilePage = () => {
           border: "1px solid rgba(255,255,255,0.2)",
         }}
       >
-        <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 3 }}>
+        {/* Profil Bilgileri */}
+        <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 2 }}>
           <Avatar
+            src={userData.profileImage || ""}
             sx={{
               width: 64,
               height: 64,
-              bgcolor: stringToColor(userData.username),
+              bgcolor: userData.profileImage
+                ? "transparent"
+                : stringToColor(userData.username),
               color: "white",
               fontWeight: 600,
             }}
           >
-            {userData.username.charAt(0).toUpperCase()}
+            {!userData.profileImage &&
+              userData.username.charAt(0).toUpperCase()}
           </Avatar>
           <Box>
             <Typography variant="h6" fontWeight={600}>
@@ -139,6 +143,21 @@ const ProfilePage = () => {
           </Box>
         </Box>
 
+        {/* Biyografi Alanı */}
+        {userData.bio && (
+          <Typography
+            variant="body2"
+            sx={{
+              whiteSpace: "pre-line",
+              color: theme.palette.text.secondary,
+              mb: 3,
+            }}
+          >
+            {userData.bio}
+          </Typography>
+        )}
+
+        {/* Beğenilen Yazılar */}
         {isOwnProfile && (
           <>
             <Typography
@@ -188,6 +207,7 @@ const ProfilePage = () => {
               </List>
             )}
 
+            {/* Kaydedilen Yazılar */}
             <Typography
               variant="h6"
               gutterBottom

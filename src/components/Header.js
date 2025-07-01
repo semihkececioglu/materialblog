@@ -216,14 +216,20 @@ const Header = ({ toggleTheme }) => {
                     onClick={(e) => setProfileAnchorEl(e.currentTarget)}
                   >
                     <Avatar
+                      src={user.profileImage || ""}
                       sx={{
                         width: 32,
                         height: 32,
-                        bgcolor: stringToColor(user.username),
+                        bgcolor: user.profileImage
+                          ? "transparent"
+                          : stringToColor(user.username),
                         fontSize: "0.875rem",
+                        color: "white",
+                        fontWeight: 600,
                       }}
                     >
-                      {user.username.charAt(0).toUpperCase()}
+                      {!user.profileImage &&
+                        user.username.charAt(0).toUpperCase()}
                     </Avatar>
                   </IconButton>
                   <Menu

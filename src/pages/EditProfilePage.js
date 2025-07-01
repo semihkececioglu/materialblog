@@ -7,10 +7,32 @@ import {
   Avatar,
   useTheme,
   Snackbar,
+  CircularProgress,
+  IconButton,
 } from "@mui/material";
+import EditIcon from "@mui/icons-material/Edit";
 import { useSelector } from "react-redux";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
+
+// 🔧 Cloudinary görsel yükleme fonksiyonu
+const uploadImageToCloudinary = async (file) => {
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("upload_preset", "materialblog");
+  formData.append("cloud_name", "da2mjic2e");
+
+  const res = await fetch(
+    "https://api.cloudinary.com/v1_1/da2mjic2e/image/upload",
+    {
+      method: "POST",
+      body: formData,
+    }
+  );
+
+  const data = await res.json();
+  return data.secure_url;
+};
 
 const stringToColor = (name) => {
   let hash = 0;
@@ -28,6 +50,9 @@ const EditProfilePage = () => {
 
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
+  const [bio, setBio] = useState("");
+  const [profileImage, setProfileImage] = useState("");
+  const [uploading, setUploading] = useState(false);
   const [open, setOpen] = useState(false);
 
   const containerRef = useRef(null);
@@ -42,6 +67,8 @@ const EditProfilePage = () => {
       .then((res) => {
         setFirstName(res.data.firstName);
         setLastName(res.data.lastName);
+        setBio(res.data.bio || "");
+        setProfileImage(res.data.profileImage || "");
       })
       .catch((err) => {
         console.error("Kullanıcı bilgisi alınamadı:", err);
@@ -61,7 +88,7 @@ const EditProfilePage = () => {
     try {
       await axios.put(
         `https://materialblog-server-production.up.railway.app/api/users/${username}`,
-        { firstName, lastName }
+        { firstName, lastName, bio, profileImage }
       );
       setOpen(true);
       setTimeout(() => {
@@ -101,6 +128,7 @@ const EditProfilePage = () => {
           Profili Düzenle
         </Typography>
 
+        {/* Avatar ve düzenleme ikonu */}
         <Box
           sx={{
             display: "flex",
@@ -108,23 +136,69 @@ const EditProfilePage = () => {
             alignItems: "center",
             gap: 1,
             mb: 3,
+            position: "relative",
           }}
         >
-          <Avatar
-            sx={{
-              width: 72,
-              height: 72,
-              bgcolor: stringToColor(user.username),
-              color: "white",
-              fontWeight: 600,
-              fontSize: 28,
-            }}
-          >
-            {user.username.charAt(0).toUpperCase()}
-          </Avatar>
+          <Box sx={{ position: "relative" }}>
+            <Avatar
+              src={profileImage || ""}
+              sx={{
+                width: 72,
+                height: 72,
+                bgcolor: profileImage
+                  ? "transparent"
+                  : stringToColor(user.username),
+                color: "white",
+                fontWeight: 600,
+                fontSize: 28,
+              }}
+            >
+              {!profileImage && user.username.charAt(0).toUpperCase()}
+            </Avatar>
+
+            <Box
+              sx={{
+                position: "absolute",
+                bottom: -4,
+                right: -4,
+                bgcolor: "background.paper",
+                borderRadius: "50%",
+                boxShadow: 2,
+              }}
+            >
+              <IconButton
+                component="label"
+                size="small"
+                disabled={uploading}
+                sx={{ p: 0.5 }}
+              >
+                <EditIcon fontSize="small" />
+                <input
+                  type="file"
+                  hidden
+                  accept="image/*"
+                  onChange={async (e) => {
+                    const file = e.target.files[0];
+                    if (!file) return;
+                    setUploading(true);
+                    try {
+                      const imageUrl = await uploadImageToCloudinary(file);
+                      setProfileImage(imageUrl);
+                    } catch (err) {
+                      console.error("Yükleme hatası:", err);
+                    } finally {
+                      setUploading(false);
+                    }
+                  }}
+                />
+              </IconButton>
+            </Box>
+          </Box>
+
           <Typography variant="subtitle1" color="text.secondary">
             @{user.username}
           </Typography>
+          {uploading && <CircularProgress size={20} sx={{ mt: 1 }} />}
         </Box>
 
         <form onSubmit={handleSubmit}>
@@ -142,8 +216,25 @@ const EditProfilePage = () => {
             variant="outlined"
             value={lastName}
             onChange={(e) => setLastName(e.target.value)}
+            sx={{ mb: 2 }}
+          />
+
+          <TextField
+            fullWidth
+            label="Biyografi (max 300 karakter)"
+            variant="outlined"
+            multiline
+            rows={4}
+            value={bio}
+            onChange={(e) => {
+              if (e.target.value.length <= 300) {
+                setBio(e.target.value);
+              }
+            }}
+            helperText={`${bio.length}/300`}
             sx={{ mb: 3 }}
           />
+
           <Button
             type="submit"
             variant="contained"
