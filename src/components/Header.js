@@ -15,21 +15,15 @@ import {
   ListItem,
   ListItemText,
   Avatar,
-  Dialog,
-  TextField,
-  InputAdornment,
   Fade,
-  Slide,
   Collapse,
   Divider,
 } from "@mui/material";
 import {
   Menu as MenuIcon,
   Search as SearchIcon,
-  Close as CloseIcon,
   ArrowDropDown,
   Brightness4,
-  Send as SendIcon,
   ExpandLess,
   ExpandMore,
 } from "@mui/icons-material";
@@ -37,6 +31,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { slugify } from "../utils";
 import { useSelector, useDispatch } from "react-redux";
 import { logout } from "../redux/userSlice";
+import SearchDialog from "./SearchDialog";
 
 const categories = ["React", "Tasarım", "Javascript"];
 
@@ -53,7 +48,7 @@ const stringToColor = (string) => {
   return color;
 };
 
-const Header = ({ toggleTheme, searchTerm, setSearchTerm }) => {
+const Header = ({ toggleTheme }) => {
   const [anchorEl, setAnchorEl] = useState(null);
   const [profileAnchorEl, setProfileAnchorEl] = useState(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -66,19 +61,6 @@ const Header = ({ toggleTheme, searchTerm, setSearchTerm }) => {
   const user = useSelector((state) => state.user.currentUser);
   const dispatch = useDispatch();
   const navigate = useNavigate();
-
-  const handleSearch = () => {
-    if (searchTerm.trim()) {
-      navigate(`/search?q=${encodeURIComponent(searchTerm)}`);
-      window.scrollTo(0, 0);
-      setSearchTerm("");
-      setSearchOpen(false);
-    }
-  };
-
-  const handleKeyDown = (e) => {
-    if (e.key === "Enter") handleSearch();
-  };
 
   const handleCategoryClick = (category) => {
     navigate(`/category/${slugify(category)}`);
@@ -122,7 +104,6 @@ const Header = ({ toggleTheme, searchTerm, setSearchTerm }) => {
                 ? "0 4px 20px rgba(0,0,0,0.6)"
                 : "0 8px 32px rgba(0,0,0,0.1)",
             color: theme.palette.text.primary,
-            fontFamily: '"Inter", sans-serif',
           }}
         >
           <Toolbar
@@ -159,7 +140,6 @@ const Header = ({ toggleTheme, searchTerm, setSearchTerm }) => {
                     sx={{
                       color: theme.palette.text.primary,
                       textTransform: "none",
-                      fontFamily: "inherit",
                     }}
                   >
                     Ana Sayfa
@@ -170,7 +150,6 @@ const Header = ({ toggleTheme, searchTerm, setSearchTerm }) => {
                     sx={{
                       color: theme.palette.text.primary,
                       textTransform: "none",
-                      fontFamily: "inherit",
                     }}
                   >
                     Kategoriler
@@ -185,7 +164,7 @@ const Header = ({ toggleTheme, searchTerm, setSearchTerm }) => {
                       <MenuItem
                         key={cat}
                         onClick={() => handleCategoryClick(cat)}
-                        sx={{ fontFamily: "inherit", fontSize: 14 }}
+                        sx={{ fontSize: 14 }}
                       >
                         {cat}
                       </MenuItem>
@@ -203,11 +182,7 @@ const Header = ({ toggleTheme, searchTerm, setSearchTerm }) => {
                     component={Link}
                     to="/login"
                     onClick={() => window.scrollTo(0, 0)}
-                    sx={{
-                      color: theme.palette.text.primary,
-                      textTransform: "none",
-                      fontFamily: "inherit",
-                    }}
+                    sx={{ textTransform: "none" }}
                   >
                     Giriş Yap
                   </Button>
@@ -217,12 +192,9 @@ const Header = ({ toggleTheme, searchTerm, setSearchTerm }) => {
                     onClick={() => window.scrollTo(0, 0)}
                     variant="contained"
                     sx={{
-                      bgcolor: "#1e1e1e",
-                      color: "#fff",
                       borderRadius: "12px",
                       textTransform: "none",
-                      fontFamily: "inherit",
-                      "&:hover": { bgcolor: "#333" },
+                      fontWeight: 600,
                     }}
                   >
                     Kayıt Ol
@@ -260,20 +232,10 @@ const Header = ({ toggleTheme, searchTerm, setSearchTerm }) => {
                     onClose={() => setProfileAnchorEl(null)}
                     TransitionComponent={Fade}
                   >
-                    <MenuItem
-                      onClick={() => handleProfileNavigate("")}
-                      sx={{
-                        fontFamily: "inherit",
-                        fontSize: 14,
-                        color: theme.palette.text.primary,
-                      }}
-                    >
+                    <MenuItem onClick={() => handleProfileNavigate("")}>
                       Profili Görüntüle
                     </MenuItem>
-                    <MenuItem
-                      onClick={() => handleProfileNavigate("/edit")}
-                      sx={{ fontFamily: "inherit", fontSize: 14 }}
-                    >
+                    <MenuItem onClick={() => handleProfileNavigate("/edit")}>
                       Profili Düzenle
                     </MenuItem>
                     <MenuItem
@@ -281,7 +243,6 @@ const Header = ({ toggleTheme, searchTerm, setSearchTerm }) => {
                         dispatch(logout());
                         setProfileAnchorEl(null);
                       }}
-                      sx={{ fontFamily: "inherit", fontSize: 14 }}
                     >
                       Çıkış Yap
                     </MenuItem>
@@ -298,17 +259,6 @@ const Header = ({ toggleTheme, searchTerm, setSearchTerm }) => {
         anchor="left"
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
-        PaperProps={{
-          sx: {
-            bgcolor:
-              theme.palette.mode === "dark"
-                ? "rgba(30,30,30,0.85)"
-                : "rgba(255,255,255,0.8)",
-            backdropFilter: "blur(16px)",
-            borderTopRightRadius: 12,
-            borderBottomRightRadius: 12,
-          },
-        }}
       >
         <List sx={{ width: 250 }}>
           <ListItem
@@ -414,63 +364,8 @@ const Header = ({ toggleTheme, searchTerm, setSearchTerm }) => {
         </List>
       </Drawer>
 
-      {/* ARAMA POPUP */}
-      <Dialog
-        fullScreen
-        open={searchOpen}
-        onClose={() => setSearchOpen(false)}
-        TransitionComponent={Slide}
-        PaperProps={{
-          sx: {
-            background: "rgba(0, 0, 0, 0.4)",
-            backdropFilter: "blur(12px)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          },
-        }}
-      >
-        <Box
-          sx={{
-            width: "90%",
-            maxWidth: 500,
-            bgcolor:
-              theme.palette.mode === "dark"
-                ? "rgba(30,30,30,0.95)"
-                : "rgba(255,255,255,0.95)",
-            backdropFilter: "blur(20px)",
-            p: 3,
-            borderRadius: 3,
-            display: "flex",
-            alignItems: "center",
-            gap: 2,
-          }}
-        >
-          <IconButton onClick={() => setSearchOpen(false)}>
-            <CloseIcon sx={{ color: "#000" }} />
-          </IconButton>
-          <TextField
-            autoFocus
-            fullWidth
-            placeholder="Ara..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            onKeyDown={handleKeyDown}
-            variant="standard"
-            InputProps={{
-              endAdornment: (
-                <InputAdornment position="end">
-                  <IconButton onClick={handleSearch}>
-                    <SendIcon sx={{ color: theme.palette.text.primary }} />
-                  </IconButton>
-                </InputAdornment>
-              ),
-              disableUnderline: true,
-              sx: { color: theme.palette.text.primary },
-            }}
-          />
-        </Box>
-      </Dialog>
+      {/* Arama dialog bileşeni */}
+      <SearchDialog open={searchOpen} onClose={() => setSearchOpen(false)} />
     </>
   );
 };

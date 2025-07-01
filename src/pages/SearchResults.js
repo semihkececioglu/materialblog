@@ -14,25 +14,41 @@ import Sidebar from "../components/sidebar/Sidebar";
 
 // Redux
 import { useDispatch, useSelector } from "react-redux";
-import { fetchPosts } from "../redux/postSlice";
+import {
+  fetchSearchResults,
+  setSearchTerm,
+  setPage,
+} from "../redux/searchSlice";
 
 const POSTS_PER_PAGE = 6;
 
 const SearchResults = () => {
   const [searchParams, setSearchParams] = useSearchParams();
-  const searchTerm = searchParams.get("q")?.toLowerCase() || "";
-  const page = parseInt(searchParams.get("page")) || 1;
+  const searchTermFromURL = searchParams.get("q")?.toLowerCase() || "";
+  const pageFromURL = parseInt(searchParams.get("page")) || 1;
 
   const dispatch = useDispatch();
   const theme = useTheme();
 
-  const { posts, totalPages, loading } = useSelector((state) => state.posts);
+  const { searchTerm, results, page, totalPages, loading } = useSelector(
+    (state) => state.search
+  );
 
+  // İlk yüklemede URL'den gelen veriyi store'a yaz
   useEffect(() => {
-    dispatch(fetchPosts({ search: searchTerm, page, limit: POSTS_PER_PAGE }));
+    dispatch(setSearchTerm(searchTermFromURL));
+    dispatch(setPage(pageFromURL));
+  }, [dispatch, searchTermFromURL, pageFromURL]);
+
+  // Arama sonuçlarını çek
+  useEffect(() => {
+    if (searchTerm) {
+      dispatch(fetchSearchResults({ searchTerm, page, limit: POSTS_PER_PAGE }));
+    }
   }, [dispatch, searchTerm, page]);
 
   const handlePageChange = (event, value) => {
+    dispatch(setPage(value));
     setSearchParams({ q: searchTerm, page: value });
   };
 
@@ -54,7 +70,7 @@ const SearchResults = () => {
             <Box sx={{ mt: 6, textAlign: "center" }}>
               <CircularProgress />
             </Box>
-          ) : posts.length === 0 ? (
+          ) : results.length === 0 ? (
             <Grow in>
               <Box
                 sx={{
@@ -77,7 +93,7 @@ const SearchResults = () => {
           ) : (
             <Box>
               <Box sx={{ display: "flex", flexWrap: "wrap", gap: 3 }}>
-                {posts.map((post) => (
+                {results.map((post) => (
                   <Grow in key={post._id} timeout={500}>
                     <Box
                       sx={{

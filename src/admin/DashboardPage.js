@@ -1,51 +1,30 @@
-import React, { useEffect, useState } from "react";
-import { Box, Paper, Typography, Grid, Avatar, useTheme } from "@mui/material";
+import React, { useEffect } from "react";
+import {
+  Box,
+  Paper,
+  Typography,
+  Grid,
+  Avatar,
+  useTheme,
+  CircularProgress,
+} from "@mui/material";
 import ArticleIcon from "@mui/icons-material/Article";
 import CategoryIcon from "@mui/icons-material/Category";
 import CommentIcon from "@mui/icons-material/Comment";
-import axios from "axios";
+
+// Redux
+import { useDispatch, useSelector } from "react-redux";
+import { fetchDashboardStats } from "../redux/dashboardSlice";
 
 const DashboardPage = () => {
-  const [postCount, setPostCount] = useState(0);
-  const [categoryCount, setCategoryCount] = useState(0);
-  const [commentCount, setCommentCount] = useState(0);
+  const dispatch = useDispatch();
   const theme = useTheme();
 
+  const { stats, loading, error } = useSelector((state) => state.dashboard);
+
   useEffect(() => {
-    axios
-      .get(
-        "https://materialblog-server-production.up.railway.app/api/posts?limit=1000"
-      )
-      .then((res) => {
-        setPostCount(res.data.posts?.length || 0);
-      })
-      .catch((err) => {
-        console.error("Yazılar alınamadı:", err);
-        setPostCount(0);
-      });
-
-    axios
-      .get(
-        "https://materialblog-server-production.up.railway.app/api/categories"
-      )
-      .then((res) => {
-        setCategoryCount(res.data.length);
-      })
-      .catch((err) => {
-        console.error("Kategoriler alınamadı:", err);
-        setCategoryCount(0);
-      });
-
-    axios
-      .get("https://materialblog-server-production.up.railway.app/api/comments")
-      .then((res) => {
-        setCommentCount(res.data.length);
-      })
-      .catch((err) => {
-        console.error("Yorumlar alınamadı:", err);
-        setCommentCount(0);
-      });
-  }, []);
+    dispatch(fetchDashboardStats());
+  }, [dispatch]);
 
   const StatCard = ({ title, value, icon, iconColor }) => (
     <Paper
@@ -81,13 +60,29 @@ const DashboardPage = () => {
     </Paper>
   );
 
+  if (loading || !stats) {
+    return (
+      <Box sx={{ display: "flex", justifyContent: "center", mt: 6 }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  if (error) {
+    return (
+      <Typography color="error" textAlign="center" mt={4}>
+        Veriler alınamadı: {error}
+      </Typography>
+    );
+  }
+
   return (
     <Box>
       <Grid container spacing={2}>
         <Grid item xs={12} sm={6} md={4}>
           <StatCard
             title="Toplam Yazı"
-            value={postCount}
+            value={stats.totalPosts}
             icon={<ArticleIcon />}
             iconColor={theme.palette.primary.main}
           />
@@ -95,7 +90,7 @@ const DashboardPage = () => {
         <Grid item xs={12} sm={6} md={4}>
           <StatCard
             title="Toplam Kategori"
-            value={categoryCount}
+            value={stats.totalCategories}
             icon={<CategoryIcon />}
             iconColor={theme.palette.secondary.main}
           />
@@ -103,7 +98,7 @@ const DashboardPage = () => {
         <Grid item xs={12} sm={6} md={4}>
           <StatCard
             title="Toplam Yorum"
-            value={commentCount}
+            value={stats.totalComments}
             icon={<CommentIcon />}
             iconColor={theme.palette.info.main}
           />
