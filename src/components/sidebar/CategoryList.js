@@ -18,17 +18,17 @@ const categories = [
   {
     name: "React",
     icon: <CodeIcon />,
-    bgImage: "linear-gradient(135deg, #61dafb 0%, #21a1f1 100%)",
+    color: "#61dafb",
   },
   {
     name: "JavaScript",
     icon: <JavascriptIcon />,
-    bgImage: "linear-gradient(135deg, #f7df1e 0%, #ffd700 100%)",
+    color: "#f7df1e",
   },
   {
     name: "Tasarım",
     icon: <DesignServicesIcon />,
-    bgImage: "linear-gradient(135deg, #ff7eb9 0%, #ff65a3 100%)",
+    color: "#ff7eb9",
   },
 ];
 
@@ -37,17 +37,24 @@ const CategoryList = () => {
 
   return (
     <Paper
-      elevation={3}
+      elevation={0}
       sx={{
         p: 2,
         mt: 3,
-        borderRadius: 2,
-        bgcolor: theme.palette.mode === "dark" ? "grey.900" : "grey.50",
-        border: `1px solid ${
+        borderRadius: 3,
+        backdropFilter: "blur(12px)",
+        backgroundColor:
           theme.palette.mode === "dark"
-            ? theme.palette.grey[800]
-            : theme.palette.grey[300]
-        }`,
+            ? "rgba(30,30,30,0.6)"
+            : "rgba(255,255,255,0.6)",
+        border:
+          theme.palette.mode === "dark"
+            ? "1px solid rgba(255,255,255,0.1)"
+            : "1px solid rgba(0,0,0,0.1)",
+        boxShadow:
+          theme.palette.mode === "dark"
+            ? "0 4px 20px rgba(0,0,0,0.4)"
+            : "0 4px 20px rgba(0,0,0,0.1)",
       }}
     >
       <Typography variant="h6" gutterBottom fontWeight="bold">
@@ -65,13 +72,16 @@ const CategoryList = () => {
               borderRadius: 2,
               px: 2,
               py: 1.5,
-              background: category.bgImage,
-              color: theme.palette.getContrastText("#ffffff"),
+              backdropFilter: "blur(8px)",
+              backgroundColor: `${category.color}22`, // %13 saydamlık
+              border: `1px solid ${category.color}66`, // %40 saydamlık
+              color: theme.palette.getContrastText(category.color),
               transition: "all 0.3s ease",
               textDecoration: "none",
-              boxShadow: 3,
+              boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
               "&:hover": {
-                transform: "scale(1.02)",
+                transform: "scale(1.03)",
+                backgroundColor: `${category.color}44`, // %26 saydamlık
               },
               display: "flex",
               alignItems: "center",
