@@ -34,7 +34,9 @@ const AdminCommentsPage = () => {
 
   useEffect(() => {
     if (comments.length > 0) {
-      const uniquePostIds = [...new Set(comments.map((c) => c.postId))];
+      const uniquePostIds = [
+        ...new Set(comments.map((c) => c.postId?.toString?.())),
+      ];
       const titleMap = {};
 
       Promise.all(
@@ -111,12 +113,11 @@ const AdminCommentsPage = () => {
                       },
                     }}
                   >
-                    <TableCell>
-                      {comment.username || comment.name || "Anonim"}
-                    </TableCell>
+                    <TableCell>{comment.user?.username || "Anonim"}</TableCell>
                     <TableCell>{comment.text}</TableCell>
                     <TableCell>
-                      {postTitles[comment.postId] || "Yükleniyor..."}
+                      {postTitles[comment.postId?.toString?.()] ||
+                        "Yükleniyor..."}
                     </TableCell>
                     <TableCell>
                       {new Date(comment.date).toLocaleDateString("tr-TR")}

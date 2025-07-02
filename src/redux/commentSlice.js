@@ -1,44 +1,34 @@
-// redux/commentSlice.js
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 
-const BASE_URL = "https://materialblog-server-production.up.railway.app/api";
+const BASE_URL =
+  "https://materialblog-server-production.up.railway.app/api/comments";
 
-// Yorumları getir
+// Yorumları getir (opsiyonel postId)
 export const fetchComments = createAsyncThunk(
-  "comments/fetch",
+  "comments/fetchComments",
   async (postId) => {
-    const url = postId
-      ? `${BASE_URL}/comments?postId=${postId}`
-      : `${BASE_URL}/comments`; // Tüm yorumları getir
+    const url = postId ? `${BASE_URL}?postId=${postId}` : BASE_URL;
     const res = await axios.get(url);
     return res.data;
   }
 );
 
-// Yorum ekle
+// Yeni yorum veya yanıt ekle
 export const addComment = createAsyncThunk(
-  "comments/add",
+  "comments/addComment",
   async (commentData) => {
-    const res = await axios.post(`${BASE_URL}/comments`, commentData);
+    const res = await axios.post(BASE_URL, commentData);
     return res.data;
   }
 );
 
 // Yorum sil
-export const deleteComment = createAsyncThunk("comments/delete", async (id) => {
-  await axios.delete(`${BASE_URL}/comments/${id}`);
-  return id;
-});
-
-// Yorum beğen/vazgeç
-export const toggleLikeComment = createAsyncThunk(
-  "comments/toggleLike",
-  async ({ commentId, username }) => {
-    const res = await axios.put(`${BASE_URL}/comments/${commentId}/like`, {
-      username,
-    });
-    return res.data;
+export const deleteComment = createAsyncThunk(
+  "comments/deleteComment",
+  async (commentId) => {
+    await axios.delete(`${BASE_URL}/${commentId}`);
+    return commentId;
   }
 );
 
@@ -46,8 +36,17 @@ export const toggleLikeComment = createAsyncThunk(
 export const editComment = createAsyncThunk(
   "comments/editComment",
   async ({ id, text }) => {
-    const res = await axios.put(`${BASE_URL}/comments/${id}`, { text });
+    const res = await axios.put(`${BASE_URL}/${id}`, { text });
     return res.data;
+  }
+);
+
+// Beğeni işlemi
+export const toggleLikeComment = createAsyncThunk(
+  "comments/toggleLike",
+  async ({ commentId, username }) => {
+    const res = await axios.put(`${BASE_URL}/${commentId}/like`, { username });
+    return { ...res.data, _id: commentId };
   }
 );
 
@@ -56,50 +55,38 @@ const commentSlice = createSlice({
   initialState: {
     items: [],
     loading: false,
-    error: null,
   },
   reducers: {},
   extraReducers: (builder) => {
     builder
-      // GET
       .addCase(fetchComments.pending, (state) => {
         state.loading = true;
       })
       .addCase(fetchComments.fulfilled, (state, action) => {
-        state.loading = false;
         state.items = action.payload;
-      })
-      .addCase(fetchComments.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.error.message;
       })
-
-      // POST
       .addCase(addComment.fulfilled, (state, action) => {
-        state.items.push(action.payload);
+        state.items = [...state.items, action.payload];
       })
-
-      // DELETE
       .addCase(deleteComment.fulfilled, (state, action) => {
-        state.items = state.items.filter((c) => c._id !== action.payload);
+        const id = action.payload;
+        state.items = state.items.filter(
+          (c) => c._id !== id && c.parentId !== id
+        );
       })
-
-      // LIKE
-      .addCase(toggleLikeComment.fulfilled, (state, action) => {
-        const { commentId, likes } = action.meta.arg;
-        const index = state.items.findIndex((c) => c._id === commentId);
+      .addCase(editComment.fulfilled, (state, action) => {
+        const updated = action.payload;
+        const index = state.items.findIndex((c) => c._id === updated._id);
         if (index !== -1) {
-          state.items[index].likes = action.payload.likes;
+          state.items[index].text = updated.text;
         }
       })
-
-      // EDIT
-      .addCase(editComment.fulfilled, (state, action) => {
-        const index = state.items.findIndex(
-          (c) => c._id === action.payload._id
-        );
+      .addCase(toggleLikeComment.fulfilled, (state, action) => {
+        const updated = action.payload;
+        const index = state.items.findIndex((c) => c._id === updated._id);
         if (index !== -1) {
-          state.items[index] = action.payload;
+          state.items[index] = { ...state.items[index], ...updated };
         }
       });
   },

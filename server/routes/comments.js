@@ -2,38 +2,52 @@ const express = require("express");
 const router = express.Router();
 const Comment = require("../models/comment.model");
 
-// GET: Belirli bir yazıya ait tüm yorumları al
+// GET: Belirli bir yazıya ait tüm yorumları al (user bilgileriyle birlikte)
 router.get("/", async (req, res) => {
   try {
     const { postId } = req.query;
     const filter = postId ? { postId } : {};
-    const comments = await Comment.find(filter);
+
+    const comments = await Comment.find(filter)
+      .populate("user", "username profileImage bio role")
+      .sort({ date: 1 });
+
     res.json(comments);
   } catch (err) {
     res.status(500).json({ error: "Yorumlar alınamadı" });
   }
 });
 
-// POST: Yeni yorum veya yanıt ekle
-// POST /api/comments
+// POST: Yeni yorum veya yanıt ekle (user ID gönderilmeli)
 router.post("/", async (req, res) => {
   try {
-    const newComment = new Comment(req.body);
+    const { user, postId, parentId, text } = req.body;
+
+    const newComment = new Comment({
+      user,
+      postId,
+      parentId: parentId || null,
+      text,
+    });
+
     const saved = await newComment.save();
-    res.status(201).json(saved);
+    const populated = await saved.populate(
+      "user",
+      "username profileImage bio role"
+    );
+
+    res.status(201).json(populated);
   } catch (err) {
     res.status(400).json({ error: "Yorum eklenemedi." });
   }
 });
 
 // DELETE: Yorumu (ve varsa alt yanıtlarını) sil
-// DELETE /api/comments/:id
 router.delete("/:id", async (req, res) => {
   try {
     const id = req.params.id;
 
     await Comment.findByIdAndDelete(id);
-
     await Comment.deleteMany({ parentId: id });
 
     res.json({ success: true });
@@ -43,20 +57,21 @@ router.delete("/:id", async (req, res) => {
 });
 
 // PUT: Yorumu güncelle
-// PUT /api/comments/:id
 router.put("/:id", async (req, res) => {
   try {
     const updated = await Comment.findByIdAndUpdate(
       req.params.id,
       { text: req.body.text },
       { new: true }
-    );
+    ).populate("user", "username profileImage bio role");
+
     res.json(updated);
   } catch (err) {
     res.status(500).json({ error: "Yorum güncellenemedi." });
   }
 });
 
+// PUT: Yorumu beğen / beğenmekten vazgeç
 router.put("/:id/like", async (req, res) => {
   const { username } = req.body;
 
@@ -77,7 +92,12 @@ router.put("/:id/like", async (req, res) => {
     }
 
     await comment.save();
-    res.json({ likes: comment.likes, liked: !alreadyLiked });
+    const updated = await Comment.findById(comment._id).populate(
+      "user",
+      "username profileImage bio role"
+    );
+
+    res.json(updated);
   } catch (err) {
     res.status(500).json({ error: "Beğeni güncellenemedi." });
   }

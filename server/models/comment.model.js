@@ -11,16 +11,16 @@ const commentSchema = new mongoose.Schema({
     ref: "Comment",
     default: null,
   },
-  username: {
-    type: String,
+  user: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
     required: true,
   },
-  email: String,
   text: {
     type: String,
     required: true,
+    trim: true,
   },
-  avatar: String,
   date: {
     type: Date,
     default: Date.now,

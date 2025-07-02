@@ -46,9 +46,8 @@ const CommentSection = ({ postId }) => {
     if (!text.trim()) return;
 
     const newComment = {
+      user: user.id,
       postId,
-      username: user.username,
-      email: user.email,
       text,
     };
 
@@ -63,10 +62,9 @@ const CommentSection = ({ postId }) => {
 
   const handleReplySubmit = async (parentId, replyObj) => {
     const newReply = {
+      user: replyObj.user,
       postId,
       parentId,
-      username: replyObj.username,
-      email: replyObj.email,
       text: replyObj.text,
     };
 
@@ -91,7 +89,6 @@ const CommentSection = ({ postId }) => {
     setSnackbar({ open: true, message });
   };
 
-  // Yorumları nested yapıya çevir
   const buildNestedComments = (comments) => {
     const map = {};
     comments.forEach((c) => (map[c._id] = { ...c, replies: [] }));
@@ -106,7 +103,6 @@ const CommentSection = ({ postId }) => {
     return nested;
   };
 
-  // Yorumları sıralı ve nested olarak hazırla
   const sortedComments = useMemo(() => {
     const nested = buildNestedComments(flatComments);
     return nested.sort((a, b) => {
@@ -127,7 +123,6 @@ const CommentSection = ({ postId }) => {
 
   return (
     <Box sx={{ mt: 4 }}>
-      {/* Başlık ve sıralama */}
       <Box
         sx={{
           display: "flex",
@@ -159,7 +154,6 @@ const CommentSection = ({ postId }) => {
         </Select>
       </Box>
 
-      {/* Yorum listesi */}
       <List>
         {sortedComments.map((comment) => (
           <CommentItem
@@ -176,7 +170,6 @@ const CommentSection = ({ postId }) => {
 
       <Divider sx={{ my: 3 }} />
 
-      {/* Yorum formu */}
       {!user ? (
         <Box sx={{ mt: 2, textAlign: "center" }}>
           <Typography variant="body2" color="text.secondary">

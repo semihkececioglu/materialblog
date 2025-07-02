@@ -5,11 +5,6 @@ import {
   Button,
   Paper,
   CardContent,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogContentText,
-  DialogTitle,
   IconButton,
   List,
   TextField,
@@ -17,11 +12,18 @@ import {
   Tooltip,
   Snackbar,
   Alert,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Slide,
+  useMediaQuery,
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
 import ChatBubbleOutlineIcon from "@mui/icons-material/ChatBubbleOutline";
 import FavoriteIcon from "@mui/icons-material/Favorite";
+import WarningAmberRoundedIcon from "@mui/icons-material/WarningAmberRounded";
 import { useDispatch, useSelector } from "react-redux";
 import {
   toggleLikeComment,
@@ -29,6 +31,8 @@ import {
   editComment,
 } from "../redux/commentSlice";
 import getTimeAgo from "../utils/getTimeAgo";
+import { useTheme } from "@mui/material/styles";
+import { useNavigate } from "react-router-dom";
 
 const stringToColor = (name) => {
   if (!name || typeof name !== "string") return "#888";
@@ -45,24 +49,26 @@ const CommentItem = ({
   replyingTo,
   setReplyingTo,
   onNotify,
+  onDelete,
 }) => {
   const dispatch = useDispatch();
   const user = useSelector((state) => state.user.currentUser);
-  const isOwner = user?.username === comment.username;
+  const isOwner = user?.username === comment.user?.username;
   const isAdmin = user?.role === "admin";
 
   const [replyText, setReplyText] = useState("");
-  const [replyEmail, setReplyEmail] = useState("");
-  const [replyName, setReplyName] = useState("");
   const [editMode, setEditMode] = useState(false);
   const [editedText, setEditedText] = useState(comment.text);
   const [liked, setLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(0);
   const [showAlert, setShowAlert] = useState(false);
-  const [openDialog, setOpenDialog] = useState(false);
+  const [loginWarn, setLoginWarn] = useState(false);
   const [snackbar, setSnackbar] = useState({ open: false, message: "" });
+  const [openDialog, setOpenDialog] = useState(false);
 
-  const displayName = comment.username || comment.name || "Anonim";
+  const theme = useTheme();
+  const fullScreen = useMediaQuery(theme.breakpoints.down("sm"));
+  const navigate = useNavigate();
 
   useEffect(() => {
     setLiked(comment.likes?.includes(user?.username));
@@ -72,7 +78,6 @@ const CommentItem = ({
   const handleLike = () => {
     if (!user) return setShowAlert(true);
     if (isOwner) return;
-
     dispatch(
       toggleLikeComment({ commentId: comment._id, username: user.username })
     ).then((res) => {
@@ -89,12 +94,11 @@ const CommentItem = ({
   };
 
   const handleReply = () => {
-    const responderUsername = user?.username || replyName;
-    if (!responderUsername.trim() || !replyText.trim()) return;
+    if (!user) return;
+    if (!replyText.trim()) return;
 
     const newReply = {
-      username: responderUsername,
-      email: user?.email || replyEmail,
+      user: user.id,
       text: replyText,
       parentId: comment._id,
       postId: comment.postId,
@@ -102,8 +106,6 @@ const CommentItem = ({
 
     onReplySubmit(comment._id, newReply);
     setReplyText("");
-    setReplyName("");
-    setReplyEmail("");
     setReplyingTo(null);
     onNotify?.("Yanıt eklendi");
   };
@@ -118,37 +120,60 @@ const CommentItem = ({
     }
   };
 
-  const handleDelete = () => {
-    dispatch(deleteComment(comment._id));
-    setOpenDialog(false);
-    setSnackbar({ open: true, message: "Yorum silindi" });
-  };
+  const displayName = comment.user?.username || "Anonim";
 
   return (
-    <Paper elevation={2} sx={{ mb: 2, ml: 4, p: 2, borderRadius: 2 }}>
+    <Paper
+      elevation={2}
+      sx={{
+        mb: 2,
+        ml: comment.parentId ? { xs: 2, md: 4 } : 0,
+        p: 2,
+        borderRadius: 2,
+      }}
+    >
       <CardContent sx={{ pb: 1 }}>
         <Box sx={{ display: "flex", justifyContent: "space-between" }}>
           <Box sx={{ display: "flex", alignItems: "center" }}>
             <Tooltip title={displayName}>
               <Avatar
+                src={comment.user?.profileImage || ""}
                 sx={{
-                  bgcolor: stringToColor(displayName),
+                  bgcolor: comment.user?.profileImage
+                    ? "transparent"
+                    : stringToColor(displayName),
                   width: 36,
                   height: 36,
                   fontSize: 14,
                   mr: 1,
+                  color: "white",
+                  fontWeight: 600,
                 }}
               >
-                {displayName.charAt(0).toUpperCase()}
+                {!comment.user?.profileImage &&
+                  displayName.charAt(0).toUpperCase()}
               </Avatar>
             </Tooltip>
             <Box>
-              <Typography variant="subtitle2">{displayName}</Typography>
               <Typography
-                variant="caption"
-                color="text.secondary"
-                title={new Date(comment.date).toLocaleString()}
+                variant="subtitle2"
+                sx={{
+                  fontWeight: 600,
+                  color: theme.palette.primary.main,
+                  cursor: comment.user?.username ? "pointer" : "default",
+                  textDecoration: comment.user?.username ? "underline" : "none",
+                  "&:hover": {
+                    opacity: comment.user?.username ? 0.8 : 1,
+                  },
+                }}
+                onClick={() =>
+                  comment.user?.username &&
+                  navigate(`/profile/${comment.user.username}`)
+                }
               >
+                {displayName}
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
                 {getTimeAgo(comment.date)}
               </Typography>
             </Box>
@@ -224,9 +249,10 @@ const CommentItem = ({
 
           <Button
             size="small"
-            onClick={() =>
-              setReplyingTo(replyingTo === comment._id ? null : comment._id)
-            }
+            onClick={() => {
+              if (!user) return setLoginWarn(true);
+              setReplyingTo(replyingTo === comment._id ? null : comment._id);
+            }}
             sx={{ textTransform: "none" }}
             startIcon={<ChatBubbleOutlineIcon />}
           >
@@ -236,24 +262,6 @@ const CommentItem = ({
 
         {replyingTo === comment._id && (
           <Box sx={{ mt: 2 }}>
-            {!user && (
-              <Box sx={{ display: "flex", gap: 2, mb: 2 }}>
-                <TextField
-                  label="Ad Soyad"
-                  fullWidth
-                  value={replyName}
-                  onChange={(e) => setReplyName(e.target.value)}
-                  size="small"
-                />
-                <TextField
-                  label="E-posta"
-                  fullWidth
-                  value={replyEmail}
-                  onChange={(e) => setReplyEmail(e.target.value)}
-                  size="small"
-                />
-              </Box>
-            )}
             <TextField
               label="Cevabınız"
               fullWidth
@@ -277,7 +285,7 @@ const CommentItem = ({
         )}
 
         {comment.replies?.length > 0 && (
-          <List sx={{ mt: 2, ml: 2 }}>
+          <List sx={{ mt: 2, pl: { xs: 2, md: 4 } }}>
             {comment.replies.map((reply) => (
               <CommentItem
                 key={reply._id}
@@ -286,25 +294,11 @@ const CommentItem = ({
                 replyingTo={replyingTo}
                 setReplyingTo={setReplyingTo}
                 onNotify={onNotify}
+                onDelete={onDelete}
               />
             ))}
           </List>
         )}
-
-        <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>
-          <DialogTitle>Yorumu silmek istiyor musunuz?</DialogTitle>
-          <DialogContent>
-            <DialogContentText>
-              Bu işlem geri alınamaz. Yorum ve varsa yanıtlar silinecek.
-            </DialogContentText>
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={() => setOpenDialog(false)}>Vazgeç</Button>
-            <Button onClick={handleDelete} autoFocus color="error">
-              Evet, Sil
-            </Button>
-          </DialogActions>
-        </Dialog>
 
         <Snackbar
           open={showAlert}
@@ -318,6 +312,17 @@ const CommentItem = ({
         </Snackbar>
 
         <Snackbar
+          open={loginWarn}
+          autoHideDuration={3000}
+          onClose={() => setLoginWarn(false)}
+          anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+        >
+          <Alert severity="info" variant="filled">
+            Yanıt yazabilmek için giriş yapmalısınız.
+          </Alert>
+        </Snackbar>
+
+        <Snackbar
           open={snackbar.open}
           autoHideDuration={3000}
           onClose={() => setSnackbar({ open: false, message: "" })}
@@ -327,6 +332,65 @@ const CommentItem = ({
             {snackbar.message}
           </Alert>
         </Snackbar>
+
+        <Dialog
+          open={openDialog}
+          onClose={() => setOpenDialog(false)}
+          TransitionComponent={Slide}
+          TransitionProps={{ direction: "up" }}
+          fullScreen={fullScreen}
+          PaperProps={{
+            sx: {
+              backdropFilter: "blur(12px)",
+              backgroundColor: "rgba(255, 255, 255, 0.06)",
+              border: "1px solid rgba(255, 255, 255, 0.2)",
+              borderRadius: 3,
+              px: 3,
+              py: 2,
+              minWidth: { xs: "90%", sm: 400 },
+            },
+          }}
+        >
+          <DialogTitle
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: 1,
+              fontWeight: "bold",
+              fontSize: 18,
+            }}
+          >
+            <WarningAmberRoundedIcon color="warning" />
+            Yorumu Sil
+          </DialogTitle>
+
+          <DialogContent>
+            <Typography>
+              Bu yorumu silmek istediğinize emin misiniz? Bu işlem geri
+              alınamaz.
+            </Typography>
+          </DialogContent>
+
+          <DialogActions sx={{ justifyContent: "flex-end", gap: 1 }}>
+            <Button
+              onClick={() => setOpenDialog(false)}
+              variant="outlined"
+              color="primary"
+            >
+              Vazgeç
+            </Button>
+            <Button
+              onClick={() => {
+                onDelete(comment._id);
+                setOpenDialog(false);
+              }}
+              variant="contained"
+              color="error"
+            >
+              Sil
+            </Button>
+          </DialogActions>
+        </Dialog>
       </CardContent>
     </Paper>
   );
