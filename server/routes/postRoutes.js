@@ -3,10 +3,13 @@ const router = express.Router();
 const Post = require("../models/Post");
 const User = require("../models/User");
 
-// SLUG ile post getir
 router.get("/slug/:slug", async (req, res) => {
   try {
-    const post = await Post.findOne({ slug: req.params.slug });
+    const post = await Post.findOne({ slug: req.params.slug }).populate(
+      "user",
+      "username name profileImage"
+    );
+
     if (!post) return res.status(404).json({ message: "Yazı bulunamadı" });
     res.json(post);
   } catch (err) {

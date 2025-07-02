@@ -130,10 +130,10 @@ function PostDetail() {
 
   const readingTime = Math.ceil(post.content.split(" ").length / 150);
 
-  const author = {
-    name: "Semih Rahman Keçecioğlu",
-    avatar:
-      "https://ui-avatars.com/api/?name=Semih+R&background=0D8ABC&color=fff",
+  const author = post.user || {
+    name: "Bilinmeyen",
+    username: "anonymous",
+    profileImage: "",
   };
 
   const currentIndex = allPosts.findIndex((p) => p._id === post._id);
@@ -181,8 +181,9 @@ function PostDetail() {
             </Typography>
 
             <AuthorInfo
-              name={author.name}
-              avatar={author.avatar}
+              name={author.name || author.username}
+              avatar={author.profileImage}
+              username={author.username}
               date={formattedDate}
               readingTime={readingTime}
             />

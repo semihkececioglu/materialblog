@@ -15,6 +15,11 @@ const postSchema = new mongoose.Schema({
   },
   image: String,
   likes: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+  user: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: true,
+  },
 });
 
 postSchema.pre("save", function (next) {
@@ -26,4 +31,5 @@ postSchema.pre("save", function (next) {
   }
   next();
 });
+
 module.exports = mongoose.model("Post", postSchema);

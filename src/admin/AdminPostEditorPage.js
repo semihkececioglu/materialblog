@@ -101,6 +101,7 @@ const PostEditorPage = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { id } = useParams();
+  const user = useSelector((state) => state.user.currentUser);
 
   const loading = useSelector((state) => state.posts.loading);
 
@@ -206,6 +207,7 @@ const PostEditorPage = () => {
     const payload = {
       ...form,
       tags: form.tags.map((t) => t.trim()),
+      user: user?._id,
     };
 
     try {
