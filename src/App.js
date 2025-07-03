@@ -23,6 +23,7 @@ import PostEditorPage from "./admin/AdminPostEditorPage";
 import AdminRoute from "./auth/AdminRoute";
 import AdminUsersPage from "./admin/AdminUsersPage";
 import NotFound from "./pages/NotFound";
+import RoleBasedAdminRedirect from "./auth/RoleBasedAdminRedirect";
 
 // Redux
 import { Provider, useDispatch } from "react-redux";
@@ -117,7 +118,9 @@ function App() {
                   </AdminRoute>
                 }
               >
-                <Route index element={<DashboardPage />} />
+                <Route index element={<RoleBasedAdminRedirect />} />
+                <Route path="dashboard" element={<DashboardPage />} />{" "}
+                {/* ✅ admin için */}
                 <Route path="posts" element={<PostsPage />} />
                 <Route path="categories" element={<AdminCategoriesPage />} />
                 <Route path="tags" element={<AdminTagsPage />} />

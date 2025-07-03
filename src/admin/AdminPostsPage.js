@@ -46,6 +46,7 @@ const PostsPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
 
   const { posts: allPosts } = useSelector((state) => state.posts);
+  const user = useSelector((state) => state.user.currentUser);
 
   const [searchTerm, setSearchTerm] = useState(
     searchParams.get("search") || ""
@@ -227,14 +228,16 @@ const PostsPage = () => {
             <MenuItem value="desc">Z-A</MenuItem>
           </TextField>
 
-          <Button
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={() => navigate("/admin/editor")}
-            sx={{ borderRadius: 3 }}
-          >
-            Yeni Yazı
-          </Button>
+          {(user?.role === "admin" || user?.role === "editor") && (
+            <Button
+              variant="contained"
+              startIcon={<AddIcon />}
+              onClick={() => navigate("/admin/editor")}
+              sx={{ borderRadius: 3 }}
+            >
+              Yeni Yazı
+            </Button>
+          )}
         </Box>
       </Box>
 
@@ -289,20 +292,24 @@ const PostsPage = () => {
                     {/* ✅ Tarih formatı */}
                   </TableCell>
                   <TableCell align="right">
-                    <IconButton
-                      color="primary"
-                      size="small"
-                      onClick={() => handleEdit(post)}
-                    >
-                      <EditIcon fontSize="small" />
-                    </IconButton>
-                    <IconButton
-                      color="error"
-                      size="small"
-                      onClick={() => handleDeleteRequest(post._id)}
-                    >
-                      <DeleteIcon fontSize="small" />
-                    </IconButton>
+                    {user?.role === "admin" && (
+                      <>
+                        <IconButton
+                          color="primary"
+                          size="small"
+                          onClick={() => handleEdit(post)}
+                        >
+                          <EditIcon fontSize="small" />
+                        </IconButton>
+                        <IconButton
+                          color="error"
+                          size="small"
+                          onClick={() => handleDeleteRequest(post._id)}
+                        >
+                          <DeleteIcon fontSize="small" />
+                        </IconButton>
+                      </>
+                    )}
                   </TableCell>
                 </TableRow>
               ))}

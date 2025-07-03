@@ -27,24 +27,38 @@ import CommentIcon from "@mui/icons-material/Comment";
 import PeopleIcon from "@mui/icons-material/People";
 import SettingsIcon from "@mui/icons-material/Settings";
 import { Outlet, Link, useLocation } from "react-router-dom";
+import { useSelector } from "react-redux";
 
 const drawerWidth = 240;
-
-const navItems = [
-  { text: "Dashboard", path: "/admin", icon: <DashboardIcon /> },
-  { text: "Yazılar", path: "/admin/posts", icon: <ArticleIcon /> },
-  { text: "Kategoriler", path: "/admin/categories", icon: <CategoryIcon /> },
-  { text: "Etiketler", path: "/admin/tags", icon: <TagIcon /> },
-  { text: "Yorumlar", path: "/admin/comments", icon: <CommentIcon /> },
-  { text: "Kullanıcılar", path: "/admin/users", icon: <PeopleIcon /> },
-  { text: "Ayarlar", path: "/admin/settings", icon: <SettingsIcon /> },
-];
 
 const AdminLayout = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
-  const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  const user = useSelector((state) => state.user.currentUser);
+
+  const navItems = [
+    { text: "Dashboard", path: "/admin", icon: <DashboardIcon /> },
+    { text: "Yazılar", path: "/admin/posts", icon: <ArticleIcon /> },
+    { text: "Kategoriler", path: "/admin/categories", icon: <CategoryIcon /> },
+    { text: "Etiketler", path: "/admin/tags", icon: <TagIcon /> },
+    { text: "Yorumlar", path: "/admin/comments", icon: <CommentIcon /> },
+    { text: "Kullanıcılar", path: "/admin/users", icon: <PeopleIcon /> },
+    { text: "Ayarlar", path: "/admin/settings", icon: <SettingsIcon /> },
+  ];
+
+  // ✅ Rol kontrolü: sadece admin veya editor girebilir
+  if (!user || (user.role !== "admin" && user.role !== "editor")) {
+    return (
+      <Box sx={{ p: 4 }}>
+        <Typography variant="h6" color="error">
+          Bu sayfaya erişim yetkiniz yok.
+        </Typography>
+      </Box>
+    );
+  }
 
   const drawerContent = (
     <Box sx={{ p: 2 }}>
@@ -54,12 +68,17 @@ const AdminLayout = () => {
       <List>
         {navItems.map((item) => {
           const isActive = location.pathname.startsWith(item.path);
+
+          const isDisabled =
+            user?.role === "editor" && item.path !== "/admin/posts"; // 👈 sadece "Yazılar" açık
+
           return (
             <ListItem disablePadding key={item.text}>
               <ListItemButton
-                component={Link}
-                to={item.path}
-                onClick={() => setMobileOpen(false)}
+                component={isDisabled ? "div" : Link}
+                to={isDisabled ? undefined : item.path}
+                onClick={() => !isDisabled && setMobileOpen(false)}
+                disabled={isDisabled}
                 sx={{
                   borderRadius: 2,
                   mb: 1,
@@ -69,9 +88,14 @@ const AdminLayout = () => {
                   backgroundColor: isActive
                     ? theme.palette.action.selected
                     : "transparent",
+                  opacity: isDisabled ? 0.5 : 1,
+                  cursor: isDisabled ? "not-allowed" : "pointer",
+                  pointerEvents: isDisabled ? "none" : "auto",
                   "&:hover": {
-                    bgcolor: theme.palette.action.hover,
-                    transform: "scale(1.02)",
+                    bgcolor: isDisabled
+                      ? "transparent"
+                      : theme.palette.action.hover,
+                    transform: isDisabled ? "none" : "scale(1.02)",
                   },
                 }}
               >
@@ -82,7 +106,11 @@ const AdminLayout = () => {
                   primary={item.text}
                   primaryTypographyProps={{
                     fontWeight: isActive ? "bold" : 500,
-                    color: isActive ? "primary.main" : "text.primary",
+                    color: isDisabled
+                      ? theme.palette.text.disabled
+                      : isActive
+                      ? "primary.main"
+                      : "text.primary",
                   }}
                 />
               </ListItemButton>
@@ -97,7 +125,7 @@ const AdminLayout = () => {
     <Box sx={{ display: "flex", minHeight: "100vh" }}>
       <CssBaseline />
 
-      {/* AppBar with Glassmorphism */}
+      {/* AppBar */}
       <AppBar
         position="fixed"
         sx={{

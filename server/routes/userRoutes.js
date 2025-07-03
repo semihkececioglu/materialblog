@@ -71,7 +71,7 @@ router.put("/:id/role", async (req, res) => {
   const { id } = req.params;
   const { role } = req.body;
 
-  if (!["admin", "user"].includes(role)) {
+  if (!["admin", "user", "editor"].includes(role)) {
     return res.status(400).json({ message: "Geçersiz rol" });
   }
 

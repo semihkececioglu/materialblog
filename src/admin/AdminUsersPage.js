@@ -167,6 +167,7 @@ const AdminUsersPage = () => {
                     >
                       <MenuItem value="user">User</MenuItem>
                       <MenuItem value="admin">Admin</MenuItem>
+                      <MenuItem value="editor">Editör</MenuItem>
                     </Select>
                   </TableCell>
                 </TableRow>
