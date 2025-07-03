@@ -29,8 +29,8 @@ import {
   toggleLikeComment,
   deleteComment,
   editComment,
-} from "../redux/commentSlice";
-import getTimeAgo from "../utils/getTimeAgo";
+} from "../../redux/commentSlice";
+import getTimeAgo from "../../utils/getTimeAgo";
 import { useTheme } from "@mui/material/styles";
 import { useNavigate } from "react-router-dom";
 

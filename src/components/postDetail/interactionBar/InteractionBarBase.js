@@ -32,7 +32,7 @@ import {
   setSaved,
   setLikeCount,
   fetchInteractionData,
-} from "../redux/interactionSlice";
+} from "../../../redux/interactionSlice";
 
 import axios from "axios";
 
@@ -208,38 +208,79 @@ const InteractionBarBase = ({ position = "fixed", visible = true, postId }) => {
           anchorEl={anchorEl}
           onClose={handleShareClose}
           anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+          PaperProps={{
+            sx: {
+              bgcolor: "rgba(255, 255, 255, 0.25)",
+              backdropFilter: "blur(12px)",
+              WebkitBackdropFilter: "blur(12px)",
+              borderRadius: "16px",
+              boxShadow: "0 8px 32px rgba(0,0,0,0.2)",
+              p: 1,
+              minWidth: 220,
+            },
+          }}
         >
           <List dense disablePadding>
-            <ListItem button onClick={handleCopyLink}>
+            <ListItem
+              button
+              onClick={handleCopyLink}
+              sx={{
+                color: "text.primary",
+                "&:hover": {
+                  bgcolor: "rgba(255,255,255,0.1)",
+                },
+              }}
+            >
               <ContentCopy fontSize="small" sx={{ mr: 1 }} />
               <ListItemText primary="Bağlantıyı Kopyala" />
             </ListItem>
+
             <ListItem
               button
               component="a"
               href={`https://x.com/share?url=${window.location.href}`}
               target="_blank"
               rel="noopener noreferrer"
+              sx={{
+                color: "#1DA1F2",
+                "&:hover": {
+                  bgcolor: "rgba(29,161,242,0.1)",
+                },
+              }}
             >
               <XIcon fontSize="small" sx={{ mr: 1 }} />
               <ListItemText primary="X ile Paylaş" />
             </ListItem>
+
             <ListItem
               button
               component="a"
               href={`https://wa.me/?text=${window.location.href}`}
               target="_blank"
               rel="noopener noreferrer"
+              sx={{
+                color: "#25D366",
+                "&:hover": {
+                  bgcolor: "rgba(37,211,102,0.1)",
+                },
+              }}
             >
               <WhatsAppIcon fontSize="small" sx={{ mr: 1 }} />
               <ListItemText primary="WhatsApp ile Paylaş" />
             </ListItem>
+
             <ListItem
               button
               component="a"
               href={`https://t.me/share/url?url=${window.location.href}`}
               target="_blank"
               rel="noopener noreferrer"
+              sx={{
+                color: "#229ED9",
+                "&:hover": {
+                  bgcolor: "rgba(34,158,217,0.1)",
+                },
+              }}
             >
               <TelegramIcon fontSize="small" sx={{ mr: 1 }} />
               <ListItemText primary="Telegram ile Paylaş" />

@@ -12,14 +12,14 @@ import {
 import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
 import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
 
-import CommentSection from "../components/CommentSection";
+import CommentSection from "../components/comment/CommentSection";
 import Sidebar from "../components/sidebar/Sidebar";
-import AuthorInfo from "../components/AuthorInfo";
+import AuthorInfo from "../components/postDetail/AuthorInfo";
 import PostCard from "../components/PostCard";
-import FloatingInteractionBar from "../components/FloatingInteractionBar";
-import EmbeddedInteractionBar from "../components/EmbeddedInteractionBar";
-import ScrollProgressBar from "../components/ScrollProgressBar";
-import TableOfContents from "../components/TableOfContents";
+import FloatingInteractionBar from "../components/postDetail/interactionBar/FloatingInteractionBar";
+import EmbeddedInteractionBar from "../components/postDetail/interactionBar/EmbeddedInteractionBar";
+import ScrollProgressBar from "../components/postDetail/ScrollProgressBar";
+import TableOfContents from "../components/postDetail/TableOfContents";
 import slugify from "../utils/slugify";
 
 import { useDispatch, useSelector } from "react-redux";

@@ -19,7 +19,7 @@ import {
   fetchComments,
   addComment,
   deleteComment,
-} from "../redux/commentSlice";
+} from "../../redux/commentSlice";
 import CommentItem from "./CommentItem";
 
 const CommentSection = ({ postId }) => {
