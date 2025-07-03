@@ -13,6 +13,7 @@ import PostCard from "../components/PostCard";
 import Sidebar from "../components/sidebar/Sidebar";
 import HomeSlider from "../components/HomeSlider";
 import { fetchPosts } from "../redux/postSlice";
+import PageTransitionWrapper from "../components/common/PageTransitionWrapper";
 
 const POSTS_PER_PAGE = 6;
 
@@ -41,61 +42,65 @@ const Home = () => {
   };
 
   return (
-    <Container maxWidth="lg" sx={{ mt: 4 }}>
-      <HomeSlider />
-      <Box
-        sx={{
-          display: "flex",
-          gap: 4,
-          flexDirection: { xs: "column", md: "row" },
-        }}
-      >
-        {/* Ana içerik */}
-        <Box sx={{ flex: 3 }}>
-          {loading ? (
-            <Box sx={{ textAlign: "center", mt: 6 }}>
-              <CircularProgress />
-            </Box>
-          ) : error ? (
-            <Box sx={{ textAlign: "center", mt: 6 }}>
-              <p>Hata: {error}</p>
-            </Box>
-          ) : (
-            <>
-              <Box sx={{ display: "flex", flexWrap: "wrap", gap: 3 }}>
-                {posts.map((post) => (
-                  <Box
-                    key={post._id}
-                    sx={{
-                      flex: "1 1 calc(33.333% - 20px)",
-                      minWidth: "250px",
-                    }}
-                  >
-                    <PostCard post={post} />
-                  </Box>
-                ))}
+    <PageTransitionWrapper>
+      <Container maxWidth="lg" sx={{ mt: 4 }}>
+        <HomeSlider />
+        <Box
+          sx={{
+            display: "flex",
+            gap: 4,
+            flexDirection: { xs: "column", md: "row" },
+          }}
+        >
+          {/* Ana içerik */}
+          <Box sx={{ flex: 3 }}>
+            {loading ? (
+              <Box sx={{ textAlign: "center", mt: 6 }}>
+                <CircularProgress />
               </Box>
-
-              {totalPages > 1 && (
-                <Box sx={{ mt: 4, display: "flex", justifyContent: "center" }}>
-                  <Pagination
-                    count={totalPages}
-                    page={page}
-                    onChange={handleChange}
-                    color="primary"
-                  />
+            ) : error ? (
+              <Box sx={{ textAlign: "center", mt: 6 }}>
+                <p>Hata: {error}</p>
+              </Box>
+            ) : (
+              <>
+                <Box sx={{ display: "flex", flexWrap: "wrap", gap: 3 }}>
+                  {posts.map((post) => (
+                    <Box
+                      key={post._id}
+                      sx={{
+                        flex: "1 1 calc(33.333% - 20px)",
+                        minWidth: "250px",
+                      }}
+                    >
+                      <PostCard post={post} />
+                    </Box>
+                  ))}
                 </Box>
-              )}
-            </>
-          )}
-        </Box>
 
-        {/* Sidebar */}
-        <Box sx={{ flex: 1 }}>
-          <Sidebar />
+                {totalPages > 1 && (
+                  <Box
+                    sx={{ mt: 4, display: "flex", justifyContent: "center" }}
+                  >
+                    <Pagination
+                      count={totalPages}
+                      page={page}
+                      onChange={handleChange}
+                      color="primary"
+                    />
+                  </Box>
+                )}
+              </>
+            )}
+          </Box>
+
+          {/* Sidebar */}
+          <Box sx={{ flex: 1 }}>
+            <Sidebar />
+          </Box>
         </Box>
-      </Box>
-    </Container>
+      </Container>
+    </PageTransitionWrapper>
   );
 };
 

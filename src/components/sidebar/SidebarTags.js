@@ -3,13 +3,12 @@ import { Box, Typography, Paper, useTheme, Divider, Chip } from "@mui/material";
 import { Link } from "react-router-dom";
 import TagIcon from "@mui/icons-material/Tag";
 import { motion } from "framer-motion";
+import slugify from "../../utils/slugify";
 
 const tags = [
   { label: "React", color: "#61dafb" },
   { label: "JavaScript", color: "#f7df1e" },
   { label: "Tasarım", color: "#ff65a3" },
-  { label: "CSS", color: "#2965f1" },
-  { label: "Node.js", color: "#3c873a" },
 ];
 
 const SidebarTags = () => {
@@ -18,17 +17,25 @@ const SidebarTags = () => {
   return (
     <Paper
       component={motion.div}
-      elevation={4}
+      elevation={0}
       initial={{ opacity: 0, y: 30 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6 }}
       sx={{
         p: 3,
         mt: 3,
-        borderRadius: 3,
-        bgcolor: theme.palette.background.paper,
-        boxShadow: "0 4px 20px rgba(0, 0, 0, 0.08)",
-        border: `1px solid ${theme.palette.divider}`,
+        borderRadius: 4,
+        background:
+          theme.palette.mode === "dark"
+            ? "linear-gradient(135deg, rgba(40,40,60,0.4), rgba(20,20,40,0.4))"
+            : "linear-gradient(135deg, rgba(255,255,255,0.5), rgba(245,245,255,0.4))",
+        backdropFilter: "blur(16px)",
+        WebkitBackdropFilter: "blur(16px)",
+        boxShadow:
+          theme.palette.mode === "dark"
+            ? "0 8px 24px rgba(0,0,0,0.4)"
+            : "0 8px 24px rgba(0,0,0,0.1)",
+        border: "1px solid rgba(255,255,255,0.2)",
       }}
     >
       <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
@@ -37,14 +44,16 @@ const SidebarTags = () => {
           Etiketler
         </Typography>
       </Box>
-      <Divider sx={{ mb: 2 }} />
+
+      <Divider sx={{ mb: 2, borderColor: "rgba(255,255,255,0.2)" }} />
+
       <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1.2 }}>
         {tags.map((tag, index) => (
           <Chip
             key={index}
             label={`#${tag.label}`}
             component={Link}
-            to={`/tag/${tag.label.toLowerCase()}`}
+            to={`/tag/${slugify(tag.label)}`}
             clickable
             variant="filled"
             sx={{
@@ -55,11 +64,12 @@ const SidebarTags = () => {
               borderRadius: "20px",
               letterSpacing: 0.6,
               color: theme.palette.getContrastText(tag.color),
-              bgcolor: tag.color,
+              bgcolor: `${tag.color}E6`,
+              backdropFilter: "blur(4px)",
               transition: "transform 0.2s ease, box-shadow 0.3s ease",
               "&:hover": {
                 transform: "scale(1.08) rotate(-1deg)",
-                boxShadow: `0 6px 12px ${tag.color}66`,
+                boxShadow: `0 6px 16px ${tag.color}66`,
               },
             }}
           />

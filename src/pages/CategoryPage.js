@@ -9,6 +9,7 @@ import {
   Pagination,
   CircularProgress,
 } from "@mui/material";
+import PageTransitionWrapper from "../components/common/PageTransitionWrapper";
 
 // Redux
 import { useDispatch, useSelector } from "react-redux";
@@ -53,44 +54,46 @@ function CategoryPage() {
     .replace(/\b\w/g, (l) => l.toUpperCase());
 
   return (
-    <Container sx={{ mt: 4 }}>
-      <Typography variant="h4" gutterBottom>
-        {formattedCategoryName} Kategorisi
-      </Typography>
+    <PageTransitionWrapper>
+      <Container sx={{ mt: 4 }}>
+        <Typography variant="h4" gutterBottom>
+          {formattedCategoryName} Kategorisi
+        </Typography>
 
-      {loading ? (
-        <Box sx={{ display: "flex", justifyContent: "center", mt: 8 }}>
-          <CircularProgress />
-        </Box>
-      ) : (
-        <>
-          <Box sx={{ display: "flex", flexWrap: "wrap", gap: 3, mt: 3 }}>
-            {posts.map((post) => (
-              <Box
-                key={post._id}
-                sx={{
-                  flex: "1 1 calc(33.333% - 20px)",
-                  minWidth: "250px",
-                }}
-              >
-                <PostCard post={post} />
-              </Box>
-            ))}
+        {loading ? (
+          <Box sx={{ display: "flex", justifyContent: "center", mt: 8 }}>
+            <CircularProgress />
           </Box>
-
-          {totalPages > 1 && (
-            <Box sx={{ display: "flex", justifyContent: "center", mt: 5 }}>
-              <Pagination
-                count={totalPages}
-                page={page}
-                onChange={handlePageChange}
-                color="primary"
-              />
+        ) : (
+          <>
+            <Box sx={{ display: "flex", flexWrap: "wrap", gap: 3, mt: 3 }}>
+              {posts.map((post) => (
+                <Box
+                  key={post._id}
+                  sx={{
+                    flex: "1 1 calc(33.333% - 20px)",
+                    minWidth: "250px",
+                  }}
+                >
+                  <PostCard post={post} />
+                </Box>
+              ))}
             </Box>
-          )}
-        </>
-      )}
-    </Container>
+
+            {totalPages > 1 && (
+              <Box sx={{ display: "flex", justifyContent: "center", mt: 5 }}>
+                <Pagination
+                  count={totalPages}
+                  page={page}
+                  onChange={handlePageChange}
+                  color="primary"
+                />
+              </Box>
+            )}
+          </>
+        )}
+      </Container>
+    </PageTransitionWrapper>
   );
 }
 
