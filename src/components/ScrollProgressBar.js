@@ -36,7 +36,7 @@ const ScrollProgressBar = () => {
           height: 4,
           backgroundColor: "transparent",
           "& .MuiLinearProgress-bar": {
-            backgroundImage: "linear-gradient(to right, #00c6ff, #0072ff)",
+            backgroundImage: "linear-gradient(to right, #41295a, #2F0743)",
             transition: "all 0.3s ease",
           },
         }}

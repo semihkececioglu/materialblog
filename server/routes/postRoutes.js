@@ -98,10 +98,16 @@ router.post("/:postId/save", async (req, res) => {
   }
 });
 
-// TÜM POSTLARI GETİR (ARAMA + FİLTRE + SAYFALAMA)
 router.get("/", async (req, res) => {
   try {
-    const { search = "", category, tag, page = 1, limit = 6 } = req.query;
+    const {
+      search = "",
+      category,
+      tag,
+      author,
+      page = 1,
+      limit = 6,
+    } = req.query;
 
     const filter = {
       $or: [
@@ -112,6 +118,15 @@ router.get("/", async (req, res) => {
 
     if (category) filter.categorySlug = category;
     if (tag) filter.tags = tag;
+
+    if (author) {
+      const authorUser = await User.findOne({ username: author });
+      if (authorUser) {
+        filter.user = authorUser._id;
+      } else {
+        return res.json({ posts: [], totalPages: 0, currentPage: 1 });
+      }
+    }
 
     const pageNumber = parseInt(page);
     const pageSize = parseInt(limit);
