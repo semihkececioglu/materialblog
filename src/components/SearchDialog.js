@@ -44,14 +44,15 @@ const SearchDialog = ({ open, onClose }) => {
         sx: {
           background: "rgba(0, 0, 0, 0.4)",
           backdropFilter: "blur(12px)",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
         },
       }}
     >
       <Box
         sx={{
+          position: "absolute",
+          top: "5%", // ekranın üstünden %5 boşluk
+          left: "50%",
+          transform: "translateX(-50%)",
           width: "90%",
           maxWidth: 500,
           bgcolor:
@@ -64,6 +65,7 @@ const SearchDialog = ({ open, onClose }) => {
           display: "flex",
           alignItems: "center",
           gap: 2,
+          boxShadow: 6,
         }}
       >
         <IconButton onClick={onClose}>
