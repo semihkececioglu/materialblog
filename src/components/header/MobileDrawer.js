@@ -78,7 +78,7 @@ const MobileDrawer = ({
             <ListItemText
               primary="Ana Sayfa"
               primaryTypographyProps={{
-                color: "text.primary", // ✅ Tema rengi
+                color: "text.primary",
                 fontWeight: 500,
               }}
             />

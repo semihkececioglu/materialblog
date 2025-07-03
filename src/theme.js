@@ -6,18 +6,14 @@ export const getTheme = (mode) =>
       mode,
       ...(mode === "light"
         ? {
-            primary: {
-              main: "#1e1e1e",
-            },
+            primary: { main: "#1e1e1e" },
             background: {
               default: "#f9f9f9",
               paper: "#fff",
             },
           }
         : {
-            primary: {
-              main: "#90caf9",
-            },
+            primary: { main: "#90caf9" },
             background: {
               default: "#121212",
               paper: "#1e1e1e",
@@ -29,6 +25,36 @@ export const getTheme = (mode) =>
       fontSize: 14,
     },
     components: {
+      MuiCssBaseline: {
+        styleOverrides: {
+          body: {
+            scrollbarWidth: "thin",
+            scrollbarColor:
+              mode === "dark"
+                ? "rgba(255,255,255,0.1) transparent"
+                : "rgba(0,0,0,0.1) transparent",
+          },
+          "*::-webkit-scrollbar": {
+            width: "6px",
+          },
+          "*::-webkit-scrollbar-track": {
+            background: "transparent",
+          },
+          "*::-webkit-scrollbar-thumb": {
+            backgroundColor:
+              mode === "dark" ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.15)",
+            borderRadius: "8px",
+            backdropFilter: "blur(6px)",
+            transition: "all 0.3s ease",
+          },
+          "*::-webkit-scrollbar-thumb:hover": {
+            backgroundImage:
+              mode === "dark"
+                ? "linear-gradient(135deg, rgba(255,255,255,0.2), rgba(255,255,255,0.05))"
+                : "linear-gradient(135deg, rgba(0,0,0,0.1), rgba(0,0,0,0.05))",
+          },
+        },
+      },
       MuiCard: {
         styleOverrides: {
           root: {
