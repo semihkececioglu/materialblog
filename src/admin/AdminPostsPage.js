@@ -1,31 +1,33 @@
 import React, { useEffect, useState } from "react";
 import {
-  Paper,
+  Box,
   Typography,
+  Button,
+  IconButton,
+  Dialog,
+  DialogActions,
+  DialogTitle,
+  Slide,
+  Snackbar,
+  Alert,
+  Paper,
   Table,
   TableHead,
   TableRow,
   TableCell,
   TableBody,
-  IconButton,
-  Box,
-  Button,
-  Dialog,
-  Slide,
-  DialogActions,
-  DialogTitle,
-  Snackbar,
-  Alert,
   Chip,
+  TextField,
+  MenuItem,
+  Pagination,
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import AddIcon from "@mui/icons-material/Add";
-import { useNavigate } from "react-router-dom";
-
-// Redux
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchPosts, deletePost } from "../redux/postSlice";
+import dayjs from "dayjs"; // Tarih formatlama
 
 const categoryColors = {
   React: "primary",
@@ -41,8 +43,26 @@ const Transition = React.forwardRef(function Transition(props, ref) {
 const PostsPage = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const [searchParams, setSearchParams] = useSearchParams();
 
-  const { posts: allPosts, loading } = useSelector((state) => state.posts);
+  const { posts: allPosts } = useSelector((state) => state.posts);
+
+  const [searchTerm, setSearchTerm] = useState(
+    searchParams.get("search") || ""
+  );
+  const [selectedCategory, setSelectedCategory] = useState(
+    searchParams.get("category") || ""
+  );
+  const [sortField, setSortField] = useState(
+    searchParams.get("sortField") || ""
+  );
+  const [sortOrder, setSortOrder] = useState(
+    searchParams.get("sortOrder") || "asc"
+  );
+  const [currentPage, setCurrentPage] = useState(
+    Number(searchParams.get("page")) || 1
+  );
+  const postsPerPage = 10;
 
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [postToDelete, setPostToDelete] = useState(null);
@@ -54,21 +74,29 @@ const PostsPage = () => {
     dispatch(fetchPosts({ page: 1, limit: 1000 }));
   }, [dispatch]);
 
-  const showSnackbar = (message, severity = "success") => {
-    setSnackbarMessage(message);
+  useEffect(() => {
+    const params = {};
+    if (searchTerm) params.search = searchTerm;
+    if (selectedCategory) params.category = selectedCategory;
+    if (sortField) params.sortField = sortField;
+    if (sortOrder !== "asc") params.sortOrder = sortOrder;
+    if (currentPage > 1) params.page = currentPage;
+    setSearchParams(params);
+  }, [searchTerm, selectedCategory, sortField, sortOrder, currentPage]);
+
+  const showSnackbar = (msg, severity = "success") => {
+    setSnackbarMessage(msg);
     setSnackbarSeverity(severity);
     setSnackbarOpen(true);
   };
 
   const handleDeleteConfirm = async () => {
-    if (!postToDelete) return;
     try {
       await dispatch(deletePost(postToDelete)).unwrap();
       dispatch(fetchPosts({ page: 1, limit: 1000 }));
-      showSnackbar("Yazı başarıyla silindi!", "info");
+      showSnackbar("Yazı silindi", "info");
     } catch (err) {
-      console.error("Silme hatası:", err);
-      showSnackbar("Silme işlemi başarısız", "error");
+      showSnackbar("Silme başarısız", "error");
     } finally {
       setConfirmDelete(false);
       setPostToDelete(null);
@@ -80,38 +108,134 @@ const PostsPage = () => {
     setConfirmDelete(true);
   };
 
-  const handleEditPost = (post) => {
-    navigate(`/admin/posts/edit/${post._id}`);
-  };
+  const handleEdit = (post) => navigate(`/admin/posts/edit/${post._id}`);
+
+  let filtered = [...allPosts].filter((post) => {
+    const searchMatch = post.title
+      .toLowerCase()
+      .includes(searchTerm.toLowerCase());
+    const categoryMatch = selectedCategory
+      ? post.category === selectedCategory
+      : true;
+    return searchMatch && categoryMatch;
+  });
+
+  if (sortField) {
+    filtered.sort((a, b) => {
+      const valA =
+        sortField === "createdAt"
+          ? new Date(a[sortField])
+          : a[sortField]?.toLowerCase?.();
+      const valB =
+        sortField === "createdAt"
+          ? new Date(b[sortField])
+          : b[sortField]?.toLowerCase?.();
+
+      if (valA < valB) return sortOrder === "asc" ? -1 : 1;
+      if (valA > valB) return sortOrder === "asc" ? 1 : -1;
+      return 0;
+    });
+  }
+
+  const totalPages = Math.ceil(filtered.length / postsPerPage);
+  const visiblePosts = filtered.slice(
+    (currentPage - 1) * postsPerPage,
+    currentPage * postsPerPage
+  );
 
   return (
     <Box sx={{ pt: 1 }}>
       <Box
         sx={{
+          mb: 3,
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
-          mb: 3,
+          flexWrap: "wrap",
+          gap: 2,
         }}
       >
-        <Typography
-          variant="h5"
-          sx={{
-            fontWeight: "bold",
-            textShadow: "1px 1px 2px rgba(0,0,0,0.1)",
-          }}
-        >
+        <Typography variant="h5" sx={{ fontWeight: "bold" }}>
           Yazılar
         </Typography>
 
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          onClick={() => navigate("/admin/editor")}
-          sx={{ borderRadius: 3 }}
+        <Box
+          sx={{
+            display: "flex",
+            gap: 2,
+            flexWrap: "wrap",
+            background: "rgba(255,255,255,0.25)",
+            borderRadius: 3,
+            px: 2,
+            py: 1.5,
+            backdropFilter: "blur(10px)",
+            boxShadow: "0 4px 24px rgba(0,0,0,0.1)",
+          }}
         >
-          Yeni Yazı
-        </Button>
+          <TextField
+            size="small"
+            label="Başlık ara"
+            value={searchTerm}
+            onChange={(e) => {
+              setSearchTerm(e.target.value);
+              setCurrentPage(1);
+            }}
+          />
+          <TextField
+            size="small"
+            select
+            label="Kategori"
+            value={selectedCategory}
+            onChange={(e) => {
+              setSelectedCategory(e.target.value);
+              setCurrentPage(1);
+            }}
+            sx={{ minWidth: 130 }}
+          >
+            <MenuItem value="">Tümü</MenuItem>
+            {Object.keys(categoryColors).map((c) => (
+              <MenuItem key={c} value={c}>
+                {c}
+              </MenuItem>
+            ))}
+          </TextField>
+          <TextField
+            size="small"
+            select
+            label="Sıralama"
+            value={sortField}
+            onChange={(e) => {
+              setSortField(e.target.value);
+              setCurrentPage(1);
+            }}
+            sx={{ minWidth: 130 }}
+          >
+            <MenuItem value="">Yok</MenuItem>
+            <MenuItem value="title">Başlık</MenuItem>
+            <MenuItem value="category">Kategori</MenuItem>
+            <MenuItem value="createdAt">Tarih</MenuItem> {/* ✅ Eklendi */}
+          </TextField>
+          <TextField
+            size="small"
+            select
+            label="Yön"
+            value={sortOrder}
+            onChange={(e) => setSortOrder(e.target.value)}
+            sx={{ minWidth: 100 }}
+          >
+            <MenuItem value="asc">A-Z</MenuItem>
+            <MenuItem value="desc">Z-A</MenuItem>
+          </TextField>
+
+          <Button
+            variant="contained"
+            startIcon={<AddIcon />}
+            onClick={() => navigate("/admin/editor")}
+            sx={{ borderRadius: 3 }}
+          >
+            Yeni Yazı
+          </Button>
+        </Box>
       </Box>
 
       <Paper
@@ -119,34 +243,36 @@ const PostsPage = () => {
         sx={{
           p: 2,
           borderRadius: 3,
-          backgroundColor: "rgba(255, 255, 255, 0.75)",
-          backdropFilter: "blur(10px)",
-          boxShadow: "0 8px 24px rgba(0, 0, 0, 0.1)",
+          backgroundColor: "rgba(255, 255, 255, 0.65)",
+          backdropFilter: "blur(14px)",
+          boxShadow: "0 8px 32px rgba(0, 0, 0, 0.1)",
         }}
       >
         <Box sx={{ overflowX: "auto" }}>
           <Table size="small">
             <TableHead>
-              <TableRow sx={{ backgroundColor: "#f9f9f9" }}>
-                <TableCell sx={{ fontWeight: 600 }}>ID</TableCell>
-                <TableCell sx={{ fontWeight: 600 }}>Başlık</TableCell>
-                <TableCell sx={{ fontWeight: 600 }}>Kategori</TableCell>
-                <TableCell align="right" sx={{ fontWeight: 600 }}>
+              <TableRow>
+                <TableCell sx={{ fontWeight: "bold" }}>ID</TableCell>
+                <TableCell sx={{ fontWeight: "bold" }}>Başlık</TableCell>
+                <TableCell sx={{ fontWeight: "bold" }}>Kategori</TableCell>
+                <TableCell sx={{ fontWeight: "bold" }}>Tarih</TableCell>{" "}
+                {/* ✅ Yeni sütun */}
+                <TableCell align="right" sx={{ fontWeight: "bold" }}>
                   İşlemler
                 </TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
-              {allPosts.map((post) => (
+              {visiblePosts.map((post) => (
                 <TableRow
                   key={post._id}
                   hover
                   sx={{
-                    transition: "all 0.2s ease-in-out",
+                    "& td": { py: 0.7, px: 1 },
+                    transition: "0.2s",
                     "&:hover": {
-                      backgroundColor: "rgba(0, 0, 0, 0.04)",
+                      backgroundColor: "rgba(0,0,0,0.04)",
                     },
-                    "& td": { py: 0.8, px: 1 },
                   }}
                 >
                   <TableCell>{post._id.slice(-6)}</TableCell>
@@ -158,11 +284,15 @@ const PostsPage = () => {
                       size="small"
                     />
                   </TableCell>
+                  <TableCell>
+                    {dayjs(post.createdAt).format("DD.MM.YYYY")}{" "}
+                    {/* ✅ Tarih formatı */}
+                  </TableCell>
                   <TableCell align="right">
                     <IconButton
                       color="primary"
                       size="small"
-                      onClick={() => handleEditPost(post)}
+                      onClick={() => handleEdit(post)}
                     >
                       <EditIcon fontSize="small" />
                     </IconButton>
@@ -181,33 +311,43 @@ const PostsPage = () => {
         </Box>
       </Paper>
 
-      {/* Silme Onay */}
+      {totalPages > 1 && (
+        <Box mt={3} display="flex" justifyContent="center">
+          <Pagination
+            count={totalPages}
+            page={currentPage}
+            onChange={(e, value) => setCurrentPage(value)}
+            color="primary"
+            shape="rounded"
+          />
+        </Box>
+      )}
+
       <Dialog
         open={confirmDelete}
         onClose={() => setConfirmDelete(false)}
+        TransitionComponent={Transition}
         PaperProps={{
           sx: {
-            backgroundColor: "rgba(255, 255, 255, 0.9)",
-            backdropFilter: "blur(10px)",
+            backgroundColor: "rgba(255,255,255,0.95)",
+            backdropFilter: "blur(14px)",
             borderRadius: 3,
-            p: 2,
           },
         }}
       >
-        <DialogTitle>Bu yazıyı silmek istediğinize emin misiniz?</DialogTitle>
+        <DialogTitle>Bu yazıyı silmek istiyor musunuz?</DialogTitle>
         <DialogActions>
-          <Button onClick={() => setConfirmDelete(false)}>Vazgeç</Button>
+          <Button onClick={() => setConfirmDelete(false)}>İptal</Button>
           <Button
-            onClick={handleDeleteConfirm}
             variant="contained"
             color="error"
+            onClick={handleDeleteConfirm}
           >
             Sil
           </Button>
         </DialogActions>
       </Dialog>
 
-      {/* Snackbar */}
       <Snackbar
         open={snackbarOpen}
         autoHideDuration={3000}
