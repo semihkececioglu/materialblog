@@ -132,37 +132,50 @@ CLOUDINARY_API_SECRET=...
 
 ## 📸 Screenshots
 
-> Add screenshots inside a `/screenshots/` folder.
+### 🌐 Homepage (Light & Dark)
 
-| Section              | Image                               |
-| -------------------- | ----------------------------------- |
-| Homepage             | `screenshots/home.jpg`              |
-| Homepage Dark        | `screenshots/home-dark.jpg`         |
-| Login Page           | `screenshots/login.jpg`             |
-| Register Page        | `screenshots/register.jpg`          |
-| Profile Page         | `screenshots/profile.jpg`           |
-| Edit Profile         | `screenshots/edit-profile.jpg`      |
-| Search Dialog        | `screenshots/searchdialog.jpg`      |
-| Post Card            | `screenshots/postcard.jpg`          |
-| Post Detail          | `screenshots/postdetail.jpg`        |
-| Author Info          | `screenshots/authorinfo.png`        |
-| Table of Contents    | `screenshots/tableofcontents.png`   |
-| Interaction Bar      | `screenshots/interactionbar.png`    |
-| Prev/Next Navigation | `screenshots/prev-next-posts.png`   |
-| Related Posts        | `screenshots/related-posts.png`     |
-| Comments Section     | `screenshots/comments.png`          |
-| Admin Dashboard      | `screenshots/admin-dashboard.png`   |
-| Admin Posts          | `screenshots/admin-posts.png`       |
-| Admin Editor         | `screenshots/admin-post-editor.png` |
-| Admin Categories     | `screenshots/admin-categories.png`  |
-| Admin Tags           | `screenshots/admin-tags.png`        |
-| Admin Comments       | `screenshots/admin-comments.png`    |
-| Admin Settings       | `screenshots/admin-settings.png`    |
-| Admin Users          | `screenshots/admin-users.png`       |
-| Mobile Home          | `screenshots/mobile-home.png`       |
-| Mobile Drawer        | `screenshots/mobile-drawer.png`     |
-| Mobile Comments      | `screenshots/mobile-comments.png`   |
-| Mobile Profile       | `screenshots/mobile-profile.png`    |
+![Homepage](./screenshots/home.jpg)
+![Homepage Dark](./screenshots/home-dark.jpg)
+
+### 🔐 Authentication
+
+![Login](./screenshots/login.jpg)
+![Register](./screenshots/register.jpg)
+
+### 👤 User Profile
+
+![Profile](./screenshots/profile.jpg)
+![Edit Profile](./screenshots/edit-profile.jpg)
+
+### 🔎 Search Dialog
+
+![Search Dialog](./screenshots/searchdialog.jpg)
+
+### 🧾 Post UI
+
+![Post Card](./screenshots/postcard.jpg)
+![Post Detail](./screenshots/postdetail.jpg)
+![Author Info](./screenshots/authorinfo.png)
+![Table of Contents](./screenshots/tableofcontents.png)
+![Interaction Bar](./screenshots/interactionbar.png)
+![Prev/Next Navigation](./screenshots/prev-next-posts.png)
+![Comments Section](./screenshots/comments.png)
+
+### 🛠 Admin Panel
+
+![Admin Dashboard](./screenshots/admin-dashboard.png)
+![Admin Posts](./screenshots/admin-posts.png)
+![Admin Editor](./screenshots/admin-post-editor.png)
+![Admin Categories](./screenshots/admin-categories.png)
+![Admin Tags](./screenshots/admin-tags.png)
+![Admin Comments](./screenshots/admin-comments.png)
+![Admin Settings](./screenshots/admin-settings.png)
+![Admin Users](./screenshots/admin-users.png)
+
+### 📱 Mobile View
+
+![Mobile Home](./screenshots/mobile-home.png)
+![Mobile Drawer](./screenshots/mobile-drawer.png)
 
 ---
 
