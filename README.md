@@ -136,14 +136,15 @@ CLOUDINARY_API_SECRET=...
 
 | Section              | Image                               |
 | -------------------- | ----------------------------------- |
-| Homepage             | `screenshots/home.png`              |
-| Login Page           | `screenshots/login.png`             |
-| Register Page        | `screenshots/register.png`          |
-| Profile Page         | `screenshots/profile.png`           |
-| Edit Profile         | `screenshots/edit-profile.png`      |
-| Search Dialog        | `screenshots/searchdialog.png`      |
-| Post Card            | `screenshots/postcard.png`          |
-| Post Detail          | `screenshots/postdetail.png`        |
+| Homepage             | `screenshots/home.jpg`              |
+| Homepage Dark        | `screenshots/home-dark.jpg`         |
+| Login Page           | `screenshots/login.jpg`             |
+| Register Page        | `screenshots/register.jpg`          |
+| Profile Page         | `screenshots/profile.jpg`           |
+| Edit Profile         | `screenshots/edit-profile.jpg`      |
+| Search Dialog        | `screenshots/searchdialog.jpg`      |
+| Post Card            | `screenshots/postcard.jpg`          |
+| Post Detail          | `screenshots/postdetail.jpg`        |
 | Author Info          | `screenshots/authorinfo.png`        |
 | Table of Contents    | `screenshots/tableofcontents.png`   |
 | Interaction Bar      | `screenshots/interactionbar.png`    |
@@ -170,8 +171,6 @@ CLOUDINARY_API_SECRET=...
 - [ ] Backend search + pagination
 - [ ] SEO improvements (meta tags, sitemap)
 - [ ] Admin role: user management (edit/delete)
-- [ ] Public profiles with shared post listing
-- [ ] Nested comments collapse feature
 - [ ] Unit tests & CI
 
 ---
