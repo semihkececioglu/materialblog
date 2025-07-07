@@ -145,7 +145,7 @@ CLOUDINARY_API_SECRET=...
 ### 👤 User Profile
 
 ![Profile](./screenshots/profile.jpg)
-![Edit Profile](./screenshots/edit-profile.jpg)
+![Edit Profile](./screenshots/editprofile.jpg)
 
 ### 🔎 Search Dialog
 
