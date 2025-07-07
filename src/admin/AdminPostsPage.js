@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import {
   Box,
   Typography,
@@ -20,14 +20,18 @@ import {
   TextField,
   MenuItem,
   Pagination,
+  InputAdornment,
 } from "@mui/material";
-import EditIcon from "@mui/icons-material/Edit";
-import DeleteIcon from "@mui/icons-material/Delete";
-import AddIcon from "@mui/icons-material/Add";
+import {
+  Edit as EditIcon,
+  Delete as DeleteIcon,
+  Add as AddIcon,
+  Search as SearchIcon,
+} from "@mui/icons-material";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchPosts, deletePost } from "../redux/postSlice";
-import dayjs from "dayjs"; // Tarih formatlama
+import dayjs from "dayjs";
 
 const categoryColors = {
   React: "primary",
@@ -54,11 +58,8 @@ const PostsPage = () => {
   const [selectedCategory, setSelectedCategory] = useState(
     searchParams.get("category") || ""
   );
-  const [sortField, setSortField] = useState(
-    searchParams.get("sortField") || ""
-  );
-  const [sortOrder, setSortOrder] = useState(
-    searchParams.get("sortOrder") || "asc"
+  const [sortOption, setSortOption] = useState(
+    searchParams.get("sort") || "newest"
   );
   const [currentPage, setCurrentPage] = useState(
     Number(searchParams.get("page")) || 1
@@ -79,24 +80,17 @@ const PostsPage = () => {
     const params = {};
     if (searchTerm) params.search = searchTerm;
     if (selectedCategory) params.category = selectedCategory;
-    if (sortField) params.sortField = sortField;
-    if (sortOrder !== "asc") params.sortOrder = sortOrder;
+    if (sortOption) params.sort = sortOption;
     if (currentPage > 1) params.page = currentPage;
     setSearchParams(params);
-  }, [searchTerm, selectedCategory, sortField, sortOrder, currentPage]);
-
-  const showSnackbar = (msg, severity = "success") => {
-    setSnackbarMessage(msg);
-    setSnackbarSeverity(severity);
-    setSnackbarOpen(true);
-  };
+  }, [searchTerm, selectedCategory, sortOption, currentPage]);
 
   const handleDeleteConfirm = async () => {
     try {
       await dispatch(deletePost(postToDelete)).unwrap();
       dispatch(fetchPosts({ page: 1, limit: 1000 }));
       showSnackbar("Yazı silindi", "info");
-    } catch (err) {
+    } catch {
       showSnackbar("Silme başarısız", "error");
     } finally {
       setConfirmDelete(false);
@@ -104,39 +98,40 @@ const PostsPage = () => {
     }
   };
 
-  const handleDeleteRequest = (id) => {
-    setPostToDelete(id);
-    setConfirmDelete(true);
+  const showSnackbar = (msg, severity = "success") => {
+    setSnackbarMessage(msg);
+    setSnackbarSeverity(severity);
+    setSnackbarOpen(true);
   };
 
   const handleEdit = (post) => navigate(`/admin/posts/edit/${post._id}`);
 
-  let filtered = [...allPosts].filter((post) => {
-    const searchMatch = post.title
-      .toLowerCase()
-      .includes(searchTerm.toLowerCase());
-    const categoryMatch = selectedCategory
-      ? post.category === selectedCategory
-      : true;
-    return searchMatch && categoryMatch;
-  });
+  // 🔎 Arama ve filtreleme işlemleri
+  const filtered = useMemo(() => {
+    let filtered = [...allPosts];
 
-  if (sortField) {
-    filtered.sort((a, b) => {
-      const valA =
-        sortField === "createdAt"
-          ? new Date(a[sortField])
-          : a[sortField]?.toLowerCase?.();
-      const valB =
-        sortField === "createdAt"
-          ? new Date(b[sortField])
-          : b[sortField]?.toLowerCase?.();
+    if (searchTerm) {
+      filtered = filtered.filter((p) =>
+        p.title.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
 
-      if (valA < valB) return sortOrder === "asc" ? -1 : 1;
-      if (valA > valB) return sortOrder === "asc" ? 1 : -1;
-      return 0;
-    });
-  }
+    if (selectedCategory) {
+      filtered = filtered.filter((p) => p.category === selectedCategory);
+    }
+
+    if (sortOption === "title-asc") {
+      filtered.sort((a, b) => a.title.localeCompare(b.title));
+    } else if (sortOption === "title-desc") {
+      filtered.sort((a, b) => b.title.localeCompare(a.title));
+    } else if (sortOption === "newest") {
+      filtered.sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
+    } else if (sortOption === "oldest") {
+      filtered.sort((a, b) => new Date(a.date || 0) - new Date(b.date || 0));
+    }
+
+    return filtered;
+  }, [allPosts, searchTerm, selectedCategory, sortOption]);
 
   const totalPages = Math.ceil(filtered.length / postsPerPage);
   const visiblePosts = filtered.slice(
@@ -156,76 +151,62 @@ const PostsPage = () => {
           gap: 2,
         }}
       >
-        <Typography variant="h5" sx={{ fontWeight: "bold" }}>
+        <Typography variant="h5" fontWeight="bold">
           Yazılar
         </Typography>
 
         <Box
           sx={{
             display: "flex",
-            gap: 2,
             flexWrap: "wrap",
-            background: "rgba(255,255,255,0.25)",
-            borderRadius: 3,
-            px: 2,
-            py: 1.5,
-            backdropFilter: "blur(10px)",
-            boxShadow: "0 4px 24px rgba(0,0,0,0.1)",
+            gap: 2,
+            alignItems: "center",
           }}
         >
           <TextField
             size="small"
-            label="Başlık ara"
+            placeholder="Ara..."
             value={searchTerm}
             onChange={(e) => {
               setSearchTerm(e.target.value);
               setCurrentPage(1);
             }}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon />
+                </InputAdornment>
+              ),
+            }}
           />
           <TextField
             size="small"
             select
-            label="Kategori"
             value={selectedCategory}
             onChange={(e) => {
               setSelectedCategory(e.target.value);
               setCurrentPage(1);
             }}
-            sx={{ minWidth: 130 }}
+            sx={{ minWidth: 140 }}
           >
-            <MenuItem value="">Tümü</MenuItem>
-            {Object.keys(categoryColors).map((c) => (
-              <MenuItem key={c} value={c}>
-                {c}
+            <MenuItem value="">Tüm Kategoriler</MenuItem>
+            {Object.keys(categoryColors).map((cat) => (
+              <MenuItem key={cat} value={cat}>
+                {cat}
               </MenuItem>
             ))}
           </TextField>
           <TextField
             size="small"
             select
-            label="Sıralama"
-            value={sortField}
-            onChange={(e) => {
-              setSortField(e.target.value);
-              setCurrentPage(1);
-            }}
-            sx={{ minWidth: 130 }}
+            value={sortOption}
+            onChange={(e) => setSortOption(e.target.value)}
+            sx={{ minWidth: 150 }}
           >
-            <MenuItem value="">Yok</MenuItem>
-            <MenuItem value="title">Başlık</MenuItem>
-            <MenuItem value="category">Kategori</MenuItem>
-            <MenuItem value="createdAt">Tarih</MenuItem> {/* ✅ Eklendi */}
-          </TextField>
-          <TextField
-            size="small"
-            select
-            label="Yön"
-            value={sortOrder}
-            onChange={(e) => setSortOrder(e.target.value)}
-            sx={{ minWidth: 100 }}
-          >
-            <MenuItem value="asc">A-Z</MenuItem>
-            <MenuItem value="desc">Z-A</MenuItem>
+            <MenuItem value="newest">En Yeni</MenuItem>
+            <MenuItem value="oldest">En Eski</MenuItem>
+            <MenuItem value="title-asc">Başlık A-Z</MenuItem>
+            <MenuItem value="title-desc">Başlık Z-A</MenuItem>
           </TextField>
 
           {(user?.role === "admin" || user?.role === "editor") && (
@@ -241,16 +222,7 @@ const PostsPage = () => {
         </Box>
       </Box>
 
-      <Paper
-        elevation={0}
-        sx={{
-          p: 2,
-          borderRadius: 3,
-          backgroundColor: "rgba(255, 255, 255, 0.65)",
-          backdropFilter: "blur(14px)",
-          boxShadow: "0 8px 32px rgba(0, 0, 0, 0.1)",
-        }}
-      >
+      <Paper elevation={0} sx={{ p: 2, borderRadius: 3 }}>
         <Box sx={{ overflowX: "auto" }}>
           <Table size="small">
             <TableHead>
@@ -258,8 +230,7 @@ const PostsPage = () => {
                 <TableCell sx={{ fontWeight: "bold" }}>ID</TableCell>
                 <TableCell sx={{ fontWeight: "bold" }}>Başlık</TableCell>
                 <TableCell sx={{ fontWeight: "bold" }}>Kategori</TableCell>
-                <TableCell sx={{ fontWeight: "bold" }}>Tarih</TableCell>{" "}
-                {/* ✅ Yeni sütun */}
+                <TableCell sx={{ fontWeight: "bold" }}>Tarih</TableCell>
                 <TableCell align="right" sx={{ fontWeight: "bold" }}>
                   İşlemler
                 </TableCell>
@@ -267,17 +238,7 @@ const PostsPage = () => {
             </TableHead>
             <TableBody>
               {visiblePosts.map((post) => (
-                <TableRow
-                  key={post._id}
-                  hover
-                  sx={{
-                    "& td": { py: 0.7, px: 1 },
-                    transition: "0.2s",
-                    "&:hover": {
-                      backgroundColor: "rgba(0,0,0,0.04)",
-                    },
-                  }}
-                >
+                <TableRow key={post._id} hover>
                   <TableCell>{post._id.slice(-6)}</TableCell>
                   <TableCell>{post.title}</TableCell>
                   <TableCell>
@@ -288,8 +249,9 @@ const PostsPage = () => {
                     />
                   </TableCell>
                   <TableCell>
-                    {dayjs(post.createdAt).format("DD.MM.YYYY")}{" "}
-                    {/* ✅ Tarih formatı */}
+                    {post.date && dayjs(post.date).isValid()
+                      ? dayjs(post.date).format("DD.MM.YYYY")
+                      : "Geçersiz"}
                   </TableCell>
                   <TableCell align="right">
                     {user?.role === "admin" && (
@@ -304,7 +266,10 @@ const PostsPage = () => {
                         <IconButton
                           color="error"
                           size="small"
-                          onClick={() => handleDeleteRequest(post._id)}
+                          onClick={() => {
+                            setPostToDelete(post._id);
+                            setConfirmDelete(true);
+                          }}
                         >
                           <DeleteIcon fontSize="small" />
                         </IconButton>
@@ -334,13 +299,6 @@ const PostsPage = () => {
         open={confirmDelete}
         onClose={() => setConfirmDelete(false)}
         TransitionComponent={Transition}
-        PaperProps={{
-          sx: {
-            backgroundColor: "rgba(255,255,255,0.95)",
-            backdropFilter: "blur(14px)",
-            borderRadius: 3,
-          },
-        }}
       >
         <DialogTitle>Bu yazıyı silmek istiyor musunuz?</DialogTitle>
         <DialogActions>

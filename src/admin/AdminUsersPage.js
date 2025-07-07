@@ -20,6 +20,7 @@ import {
   DialogContentText,
   DialogActions,
   Button,
+  Tooltip,
 } from "@mui/material";
 import axios from "axios";
 
@@ -142,36 +143,55 @@ const AdminUsersPage = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {users.map((user) => (
-                <TableRow
-                  key={user._id}
-                  sx={{
-                    transition: "all 0.2s ease-in-out",
-                    "&:hover": {
-                      backgroundColor: "rgba(0, 0, 0, 0.04)",
-                    },
-                  }}
-                >
-                  <TableCell>{user.username}</TableCell>
-                  <TableCell>
-                    {user.firstName && user.lastName
-                      ? `${user.firstName} ${user.lastName}`
-                      : "-"}
-                  </TableCell>
-                  <TableCell>{user.email}</TableCell>
-                  <TableCell>
-                    <Select
-                      value={user.role}
-                      size="small"
-                      onChange={(e) => handleRoleSelect(user, e.target.value)}
-                    >
-                      <MenuItem value="user">User</MenuItem>
-                      <MenuItem value="admin">Admin</MenuItem>
-                      <MenuItem value="editor">Editör</MenuItem>
-                    </Select>
-                  </TableCell>
-                </TableRow>
-              ))}
+              {users.map((user) => {
+                const isProtected = user.username === "semihkececioglu";
+
+                return (
+                  <TableRow
+                    key={user._id}
+                    sx={{
+                      transition: "all 0.2s ease-in-out",
+                      "&:hover": {
+                        backgroundColor: "rgba(0, 0, 0, 0.04)",
+                      },
+                    }}
+                  >
+                    <TableCell>{user.username}</TableCell>
+                    <TableCell>
+                      {user.firstName && user.lastName
+                        ? `${user.firstName} ${user.lastName}`
+                        : "-"}
+                    </TableCell>
+                    <TableCell>{user.email}</TableCell>
+                    <TableCell>
+                      <Tooltip
+                        title={
+                          isProtected
+                            ? "Bu kullanıcının rolü değiştirilemez"
+                            : ""
+                        }
+                        arrow
+                        placement="top"
+                      >
+                        <span>
+                          <Select
+                            value={user.role}
+                            size="small"
+                            onChange={(e) =>
+                              handleRoleSelect(user, e.target.value)
+                            }
+                            disabled={isProtected}
+                          >
+                            <MenuItem value="user">User</MenuItem>
+                            <MenuItem value="admin">Admin</MenuItem>
+                            <MenuItem value="editor">Editör</MenuItem>
+                          </Select>
+                        </span>
+                      </Tooltip>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
             </TableBody>
           </Table>
         </TableContainer>

@@ -6,6 +6,7 @@ const jwt = require("jsonwebtoken");
 const JWT_SECRET = process.env.JWT_SECRET || "dev_secret";
 
 // Register
+// Register
 router.post("/register", async (req, res) => {
   try {
     const { username, email, password, firstName, lastName } = req.body;
@@ -14,16 +15,40 @@ router.post("/register", async (req, res) => {
     if (userExists)
       return res.status(400).json({ message: "Kullanıcı zaten mevcut." });
 
+    // Şifreyi hashle
+    const hashedPassword = await bcrypt.hash(password, 10);
+
     const newUser = new User({
       username,
       email,
-      password,
+      password: hashedPassword,
       firstName,
       lastName,
     });
-    await newUser.save();
 
-    res.status(201).json({ message: "Kayıt başarılı" });
+    const savedUser = await newUser.save();
+
+    // JWT token oluştur
+    const token = jwt.sign(
+      { id: savedUser._id, role: savedUser.role },
+      JWT_SECRET,
+      { expiresIn: "7d" }
+    );
+
+    // Otomatik giriş yapılıp kullanıcı bilgisiyle birlikte dön
+    res.status(201).json({
+      token,
+      user: {
+        id: savedUser._id,
+        username: savedUser.username,
+        email: savedUser.email,
+        role: savedUser.role,
+        firstName: savedUser.firstName,
+        lastName: savedUser.lastName,
+        bio: savedUser.bio || "",
+        profileImage: savedUser.profileImage || "",
+      },
+    });
   } catch (err) {
     res.status(500).json({ message: "Sunucu hatası" });
   }

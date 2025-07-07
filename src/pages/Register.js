@@ -47,7 +47,13 @@ const Register = () => {
         }
       );
 
-      dispatch(login({ user: res.data.user, token: res.data.token }));
+      // Gelen token ve kullanıcı bilgisi
+      const { user, token } = res.data;
+
+      // Redux store'a ve localStorage'a birlikte yazılır
+      dispatch(login({ user, token }));
+
+      // Giriş yapılmış şekilde ana sayfaya yönlendir
       navigate("/");
       window.scrollTo(0, 0);
     } catch (err) {

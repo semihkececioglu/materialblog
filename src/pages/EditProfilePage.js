@@ -9,6 +9,7 @@ import {
   Snackbar,
   CircularProgress,
   IconButton,
+  Skeleton, // ✅ eklendi
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import { useSelector } from "react-redux";
@@ -54,12 +55,14 @@ const EditProfilePage = () => {
   const [profileImage, setProfileImage] = useState("");
   const [uploading, setUploading] = useState(false);
   const [open, setOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true); // ✅ loading state
 
   const containerRef = useRef(null);
 
   useEffect(() => {
     if (!user || user.username !== username) return;
 
+    setIsLoading(true); // 🔄 Başlarken true
     axios
       .get(
         `https://materialblog-server-production.up.railway.app/api/users/${username}`
@@ -72,6 +75,9 @@ const EditProfilePage = () => {
       })
       .catch((err) => {
         console.error("Kullanıcı bilgisi alınamadı:", err);
+      })
+      .finally(() => {
+        setIsLoading(false); // ✅ Veri gelince loading false
       });
   }, [user, username]);
 
@@ -128,7 +134,7 @@ const EditProfilePage = () => {
           Profili Düzenle
         </Typography>
 
-        {/* Avatar ve düzenleme ikonu */}
+        {/* Avatar ve kullanıcı adı */}
         <Box
           sx={{
             display: "flex",
@@ -139,117 +145,132 @@ const EditProfilePage = () => {
             position: "relative",
           }}
         >
-          <Box sx={{ position: "relative" }}>
-            <Avatar
-              src={profileImage || ""}
-              sx={{
-                width: 72,
-                height: 72,
-                bgcolor: profileImage
-                  ? "transparent"
-                  : stringToColor(user.username),
-                color: "white",
-                fontWeight: 600,
-                fontSize: 28,
-              }}
-            >
-              {!profileImage && user.username.charAt(0).toUpperCase()}
-            </Avatar>
-
-            <Box
-              sx={{
-                position: "absolute",
-                bottom: -4,
-                right: -4,
-                bgcolor: "background.paper",
-                borderRadius: "50%",
-                boxShadow: 2,
-              }}
-            >
-              <IconButton
-                component="label"
-                size="small"
-                disabled={uploading}
-                sx={{ p: 0.5 }}
+          {isLoading ? (
+            <Skeleton variant="circular" width={72} height={72} />
+          ) : (
+            <Box sx={{ position: "relative" }}>
+              <Avatar
+                src={profileImage || ""}
+                sx={{
+                  width: 72,
+                  height: 72,
+                  bgcolor: profileImage
+                    ? "transparent"
+                    : stringToColor(user.username),
+                  color: "white",
+                  fontWeight: 600,
+                  fontSize: 28,
+                }}
               >
-                <EditIcon fontSize="small" />
-                <input
-                  type="file"
-                  hidden
-                  accept="image/*"
-                  onChange={async (e) => {
-                    const file = e.target.files[0];
-                    if (!file) return;
-                    setUploading(true);
-                    try {
-                      const imageUrl = await uploadImageToCloudinary(file);
-                      setProfileImage(imageUrl);
-                    } catch (err) {
-                      console.error("Yükleme hatası:", err);
-                    } finally {
-                      setUploading(false);
-                    }
-                  }}
-                />
-              </IconButton>
-            </Box>
-          </Box>
+                {!profileImage && user.username.charAt(0).toUpperCase()}
+              </Avatar>
 
-          <Typography variant="subtitle1" color="text.secondary">
-            @{user.username}
-          </Typography>
+              <Box
+                sx={{
+                  position: "absolute",
+                  bottom: -4,
+                  right: -4,
+                  bgcolor: "background.paper",
+                  borderRadius: "50%",
+                  boxShadow: 2,
+                }}
+              >
+                <IconButton
+                  component="label"
+                  size="small"
+                  disabled={uploading}
+                  sx={{ p: 0.5 }}
+                >
+                  <EditIcon fontSize="small" />
+                  <input
+                    type="file"
+                    hidden
+                    accept="image/*"
+                    onChange={async (e) => {
+                      const file = e.target.files[0];
+                      if (!file) return;
+                      setUploading(true);
+                      try {
+                        const imageUrl = await uploadImageToCloudinary(file);
+                        setProfileImage(imageUrl);
+                      } catch (err) {
+                        console.error("Yükleme hatası:", err);
+                      } finally {
+                        setUploading(false);
+                      }
+                    }}
+                  />
+                </IconButton>
+              </Box>
+            </Box>
+          )}
+
+          {isLoading ? (
+            <Skeleton width={100} height={24} />
+          ) : (
+            <Typography variant="subtitle1" color="text.secondary">
+              @{user.username}
+            </Typography>
+          )}
           {uploading && <CircularProgress size={20} sx={{ mt: 1 }} />}
         </Box>
 
-        <form onSubmit={handleSubmit}>
-          <TextField
-            fullWidth
-            label="Ad"
-            variant="outlined"
-            value={firstName}
-            onChange={(e) => setFirstName(e.target.value)}
-            sx={{ mb: 2 }}
-          />
-          <TextField
-            fullWidth
-            label="Soyad"
-            variant="outlined"
-            value={lastName}
-            onChange={(e) => setLastName(e.target.value)}
-            sx={{ mb: 2 }}
-          />
+        {/* Form alanı */}
+        {isLoading ? (
+          <>
+            <Skeleton height={56} sx={{ mb: 2 }} />
+            <Skeleton height={56} sx={{ mb: 2 }} />
+            <Skeleton height={96} sx={{ mb: 3 }} />
+            <Skeleton height={45} width="100%" />
+          </>
+        ) : (
+          <form onSubmit={handleSubmit}>
+            <TextField
+              fullWidth
+              label="Ad"
+              variant="outlined"
+              value={firstName}
+              onChange={(e) => setFirstName(e.target.value)}
+              sx={{ mb: 2 }}
+            />
+            <TextField
+              fullWidth
+              label="Soyad"
+              variant="outlined"
+              value={lastName}
+              onChange={(e) => setLastName(e.target.value)}
+              sx={{ mb: 2 }}
+            />
 
-          <TextField
-            fullWidth
-            label="Biyografi (max 300 karakter)"
-            variant="outlined"
-            multiline
-            rows={4}
-            value={bio}
-            onChange={(e) => {
-              if (e.target.value.length <= 300) {
-                setBio(e.target.value);
-              }
-            }}
-            helperText={`${bio.length}/300`}
-            sx={{ mb: 3 }}
-          />
+            <TextField
+              fullWidth
+              label="Biyografi (max 300 karakter)"
+              variant="outlined"
+              multiline
+              rows={4}
+              value={bio}
+              onChange={(e) => {
+                if (e.target.value.length <= 300) {
+                  setBio(e.target.value);
+                }
+              }}
+              helperText={`${bio.length}/300`}
+              sx={{ mb: 3 }}
+            />
 
-          <Button
-            type="submit"
-            variant="contained"
-            fullWidth
-            sx={{
-              fontWeight: 600,
-              py: 1,
-              borderRadius: 2,
-            }}
-          >
-            Kaydet
-          </Button>
-        </form>
+            <Button
+              type="submit"
+              variant="contained"
+              fullWidth
+              sx={{ fontWeight: 600, py: 1, borderRadius: 2 }}
+            >
+              Kaydet
+            </Button>
+          </form>
+        )}
       </Box>
 
+      {/* Snackbar */}
       <Box sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
         <Snackbar
           open={open}

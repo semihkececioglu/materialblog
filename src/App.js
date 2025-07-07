@@ -1,5 +1,10 @@
 import React, { useEffect, useState, useMemo } from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
 import { ThemeProvider, CssBaseline } from "@mui/material";
 import { getTheme } from "./theme";
 import Layout from "./components/Layout";
@@ -26,11 +31,10 @@ import NotFound from "./pages/NotFound";
 import RoleBasedAdminRedirect from "./auth/RoleBasedAdminRedirect";
 
 // Redux
-import { Provider, useDispatch } from "react-redux";
+import { Provider, useDispatch, useSelector } from "react-redux";
 import store from "./redux/store";
-import { login } from "./redux/userSlice"; // 🧠 login action'ı
+import { login } from "./redux/userSlice";
 
-// Kullanıcıyı localStorage'dan alıp Redux'a yazan iç bileşen
 const AuthLoader = ({ children }) => {
   const dispatch = useDispatch();
 
@@ -42,7 +46,6 @@ const AuthLoader = ({ children }) => {
       try {
         const parsedUser = JSON.parse(storedUser);
 
-        // 🔧 id → _id düzeltmesi
         if (parsedUser.id && !parsedUser._id) {
           parsedUser._id = parsedUser.id;
         }
@@ -62,6 +65,7 @@ function App() {
   const [searchTerm, setSearchTerm] = useState("");
 
   const theme = useMemo(() => getTheme(mode), [mode]);
+  const user = useSelector((state) => state.user.currentUser); // 🧠 kullanıcının rolünü kontrol edeceğiz
 
   return (
     <Provider store={store}>
@@ -70,7 +74,7 @@ function App() {
         <Router>
           <AuthLoader>
             <Routes>
-              {/* Blog Layout */}
+              {/* Genel Kullanıcı Rotaları */}
               <Route
                 element={
                   <Layout
@@ -109,7 +113,7 @@ function App() {
                 <Route path="*" element={<NotFound />} />
               </Route>
 
-              {/* Admin Layout */}
+              {/* Admin Paneli */}
               <Route
                 path="/admin/*"
                 element={
@@ -119,16 +123,69 @@ function App() {
                 }
               >
                 <Route index element={<RoleBasedAdminRedirect />} />
-                <Route path="dashboard" element={<DashboardPage />} />{" "}
-                {/* ✅ admin için */}
+                <Route
+                  path="dashboard"
+                  element={
+                    user?.role === "admin" ? (
+                      <DashboardPage />
+                    ) : (
+                      <Navigate to="/admin/posts" replace />
+                    )
+                  }
+                />
                 <Route path="posts" element={<PostsPage />} />
-                <Route path="categories" element={<AdminCategoriesPage />} />
-                <Route path="tags" element={<AdminTagsPage />} />
-                <Route path="comments" element={<AdminCommentsPage />} />
-                <Route path="users" element={<AdminUsersPage />} />
-                <Route path="settings" element={<AdminSettingsPage />} />
-                <Route path="editor" element={<PostEditorPage />} />
                 <Route path="posts/edit/:id" element={<PostEditorPage />} />
+                <Route path="editor" element={<PostEditorPage />} />
+                <Route
+                  path="categories"
+                  element={
+                    user?.role === "admin" ? (
+                      <AdminCategoriesPage />
+                    ) : (
+                      <Navigate to="/admin/posts" replace />
+                    )
+                  }
+                />
+                <Route
+                  path="tags"
+                  element={
+                    user?.role === "admin" ? (
+                      <AdminTagsPage />
+                    ) : (
+                      <Navigate to="/admin/posts" replace />
+                    )
+                  }
+                />
+                <Route
+                  path="comments"
+                  element={
+                    user?.role === "admin" ? (
+                      <AdminCommentsPage />
+                    ) : (
+                      <Navigate to="/admin/posts" replace />
+                    )
+                  }
+                />
+                <Route
+                  path="users"
+                  element={
+                    user?.role === "admin" ? (
+                      <AdminUsersPage />
+                    ) : (
+                      <Navigate to="/admin/posts" replace />
+                    )
+                  }
+                />
+                <Route
+                  path="settings"
+                  element={
+                    user?.role === "admin" ? (
+                      <AdminSettingsPage />
+                    ) : (
+                      <Navigate to="/admin/posts" replace />
+                    )
+                  }
+                />
               </Route>
             </Routes>
           </AuthLoader>

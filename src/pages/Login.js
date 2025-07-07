@@ -1,33 +1,35 @@
 import React, { useState } from "react";
 import {
   Box,
+  Container,
   TextField,
   Button,
   Typography,
+  Paper,
   useTheme,
   Alert,
-  Paper,
+  Snackbar,
 } from "@mui/material";
 import { useNavigate, Link } from "react-router-dom";
-import axios from "axios";
-
 import { useDispatch } from "react-redux";
 import { login } from "../redux/userSlice";
+import axios from "axios";
 
 const Login = () => {
   const theme = useTheme();
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
-  const [username, setUsername] = useState("");
+  const [usernameOrEmail, setUsernameOrEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
 
-    if (!username || !password) {
+    if (!usernameOrEmail || !password) {
       setError("Tüm alanları doldurmanız gerekiyor.");
       return;
     }
@@ -35,24 +37,23 @@ const Login = () => {
     try {
       const res = await axios.post(
         "https://materialblog-server-production.up.railway.app/api/auth/login",
-        {
-          usernameOrEmail: username,
-          password,
-        }
+        { usernameOrEmail, password }
       );
 
-      const { token, user } = res.data;
+      const { user, token } = res.data;
 
       dispatch(login({ user, token }));
 
-      localStorage.setItem("user", JSON.stringify(user));
-      localStorage.setItem("token", token);
+      // Snackbar'ı göster ve yönlendir
+      setSnackbarOpen(true);
 
-      // Sayfayı tam anlamıyla yeniden yükle (InteractionBar doğru çalışsın)
-      window.location.href = "/";
+      setTimeout(() => {
+        navigate("/");
+        window.scrollTo(0, 0);
+      }, 1000);
     } catch (err) {
       setError(
-        err.response?.data?.message || "Giriş sırasında bir hata oluştu."
+        err.response?.data?.message || "Giriş işlemi sırasında bir hata oluştu."
       );
     }
   };
@@ -62,8 +63,8 @@ const Login = () => {
       sx={{
         minHeight: "100vh",
         display: "flex",
-        alignItems: "center",
         justifyContent: "center",
+        alignItems: "center",
         fontFamily: "Inter, sans-serif",
         px: 2,
       }}
@@ -71,19 +72,19 @@ const Login = () => {
       <Paper
         elevation={0}
         sx={{
-          maxWidth: 400,
           width: "100%",
+          maxWidth: 400,
           p: 4,
           borderRadius: 4,
           background:
             theme.palette.mode === "dark"
-              ? "rgba(30,30,30,0.7)"
-              : "rgba(255,255,255,0.6)",
+              ? "rgba(30, 30, 30, 0.7)"
+              : "rgba(255, 255, 255, 0.6)",
           backdropFilter: "blur(16px)",
-          boxShadow: "0 8px 32px rgba(0,0,0,0.2)",
+          boxShadow: "0 8px 32px rgba(0,0,0,0.15)",
         }}
       >
-        <Typography variant="h5" align="center" sx={{ mb: 3, fontWeight: 600 }}>
+        <Typography variant="h6" align="center" sx={{ mb: 3, fontWeight: 600 }}>
           Giriş Yap
         </Typography>
 
@@ -95,19 +96,19 @@ const Login = () => {
 
         <form onSubmit={handleSubmit}>
           <TextField
-            label="Kullanıcı Adı"
+            label="Kullanıcı Adı veya E-posta"
             fullWidth
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
             sx={{ mb: 2 }}
+            value={usernameOrEmail}
+            onChange={(e) => setUsernameOrEmail(e.target.value)}
           />
           <TextField
             label="Şifre"
             type="password"
             fullWidth
+            sx={{ mb: 3 }}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            sx={{ mb: 3 }}
           />
           <Button
             type="submit"
@@ -131,15 +132,37 @@ const Login = () => {
           >
             Giriş Yap
           </Button>
-        </form>
 
-        <Typography variant="body2" align="center" sx={{ mt: 3 }}>
-          Hesabınız yok mu?{" "}
-          <Link to="/register" style={{ textDecoration: "underline" }}>
-            Kayıt Ol
-          </Link>
-        </Typography>
+          <Typography variant="body2" align="center" sx={{ mt: 3 }}>
+            Hesabınız yok mu?{" "}
+            <Link to="/register" style={{ textDecoration: "underline" }}>
+              Kayıt Ol
+            </Link>
+          </Typography>
+        </form>
       </Paper>
+
+      {/* Snackbar */}
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={3000}
+        onClose={() => setSnackbarOpen(false)}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      >
+        <Alert
+          onClose={() => setSnackbarOpen(false)}
+          severity="success"
+          sx={{
+            backdropFilter: "blur(8px)",
+            backgroundColor: "rgba(255,255,255,0.7)",
+            borderRadius: 2,
+            boxShadow: "0 4px 16px rgba(0,0,0,0.15)",
+            fontWeight: 500,
+          }}
+        >
+          Hoş geldin, {usernameOrEmail.split("@")[0]}!
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };

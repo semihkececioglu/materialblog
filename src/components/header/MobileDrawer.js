@@ -1,6 +1,7 @@
 import React from "react";
 import {
   Drawer,
+  Avatar,
   List,
   ListItem,
   ListItemText,
@@ -151,14 +152,41 @@ const MobileDrawer = ({
             </>
           ) : (
             <>
+              {/* 🔽 Üst: Avatar + Kullanıcı Adı (tıklanabilir menü başlığı) */}
               <ListItem
                 button
                 onClick={() => setDrawerUserOpen(!drawerUserOpen)}
-                sx={{ "&:hover": { backgroundColor: hoverBg } }}
+                sx={{
+                  "&:hover": { backgroundColor: hoverBg },
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 2,
+                }}
               >
-                <ListItemText primary="Hesabım" />
+                <Avatar
+                  src={user.profileImage || ""}
+                  sx={{
+                    width: 32,
+                    height: 32,
+                    bgcolor: user.profileImage ? "transparent" : "primary.main",
+                    fontSize: "0.875rem",
+                    fontWeight: 600,
+                    color: "#fff",
+                  }}
+                >
+                  {!user.profileImage && user.username.charAt(0).toUpperCase()}
+                </Avatar>
+                <ListItemText
+                  primary={user.username}
+                  primaryTypographyProps={{
+                    fontWeight: 600,
+                    fontSize: "0.95rem",
+                  }}
+                />
                 {drawerUserOpen ? <ExpandLess /> : <ExpandMore />}
               </ListItem>
+
+              {/* 🔽 Alt: Açılan menü */}
               <Collapse in={drawerUserOpen} timeout="auto" unmountOnExit>
                 <List component="div" disablePadding>
                   <ListItem
@@ -172,10 +200,14 @@ const MobileDrawer = ({
                         backgroundColor: hoverBg,
                       },
                     }}
-                    onClick={() => handleProfileNavigate("")}
+                    onClick={() => {
+                      handleProfileNavigate("");
+                      setDrawerOpen(false);
+                    }}
                   >
                     <ListItemText primary="Profili Görüntüle" />
                   </ListItem>
+
                   <ListItem
                     button
                     sx={{
@@ -187,10 +219,14 @@ const MobileDrawer = ({
                         backgroundColor: hoverBg,
                       },
                     }}
-                    onClick={() => handleProfileNavigate("/edit")}
+                    onClick={() => {
+                      handleProfileNavigate("/edit");
+                      setDrawerOpen(false);
+                    }}
                   >
                     <ListItemText primary="Profili Düzenle" />
                   </ListItem>
+
                   <ListItem
                     button
                     sx={{

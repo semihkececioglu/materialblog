@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   Box,
   Button,
@@ -7,9 +7,13 @@ import {
   Menu,
   MenuItem,
   Fade,
+  Snackbar,
+  CircularProgress,
+  Alert,
 } from "@mui/material";
 import { Search as SearchIcon, Brightness4 } from "@mui/icons-material";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { logout } from "../../redux/userSlice";
 
 const stringToColor = (string) => {
   let hash = 0;
@@ -35,6 +39,23 @@ const RightMenu = ({
   handleProfileNavigate,
   dispatch,
 }) => {
+  const [loadingLogout, setLoadingLogout] = useState(false);
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    setProfileAnchorEl(null);
+    setLoadingLogout(true);
+
+    setTimeout(() => {
+      dispatch(logout());
+      setSnackbarOpen(true);
+      setLoadingLogout(false);
+      navigate("/");
+      window.scrollTo(0, 0);
+    }, 1000);
+  };
+
   return (
     <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
       {!user && !isMobile && (
@@ -73,7 +94,10 @@ const RightMenu = ({
 
       {user && (
         <>
-          <IconButton onClick={(e) => setProfileAnchorEl(e.currentTarget)}>
+          <IconButton
+            onClick={(e) => setProfileAnchorEl(e.currentTarget)}
+            sx={{ display: { xs: "none", sm: "inline-flex" } }}
+          >
             <Avatar
               src={user.profileImage || ""}
               sx={{
@@ -103,17 +127,37 @@ const RightMenu = ({
             <MenuItem onClick={() => handleProfileNavigate("/edit")}>
               Profili Düzenle
             </MenuItem>
-            <MenuItem
-              onClick={() => {
-                dispatch({ type: "user/logout" }); // dispatch(logout()) yerine type ile kullanıldıysa slice'tan ayarlanabilir
-                setProfileAnchorEl(null);
-              }}
-            >
-              Çıkış Yap
+            <MenuItem onClick={handleLogout} disabled={loadingLogout}>
+              {loadingLogout ? (
+                <CircularProgress size={20} sx={{ mr: 1 }} />
+              ) : (
+                "Çıkış Yap"
+              )}
             </MenuItem>
           </Menu>
         </>
       )}
+
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={3000}
+        onClose={() => setSnackbarOpen(false)}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      >
+        <Alert
+          severity="success"
+          onClose={() => setSnackbarOpen(false)}
+          sx={{
+            backdropFilter: "blur(8px)",
+            backgroundColor: "rgba(255,255,255,0.7)",
+            borderRadius: 2,
+            boxShadow: "0 4px 16px rgba(0,0,0,0.15)",
+            fontWeight: 500,
+          }}
+        >
+          Başarıyla çıkış yaptınız.
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };
