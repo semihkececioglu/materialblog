@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import {
+  Avatar,
   Box,
   Typography,
   Paper,
@@ -156,7 +157,23 @@ const AdminUsersPage = () => {
                       },
                     }}
                   >
-                    <TableCell>{user.username}</TableCell>
+                    <TableCell>
+                      <Box display="flex" alignItems="center" gap={1}>
+                        <Avatar
+                          src={user.profileImage}
+                          alt={user.username}
+                          sx={{
+                            width: 36,
+                            height: 36,
+                            bgcolor: "primary.main",
+                          }}
+                        >
+                          {user.username?.[0]?.toUpperCase()}
+                        </Avatar>
+                        <Typography>{user.username}</Typography>
+                      </Box>
+                    </TableCell>
+
                     <TableCell>
                       {user.firstName && user.lastName
                         ? `${user.firstName} ${user.lastName}`
