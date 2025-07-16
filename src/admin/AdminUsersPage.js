@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Avatar,
   Box,
@@ -37,6 +38,8 @@ const AdminUsersPage = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
   const [newRole, setNewRole] = useState("");
+
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchUsers();
@@ -170,7 +173,22 @@ const AdminUsersPage = () => {
                         >
                           {user.username?.[0]?.toUpperCase()}
                         </Avatar>
-                        <Typography>{user.username}</Typography>
+                        <Tooltip title="Profili Gör" arrow>
+                          <Typography
+                            sx={{
+                              cursor: "pointer",
+                              "&:hover": {
+                                textDecoration: "underline",
+                                color: "primary.main",
+                              },
+                            }}
+                            onClick={() =>
+                              navigate(`/profile/${user.username}`)
+                            }
+                          >
+                            {user.username}
+                          </Typography>
+                        </Tooltip>
                       </Box>
                     </TableCell>
 
