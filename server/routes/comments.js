@@ -18,6 +18,19 @@ router.get("/", async (req, res) => {
   }
 });
 
+//admin paneli için son 5 yorumu getir.
+router.get("/latest", async (req, res) => {
+  try {
+    const latestComments = await Comment.find()
+      .sort({ createdAt: -1 })
+      .limit(5)
+      .populate("user", "username profileImage");
+    res.json(latestComments);
+  } catch (err) {
+    res.status(500).json({ message: "Yorumlar alınamadı. " });
+  }
+});
+
 // POST: Yeni yorum veya yanıt ekle (user ID gönderilmeli)
 router.post("/", async (req, res) => {
   try {
