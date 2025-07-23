@@ -22,12 +22,15 @@ router.get("/", async (req, res) => {
 router.get("/latest", async (req, res) => {
   try {
     const latestComments = await Comment.find()
-      .sort({ createdAt: -1 })
+      .sort({ date: -1 }) // doğru alan: 'date'
       .limit(5)
-      .populate("user", "username profileImage");
-    res.json(latestComments);
+      .populate("user", "username profileImage") // kullanıcı bilgisi
+      .populate("postId", "title slug"); // yorum yapılan yazı bilgisi
+
+    res.status(200).json(latestComments);
   } catch (err) {
-    res.status(500).json({ message: "Yorumlar alınamadı. " });
+    console.error("Son yorumlar alınamadı:", err.message);
+    res.status(500).json({ message: "Yorumlar alınamadı." });
   }
 });
 
