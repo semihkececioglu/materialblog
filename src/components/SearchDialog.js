@@ -45,12 +45,14 @@ const SearchDialog = ({ open, onClose }) => {
           background: "rgba(0, 0, 0, 0.4)",
           backdropFilter: "blur(12px)",
         },
+        onClick: onClose,
       }}
     >
       <Box
+        onClick={(e) => e.stopPropagation()}
         sx={{
           position: "absolute",
-          top: "5%", // ekranın üstünden %5 boşluk
+          top: "5%",
           left: "50%",
           transform: "translateX(-50%)",
           width: "90%",

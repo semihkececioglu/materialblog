@@ -50,6 +50,10 @@ const SearchResults = () => {
     setSearchParams({ q: searchTerm, page: value });
   };
 
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [searchTerm, page]);
+
   return (
     <Container maxWidth="lg" sx={{ mt: 4 }}>
       <Box
