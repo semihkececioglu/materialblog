@@ -191,21 +191,6 @@ const DashboardPage = () => {
           mt: 3,
         }}
       >
-        {/* Sol: Grafik/istatistik kutusu */}
-        <Box sx={{ flex: { xs: "100%", md: "66.66%" } }}>
-          <Typography variant="h6" fontWeight="bold" gutterBottom>
-            İSTATİSTİKLER
-          </Typography>
-          <Paper
-            sx={{
-              height: 400,
-              borderRadius: 3,
-              backgroundColor:
-                theme.palette.mode === "dark" ? "#222" : "#e0e0e0",
-            }}
-          />
-        </Box>
-
         {/* Sağ: Son Yorumlar */}
         <Box
           sx={{
@@ -279,6 +264,19 @@ const DashboardPage = () => {
             ))}
           </Paper>
         </Box>
+      </Box>
+      {/* Sol: Grafik/istatistik kutusu */}
+      <Box sx={{ flex: { xs: "100%", md: "66.66%" } }}>
+        <Typography variant="h6" fontWeight="bold" gutterBottom>
+          İSTATİSTİKLER
+        </Typography>
+        <Paper
+          sx={{
+            height: 400,
+            borderRadius: 3,
+            backgroundColor: theme.palette.mode === "dark" ? "#222" : "#e0e0e0",
+          }}
+        />
       </Box>
     </Box>
   );
