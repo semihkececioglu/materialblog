@@ -5,11 +5,10 @@ import axios from "axios";
 export const fetchInteractionData = createAsyncThunk(
   "interaction/fetchData",
   async ({ postId, userId }) => {
-    // Yorumsayısı ve beğeni sayısı tüm kullanıcılar için ortak
     const [likeRes, commentsRes] = await Promise.all([
       axios.get(
         `https://materialblog-server-production.up.railway.app/api/posts/${postId}/like-status`,
-        { params: { userId } } // varsa userId gönder
+        { params: { userId } }
       ),
       axios.get(
         `https://materialblog-server-production.up.railway.app/api/comments?postId=${postId}`
@@ -18,7 +17,6 @@ export const fetchInteractionData = createAsyncThunk(
 
     let saved = false;
 
-    // Sadece kullanıcı varsa saved verisini çek
     if (userId) {
       const userRes = await axios.get(
         `https://materialblog-server-production.up.railway.app/api/users/id/${userId}`
@@ -48,7 +46,6 @@ export const fetchInteractionData = createAsyncThunk(
   }
 );
 
-// Başlangıç durumu
 const initialState = {
   liked: false,
   likeCount: 0,
@@ -72,11 +69,9 @@ const interactionSlice = createSlice({
     setCommentCount: (state, action) => {
       state.commentCount = action.payload;
     },
-    // Kullanıcı değişince sadece kişisel alanlar sıfırlanır
     resetInteraction: (state) => {
       state.liked = false;
       state.saved = false;
-      // likeCount ve commentCount sabit kalır
     },
   },
   extraReducers: (builder) => {

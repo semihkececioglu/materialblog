@@ -22,10 +22,10 @@ router.get("/", async (req, res) => {
 router.get("/latest", async (req, res) => {
   try {
     const latestComments = await Comment.find()
-      .sort({ date: -1 }) // doğru alan: 'date'
+      .sort({ date: -1 })
       .limit(5)
-      .populate("user", "username profileImage") // kullanıcı bilgisi
-      .populate("postId", "title slug"); // yorum yapılan yazı bilgisi
+      .populate("user", "username profileImage")
+      .populate("postId", "title slug");
 
     res.status(200).json(latestComments);
   } catch (err) {
@@ -34,7 +34,7 @@ router.get("/latest", async (req, res) => {
   }
 });
 
-// POST: Yeni yorum veya yanıt ekle (user ID gönderilmeli)
+// POST: Yeni yorum veya yanıt ekle
 router.post("/", async (req, res) => {
   try {
     const { user, postId, parentId, text } = req.body;

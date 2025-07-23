@@ -65,7 +65,7 @@ function App() {
   const [searchTerm, setSearchTerm] = useState("");
 
   const theme = useMemo(() => getTheme(mode), [mode]);
-  const user = useSelector((state) => state.user.currentUser); // 🧠 kullanıcının rolünü kontrol edeceğiz
+  const user = useSelector((state) => state.user.currentUser);
 
   return (
     <Provider store={store}>
