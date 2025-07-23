@@ -44,7 +44,6 @@ const Login = () => {
 
       dispatch(login({ user, token }));
 
-      // Snackbar'ı göster ve yönlendir
       setSnackbarOpen(true);
 
       setTimeout(() => {
