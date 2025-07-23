@@ -1,11 +1,10 @@
-// src/redux/postSlice.js
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 
 const BASE_URL =
   "https://materialblog-server-production.up.railway.app/api/posts";
 
-// ✅ Listeleme (filtre, arama, kategori, tag, sayfa)
+//  Listeleme (filtre, arama, kategori, tag, sayfa)
 export const fetchPosts = createAsyncThunk(
   "posts/fetchPosts",
   async ({ page = 1, limit = 6, search = "", category = "", tag = "" }) => {
@@ -21,7 +20,7 @@ export const fetchPosts = createAsyncThunk(
   }
 );
 
-// ✅ Slug ile detay çek
+//  Slug ile detay çek
 export const fetchPostBySlug = createAsyncThunk(
   "posts/fetchPostBySlug",
   async (slug) => {
@@ -30,7 +29,7 @@ export const fetchPostBySlug = createAsyncThunk(
   }
 );
 
-// ✅ ID ile detay çek (admin)
+//  ID ile detay çek (admin)
 export const fetchPostById = createAsyncThunk(
   "posts/fetchPostById",
   async (id) => {
@@ -39,7 +38,7 @@ export const fetchPostById = createAsyncThunk(
   }
 );
 
-// ✅ Yeni yazı oluştur
+//  Yeni yazı oluştur
 export const createPost = createAsyncThunk(
   "posts/createPost",
   async (newPost) => {
@@ -48,7 +47,7 @@ export const createPost = createAsyncThunk(
   }
 );
 
-// ✅ Yazı güncelle
+//  Yazı güncelle
 export const updatePost = createAsyncThunk(
   "posts/updatePost",
   async ({ id, updatedPost }) => {
@@ -57,7 +56,7 @@ export const updatePost = createAsyncThunk(
   }
 );
 
-// ✅ Yazı sil
+//  Yazı sil
 export const deletePost = createAsyncThunk("posts/deletePost", async (id) => {
   await axios.delete(`${BASE_URL}/${id}`);
   return id; // sadece ID dönüyoruz
@@ -79,7 +78,7 @@ const postSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      // ✅ Listeleme
+      //  Listeleme
       .addCase(fetchPosts.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -94,7 +93,7 @@ const postSlice = createSlice({
         state.error = action.error.message;
       })
 
-      // ✅ Slug ile detay
+      //  Slug ile detay
       .addCase(fetchPostBySlug.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -108,7 +107,7 @@ const postSlice = createSlice({
         state.error = action.error.message;
       })
 
-      // ✅ ID ile detay
+      //  ID ile detay
       .addCase(fetchPostById.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -122,21 +121,21 @@ const postSlice = createSlice({
         state.error = action.error.message;
       })
 
-      // ✅ Yeni oluşturma
+      //  Yeni oluşturma
       .addCase(createPost.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
       .addCase(createPost.fulfilled, (state, action) => {
         state.loading = false;
-        state.posts.unshift(action.payload); // yeni yazı başa eklenir
+        state.posts.unshift(action.payload);
       })
       .addCase(createPost.rejected, (state, action) => {
         state.loading = false;
         state.error = action.error.message;
       })
 
-      // ✅ Güncelleme
+      //  Güncelleme
       .addCase(updatePost.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -156,7 +155,7 @@ const postSlice = createSlice({
         state.error = action.error.message;
       })
 
-      // ✅ Silme
+      //  Silme
       .addCase(deletePost.pending, (state) => {
         state.loading = true;
         state.error = null;

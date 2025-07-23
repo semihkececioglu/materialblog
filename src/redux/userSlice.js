@@ -1,6 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
 
-// Güvenli şekilde kullanıcıyı localStorage'dan al
 let parsedUser = null;
 try {
   const rawUser = localStorage.getItem("user");

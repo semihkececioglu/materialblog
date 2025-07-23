@@ -1,4 +1,3 @@
-// components/AuthorInfo.js
 import React from "react";
 import { Avatar, Typography, Box, Stack, useTheme } from "@mui/material";
 import { useNavigate } from "react-router-dom";

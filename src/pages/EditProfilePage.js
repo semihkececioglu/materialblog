@@ -9,14 +9,14 @@ import {
   Snackbar,
   CircularProgress,
   IconButton,
-  Skeleton, // ✅ eklendi
+  Skeleton,
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import { useSelector } from "react-redux";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 
-// 🔧 Cloudinary görsel yükleme fonksiyonu
+// CLOUDINARY IMAGE UPLOAD FUNCTION
 const uploadImageToCloudinary = async (file) => {
   const formData = new FormData();
   formData.append("file", file);
@@ -55,14 +55,14 @@ const EditProfilePage = () => {
   const [profileImage, setProfileImage] = useState("");
   const [uploading, setUploading] = useState(false);
   const [open, setOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(true); // ✅ loading state
+  const [isLoading, setIsLoading] = useState(true);
 
   const containerRef = useRef(null);
 
   useEffect(() => {
     if (!user || user.username !== username) return;
 
-    setIsLoading(true); // 🔄 Başlarken true
+    setIsLoading(true);
     axios
       .get(
         `https://materialblog-server-production.up.railway.app/api/users/${username}`
@@ -77,7 +77,7 @@ const EditProfilePage = () => {
         console.error("Kullanıcı bilgisi alınamadı:", err);
       })
       .finally(() => {
-        setIsLoading(false); // ✅ Veri gelince loading false
+        setIsLoading(false);
       });
   }, [user, username]);
 

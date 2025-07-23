@@ -1,10 +1,9 @@
-// redux/categoriesSlice.js
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 
 const BASE_URL = "https://materialblog-server-production.up.railway.app/api";
 
-// 🔄 Tüm kategorileri çek
+// Tüm kategorileri çek
 export const fetchCategories = createAsyncThunk(
   "categories/fetchCategories",
   async () => {
@@ -13,7 +12,7 @@ export const fetchCategories = createAsyncThunk(
   }
 );
 
-// ➕ Yeni kategori oluştur
+// Yeni kategori oluştur
 export const createCategory = createAsyncThunk(
   "categories/createCategory",
   async (newCategory) => {
@@ -22,7 +21,7 @@ export const createCategory = createAsyncThunk(
   }
 );
 
-// 📝 Kategori güncelle
+// Kategori güncelle
 export const updateCategory = createAsyncThunk(
   "categories/updateCategory",
   async ({ id, updatedData }) => {
@@ -31,7 +30,7 @@ export const updateCategory = createAsyncThunk(
   }
 );
 
-// ❌ Kategori sil
+// Kategori sil
 export const deleteCategory = createAsyncThunk(
   "categories/deleteCategory",
   async (id) => {

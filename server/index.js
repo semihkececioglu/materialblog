@@ -26,10 +26,7 @@ app.use(
 
 app.use(express.json());
 
-// ✅ Statik dosyalar
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
-
-// ✅ Route tanımları
+// Route tanımları
 app.use("/api/posts", postRoutes);
 app.use("/api/categories", categoryRoutes);
 app.use("/api/tags", tagRoutes);
@@ -39,7 +36,7 @@ app.use("/api/users", userRoutes);
 app.use("/api/settings", settingsRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 
-// ✅ MongoDB bağlantısı
+// MongoDB bağlantısı
 mongoose
   .connect(process.env.MONGO_URI, {
     useNewUrlParser: true,
