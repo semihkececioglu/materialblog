@@ -8,6 +8,7 @@ import {
   useTheme,
   Pagination,
   CircularProgress,
+  Paper,
 } from "@mui/material";
 import PageTransitionWrapper from "../components/common/PageTransitionWrapper";
 
@@ -53,19 +54,61 @@ function CategoryPage() {
     .replace(/-/g, " ")
     .replace(/\b\w/g, (l) => l.toUpperCase());
 
+  const getCategoryDescription = (slug) => {
+    const descriptions = {
+      react:
+        "React, bileşen tabanlı kullanıcı arayüzleri geliştirmek için kullanılan popüler bir JavaScript kütüphanesidir.",
+      javascript:
+        "JavaScript, web’in dinamik doğasını mümkün kılan güçlü bir programlama dilidir.",
+      tasarim:
+        "Tasarım kategorisi; UI/UX, renk teorisi ve kullanıcı odaklı arayüz geliştirme üzerine içerikler sunar.",
+      oyun: "Bu kategoride oyun geliştirme, Unity, Godot ve oyun tasarımıyla ilgili yazılar yer alır.",
+      yazilim:
+        "Yazılım geliştirme süreçleri, temiz kod prensipleri ve proje mimarilerine dair yazılar burada bulunur.",
+    };
+
+    const key = decodeURIComponent(slug).toLowerCase();
+    return descriptions[key] || "Bu kategoriye ait açıklama henüz eklenmedi.";
+  };
+
   return (
     <PageTransitionWrapper>
       <Container sx={{ mt: 4 }}>
-        <Typography variant="h4" gutterBottom>
-          {formattedCategoryName} Kategorisi
-        </Typography>
+        {/* Kategori Bilgi Kutusu */}
+        <Paper
+          elevation={0}
+          sx={{
+            p: 3,
+            borderRadius: 3,
+            backgroundColor:
+              theme.palette.mode === "dark"
+                ? "rgba(255,255,255,0.04)"
+                : "rgba(0,0,0,0.03)",
+            backdropFilter: "blur(8px)",
+            mb: 4,
+          }}
+        >
+          <Typography variant="h4" fontWeight="bold" gutterBottom>
+            {formattedCategoryName} Kategorisi
+          </Typography>
 
+          <Typography variant="body1" color="text.secondary" gutterBottom>
+            {getCategoryDescription(kategoriAdi)}
+          </Typography>
+
+          <Typography variant="caption" color="text.disabled">
+            Toplam {posts.length} yazı bulundu.
+          </Typography>
+        </Paper>
+
+        {/* Yükleniyor */}
         {loading ? (
           <Box sx={{ display: "flex", justifyContent: "center", mt: 8 }}>
             <CircularProgress />
           </Box>
         ) : (
           <>
+            {/* Yazılar Listesi */}
             <Box sx={{ display: "flex", flexWrap: "wrap", gap: 3, mt: 3 }}>
               {posts.map((post) => (
                 <Box
@@ -80,6 +123,7 @@ function CategoryPage() {
               ))}
             </Box>
 
+            {/* Sayfalama */}
             {totalPages > 1 && (
               <Box sx={{ display: "flex", justifyContent: "center", mt: 5 }}>
                 <Pagination

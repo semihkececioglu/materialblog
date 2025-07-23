@@ -12,7 +12,6 @@ import {
 } from "@mui/material";
 import PostCard from "../components/PostCard";
 import PageTransitionWrapper from "../components/common/PageTransitionWrapper";
-
 import { useDispatch, useSelector } from "react-redux";
 import { fetchPosts } from "../redux/postSlice";
 
@@ -26,6 +25,17 @@ const tagColors = {
   blog: "#00b894",
   "material-ui": "#0081cb",
   seo: "#ff6d00",
+};
+
+const tagDescriptions = {
+  react: "React ile ilgili en güncel yazılar, ipuçları ve rehberler burada.",
+  javascript:
+    "JavaScript dünyasına dair fonksiyonlar, async yapılar ve daha fazlası.",
+  css: "Stil, düzen ve animasyonlar konusunda CSS ile ilgili içerikler.",
+  html: "Semantik HTML, etiket kullanımı ve yapısal ipuçları.",
+  blog: "Blog yönetimi, içerik üretimi ve yazarlık deneyimleri.",
+  "material-ui": "Material UI ile arayüz tasarımı ve bileşen kullanımı.",
+  seo: "Arama motoru optimizasyonu ve SEO teknikleri.",
 };
 
 function TagPosts() {
@@ -57,25 +67,57 @@ function TagPosts() {
     navigate(url);
   };
 
-  const tagLabel = tag
+  const tagKey = decodeURIComponent(tag).toLowerCase();
+  const tagLabel = tagKey
     .replace(/-/g, " ")
     .replace(/\b\w/g, (l) => l.toUpperCase());
+
+  const chipColor = tagColors[tagKey] || theme.palette.primary.main;
+  const description =
+    tagDescriptions[tagKey] || "Bu etikete ait açıklama henüz eklenmedi.";
 
   return (
     <PageTransitionWrapper>
       <Container maxWidth="lg" sx={{ mt: 4 }}>
-        <Typography variant="h5" gutterBottom>
-          Etiket:{" "}
-          <Chip
-            label={`#${tagLabel}`}
-            sx={{
-              bgcolor:
-                tagColors[tag.toLowerCase()] || theme.palette.primary.main,
-              color: "white",
-            }}
-          />
-        </Typography>
+        {/* Etiket Bilgi Kutusu */}
+        <Paper
+          elevation={0}
+          sx={{
+            p: 3,
+            borderRadius: 3,
+            backgroundColor:
+              theme.palette.mode === "dark"
+                ? "rgba(255,255,255,0.04)"
+                : "rgba(0,0,0,0.03)",
+            backdropFilter: "blur(8px)",
+            mb: 4,
+          }}
+        >
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
+            <Typography variant="h5" fontWeight="bold">
+              Etiket:
+            </Typography>
+            <Chip
+              label={`#${tagLabel}`}
+              sx={{
+                bgcolor: chipColor,
+                color: "white",
+                fontWeight: "bold",
+                fontSize: "1rem",
+              }}
+            />
+          </Box>
 
+          <Typography variant="body1" color="text.secondary" gutterBottom>
+            {description}
+          </Typography>
+
+          <Typography variant="caption" color="text.disabled">
+            Toplam {posts.length} yazı bulundu.
+          </Typography>
+        </Paper>
+
+        {/* İçerik */}
         {loading ? (
           <Box sx={{ display: "flex", justifyContent: "center", mt: 8 }}>
             <CircularProgress />
