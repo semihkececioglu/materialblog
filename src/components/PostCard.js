@@ -16,6 +16,7 @@ import ImageNotSupportedIcon from "@mui/icons-material/ImageNotSupported";
 import { useNavigate } from "react-router-dom";
 import slugify from "../utils/slugify";
 
+/** İçerikten ilk <img> src'sini al */
 const getFirstImageFromHTML = (html) => {
   const match = html?.match(/<img[^>]+src=["']([^"'>]+)["']/);
   return match ? match[1] : null;
@@ -24,6 +25,40 @@ const getFirstImageFromHTML = (html) => {
 const formatDate = (isoString) => {
   const options = { day: "numeric", month: "long", year: "numeric" };
   return new Date(isoString).toLocaleDateString("tr-TR", options);
+};
+
+/** Cloudinary URL'ine dönüşüm (transform) ekle.
+ * - Cloudinary ise: /image/upload/ → /image/upload/f_auto,q_auto,c_limit,w_{w}/
+ * - Değilse: orijinal URL'i döndür
+ */
+const buildCloudinaryUrl = (url, w) => {
+  if (!url) return "";
+  try {
+    const isCloudinary =
+      url.includes("res.cloudinary.com") && url.includes("/image/upload/");
+    if (!isCloudinary) return url;
+    return url.replace(
+      "/image/upload/",
+      `/image/upload/f_auto,q_auto,c_limit,w_${w}/`
+    );
+  } catch {
+    return url;
+  }
+};
+
+/** srcset & sizes üretici – Cloudinary için */
+const buildResponsive = (url) => {
+  // Kartta hedef genişlikler: 480 / 768 / 1024 (ızgaraya göre)
+  const w480 = buildCloudinaryUrl(url, 480);
+  const w768 = buildCloudinaryUrl(url, 768);
+  const w1024 = buildCloudinaryUrl(url, 1024);
+
+  return {
+    src: w768, // default
+    srcSet: `${w480} 480w, ${w768} 768w, ${w1024} 1024w`,
+    // Mobilde tam genişlik, orta ekranda 1/2, büyükte 1/3 sütun gibi bir tipik grid
+    sizes: "(max-width: 600px) 100vw, (max-width: 1200px) 50vw, 33vw",
+  };
 };
 
 const PostCard = ({ post }) => {
@@ -35,7 +70,10 @@ const PostCard = ({ post }) => {
   };
 
   const firstImage = getFirstImageFromHTML(post.content);
-  const imageUrl = post.image || firstImage;
+  const rawImageUrl = post.image || firstImage;
+
+  // Görsel kaynakları
+  const responsive = buildResponsive(rawImageUrl);
 
   return (
     <Card
@@ -63,13 +101,21 @@ const PostCard = ({ post }) => {
         },
       }}
     >
-      {imageUrl ? (
+      {rawImageUrl ? (
         <CardMedia
           component="img"
-          height="140"
-          image={imageUrl}
+          // CLS için boyut ver (yaklaşık 16:9; kart üstü 140px yüksek)
+          width={640}
+          height={360}
+          // Cloudinary ise optimize, değilse orijinal
+          image={responsive.src}
+          srcSet={responsive.srcSet}
+          sizes={responsive.sizes}
           alt={post.title}
+          loading="lazy"
+          decoding="async"
           sx={{
+            height: 140,
             objectFit: "cover",
             transition: "transform 0.3s ease",
             "&:hover": {
