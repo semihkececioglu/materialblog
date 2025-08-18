@@ -88,41 +88,48 @@ const CategoryList = () => {
         Kategoriler
       </Typography>
       <Divider sx={{ my: 1 }} />
-      <List disablePadding>
+
+      {/* 📌 Gerçek ul/li yapısı */}
+      <List component="ul" disablePadding>
         {categories.map((category, index) => (
           <ListItem
             key={index}
-            component={Link}
-            to={`/category/${toSlug(category.name)}`}
-            sx={{
-              mb: 2,
-              borderRadius: 2,
-              px: 2,
-              py: 1.5,
-              backdropFilter: "blur(8px)",
-              backgroundColor: `${category.color}22`,
-              border: `1px solid ${category.color}66`,
-              color: theme.palette.getContrastText(category.color),
-              transition: "all 0.3s ease",
-              textDecoration: "none",
-              boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
-              "&:hover": {
-                transform: "scale(1.03)",
-                backgroundColor: `${category.color}44`,
-              },
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "flex-start",
-              gap: 2,
-            }}
+            component="li"
+            disablePadding
+            sx={{ listStyle: "none", mb: 2 }}
           >
-            <ListItemIcon sx={{ color: "inherit", minWidth: 0 }}>
-              {category.icon}
-            </ListItemIcon>
-            <ListItemText
-              primary={category.name}
-              primaryTypographyProps={{ fontWeight: 600 }}
-            />
+            <Paper
+              component={Link}
+              to={`/category/${toSlug(category.name)}`}
+              sx={{
+                flex: 1,
+                borderRadius: 2,
+                px: 2,
+                py: 1.5,
+                backdropFilter: "blur(8px)",
+                backgroundColor: `${category.color}22`,
+                border: `1px solid ${category.color}66`,
+                color: theme.palette.getContrastText(category.color),
+                transition: "all 0.3s ease",
+                textDecoration: "none",
+                boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+                display: "flex",
+                alignItems: "center",
+                gap: 2,
+                "&:hover": {
+                  transform: "scale(1.03)",
+                  backgroundColor: `${category.color}44`,
+                },
+              }}
+            >
+              <ListItemIcon sx={{ color: "inherit", minWidth: 0 }}>
+                {category.icon}
+              </ListItemIcon>
+              <ListItemText
+                primary={category.name}
+                primaryTypographyProps={{ fontWeight: 600 }}
+              />
+            </Paper>
           </ListItem>
         ))}
       </List>
