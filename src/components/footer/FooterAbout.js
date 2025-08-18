@@ -1,5 +1,5 @@
 import React from "react";
-import { Box, Typography, IconButton } from "@mui/material";
+import { Box, Typography, IconButton, Tooltip } from "@mui/material";
 import { Twitter, Facebook, Instagram } from "@mui/icons-material";
 
 const FooterAbout = () => (
@@ -11,15 +11,38 @@ const FooterAbout = () => (
       Modern, sade ve kullanıcı dostu bir blog deneyimi sunmayı amaçlıyoruz.
     </Typography>
     <Box sx={{ mt: 2 }}>
-      <IconButton color="inherit" href="https://twitter.com" target="_blank">
-        <Twitter />
-      </IconButton>
-      <IconButton color="inherit" href="https://facebook.com" target="_blank">
-        <Facebook />
-      </IconButton>
-      <IconButton color="inherit" href="https://instagram.com" target="_blank">
-        <Instagram />
-      </IconButton>
+      <Tooltip title="Twitter" arrow>
+        <IconButton
+          color="inherit"
+          href="https://twitter.com"
+          target="_blank"
+          aria-label="Twitter"
+        >
+          <Twitter />
+        </IconButton>
+      </Tooltip>
+
+      <Tooltip title="Facebook" arrow>
+        <IconButton
+          color="inherit"
+          href="https://facebook.com"
+          target="_blank"
+          aria-label="Facebook"
+        >
+          <Facebook />
+        </IconButton>
+      </Tooltip>
+
+      <Tooltip title="Instagram" arrow>
+        <IconButton
+          color="inherit"
+          href="https://instagram.com"
+          target="_blank"
+          aria-label="Instagram"
+        >
+          <Instagram />
+        </IconButton>
+      </Tooltip>
     </Box>
   </Box>
 );

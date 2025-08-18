@@ -1,5 +1,13 @@
 import React from "react";
-import { Box, Typography, useTheme, Tooltip, Divider } from "@mui/material";
+import {
+  Box,
+  Typography,
+  useTheme,
+  Tooltip,
+  Divider,
+  List,
+  ListItem,
+} from "@mui/material";
 import {
   Twitter,
   Facebook,
@@ -76,57 +84,67 @@ const SocialMediaBox = () => {
       </Typography>
       <Divider sx={{ my: 1 }} />
 
-      <Box
+      {/* 📌 List yapısı */}
+      <List
         sx={{
           display: "flex",
           flexWrap: "wrap",
           justifyContent: "space-between",
+          p: 0,
         }}
       >
         {socialLinks.map((item) => (
-          <Tooltip
+          <ListItem
             key={item.name}
-            title={`Beni ${item.name} üzerinden takip et`}
-            arrow
+            component="li"
+            sx={{
+              width: "32%",
+              m: "0.5%",
+              height: 100,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              borderRadius: 2,
+              textDecoration: "none",
+              bgcolor: "rgba(255,255,255,0.08)",
+              border: `1px solid rgba(255,255,255,0.1)`,
+              color: theme.palette.mode === "dark" ? "#ccc" : "#333",
+              transition: "all 0.35s ease",
+              listStyle: "none", // 🔑 default bullet kaldır
+              "&:hover": {
+                transform: "scale(1.05)",
+                bgcolor: item.color,
+                color: "#fff",
+                boxShadow: `0 0 12px ${item.color}`,
+                svg: { color: "#fff" },
+              },
+            }}
           >
-            <Box
-              component="a"
-              href={item.link}
-              target="_blank"
-              rel="noopener noreferrer"
-              sx={{
-                width: "32%",
-                m: "0.5%",
-                height: 100,
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                justifyContent: "center",
-                borderRadius: 2,
-                textDecoration: "none",
-                bgcolor: "rgba(255,255,255,0.08)",
-                border: `1px solid rgba(255,255,255,0.1)`,
-                color: theme.palette.mode === "dark" ? "#ccc" : "#333",
-                transition: "all 0.35s ease",
-                "&:hover": {
-                  transform: "scale(1.05)",
-                  bgcolor: item.color,
-                  color: "#fff",
-                  boxShadow: `0 0 12px ${item.color}`,
-                  svg: {
-                    color: "#fff",
-                  },
-                },
-              }}
-            >
-              <Box sx={{ mb: 1, color: item.color }}>{item.icon}</Box>
-              <Typography variant="body2" fontWeight={500}>
-                {item.name}
-              </Typography>
-            </Box>
-          </Tooltip>
+            <Tooltip title={`Beni ${item.name} üzerinden takip et`} arrow>
+              <Box
+                component="a"
+                href={item.link}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={item.name}
+                sx={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  textDecoration: "none",
+                  color: "inherit",
+                }}
+              >
+                <Box sx={{ mb: 1, color: item.color }}>{item.icon}</Box>
+                <Typography variant="body2" fontWeight={500}>
+                  {item.name}
+                </Typography>
+              </Box>
+            </Tooltip>
+          </ListItem>
         ))}
-      </Box>
+      </List>
     </Box>
   );
 };
