@@ -1,4 +1,3 @@
-// 🔁 Redux + Axios entegre, senkron sorunsuz PostEditorPage.js
 import React, { useState, useEffect } from "react";
 import {
   TextField,
@@ -35,10 +34,11 @@ import {
 
 Quill.register("modules/imageResize", ImageResize);
 
+// 🔧 Cloudinary upload
 const uploadToCloudinary = async (file) => {
   const formData = new FormData();
   formData.append("file", file);
-  formData.append("upload_preset", "materialblog");
+  formData.append("upload_preset", "materialblog"); // senin preset adın
   const res = await axios.post(
     "https://api.cloudinary.com/v1_1/da2mjic2e/image/upload",
     formData
@@ -46,6 +46,7 @@ const uploadToCloudinary = async (file) => {
   return res.data.secure_url;
 };
 
+// 🔧 Quill toolbar
 const quillModules = {
   toolbar: {
     container: [
@@ -68,8 +69,16 @@ const quillModules = {
           if (!file) return;
           try {
             const url = await uploadToCloudinary(file);
-            const range = this.quill.getSelection();
-            this.quill.insertEmbed(range.index, "image", url);
+            // 🔁 optimize edilmiş versiyonu kullan
+            const optimized = url.includes("/image/upload/")
+              ? url.replace(
+                  "/image/upload/",
+                  "/image/upload/f_auto,q_auto,c_limit,w_1200/"
+                )
+              : url;
+            const range = this.quill.getSelection(true);
+            this.quill.insertEmbed(range.index, "image", optimized, "user");
+            this.quill.setSelection(range.index + 1, 0, "user");
           } catch (err) {
             console.error("İçerik görseli yüklenemedi:", err);
           }
@@ -109,6 +118,7 @@ const PostEditorPage = () => {
     title: "",
     category: "",
     image: "",
+    _imagePreview: "",
     summary: "",
     content: "",
     tags: [],
@@ -146,6 +156,12 @@ const PostEditorPage = () => {
             title: post.title || "",
             category: post.category || "",
             image: post.image || "",
+            _imagePreview: post.image
+              ? post.image.replace(
+                  "/image/upload/",
+                  "/image/upload/f_auto,q_auto,c_limit,w_800/"
+                )
+              : "",
             summary: post.summary || "",
             content: post.content || "",
             tags: post.tags || [],
@@ -158,6 +174,7 @@ const PostEditorPage = () => {
           title: "",
           category: "",
           image: "",
+          _imagePreview: "",
           summary: "",
           content: "",
           tags: [],
@@ -174,13 +191,20 @@ const PostEditorPage = () => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
+  // Kapak görseli yükleme
   const handleCoverUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
     setIsCoverUploading(true);
     try {
       const url = await uploadToCloudinary(file);
-      setForm({ ...form, image: url });
+      const preview = url.includes("/image/upload/")
+        ? url.replace(
+            "/image/upload/",
+            "/image/upload/f_auto,q_auto,c_limit,w_800/"
+          )
+        : url;
+      setForm({ ...form, image: url, _imagePreview: preview });
     } catch (err) {
       console.error("Kapak görseli yüklenemedi:", err);
     } finally {
@@ -191,6 +215,7 @@ const PostEditorPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // Yeni etiketleri DB'ye kaydet
     for (const tag of form.tags) {
       const exists = allTags.some(
         (t) => t.name.toLowerCase() === tag.toLowerCase()
@@ -295,6 +320,7 @@ const PostEditorPage = () => {
             </Select>
           </FormControl>
 
+          {/* Kapak Görseli */}
           <Box sx={{ mb: 2 }}>
             <Typography variant="subtitle1">Kapak Görseli:</Typography>
             <Button variant="outlined" component="label" sx={{ mt: 1 }}>
@@ -306,15 +332,22 @@ const PostEditorPage = () => {
                 onChange={handleCoverUpload}
               />
             </Button>
+
             {isCoverUploading ? (
               <Box mt={2} display="flex" justifyContent="center">
                 <CircularProgress />
               </Box>
             ) : (
-              form.image && (
-                <Box mt={2}>
+              form._imagePreview && (
+                <Box
+                  mt={2}
+                  sx={{
+                    position: "relative",
+                    display: "inline-block",
+                  }}
+                >
                   <img
-                    src={form.image}
+                    src={form._imagePreview}
                     alt="Kapak"
                     style={{
                       maxHeight: 150,
@@ -322,6 +355,27 @@ const PostEditorPage = () => {
                       border: "1px solid #ccc",
                     }}
                   />
+                  {/* X ikonu */}
+                  <Button
+                    size="small"
+                    onClick={() =>
+                      setForm({ ...form, image: "", _imagePreview: "" })
+                    }
+                    sx={{
+                      position: "absolute",
+                      top: 6,
+                      right: 6,
+                      minWidth: 0,
+                      width: 28,
+                      height: 28,
+                      borderRadius: "50%",
+                      bgcolor: "rgba(0,0,0,0.6)",
+                      color: "#fff",
+                      "&:hover": { bgcolor: "rgba(0,0,0,0.8)" },
+                    }}
+                  >
+                    ✕
+                  </Button>
                 </Box>
               )
             )}
