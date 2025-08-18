@@ -33,6 +33,60 @@ import {
   resetInteraction,
 } from "../redux/interactionSlice";
 
+/* ---------- Görsel yardımcıları ---------- */
+
+// Cloudinary mi?
+const isCloudinary = (url) =>
+  typeof url === "string" &&
+  url.includes("res.cloudinary.com") &&
+  url.includes("/image/upload/");
+
+// Cloudinary URL'ine dönüşüm ekle
+const cld = (url, params) =>
+  url.replace("/image/upload/", `/image/upload/${params}/`);
+
+// Kapak için responsive kaynak üret
+const buildHeroSources = (url) => {
+  if (!isCloudinary(url)) {
+    return {
+      src: url,
+      srcSet: undefined,
+      sizes: undefined,
+    };
+  }
+  const w1200 = cld(url, "f_auto,q_auto,c_limit,w_1200");
+  const w768 = cld(url, "f_auto,q_auto,c_limit,w_768");
+  const w480 = cld(url, "f_auto,q_auto,c_limit,w_480");
+  return {
+    src: w1200,
+    srcSet: `${w480} 480w, ${w768} 768w, ${w1200} 1200w`,
+    sizes: "(max-width: 900px) 100vw, 900px",
+  };
+};
+
+// İçerik HTML'indeki <img> taglarını optimize et
+const optimizeHtmlImages = (html) => {
+  if (!html) return "";
+
+  return html.replace(
+    /<img([^>]+)src=["']([^"']+)["']([^>]*)>/gi,
+    (full, pre, src, post) => {
+      let newSrc = src;
+      // Cloudinary ise küçült + modern format + kalite
+      if (isCloudinary(src)) {
+        newSrc = cld(src, "f_auto,q_auto,c_limit,w_1200");
+      }
+      // loading/decoding ekle; varsa üzerine yazmayalım diye basit kontrol
+      const hasLoading = /loading=/.test(full);
+      const hasDecoding = /decoding=/.test(full);
+
+      return `<img${pre}src="${newSrc}"${hasLoading ? "" : ' loading="lazy"'}${
+        hasDecoding ? "" : ' decoding="async"'
+      }${post}>`;
+    }
+  );
+};
+
 function PostDetail() {
   const { slug } = useParams();
   const theme = useTheme();
@@ -155,6 +209,12 @@ function PostDetail() {
     .filter((p) => p.category === post.category && p._id !== post._id)
     .slice(0, 3);
 
+  // --- Kapak görseli kaynakları ---
+  const hero = post.image ? buildHeroSources(post.image) : null;
+
+  // --- İçerik HTML optimize ---
+  const optimizedHtml = optimizeHtmlImages(post.content);
+
   return (
     <Container maxWidth="lg" sx={{ mt: 4 }}>
       <Box
@@ -199,23 +259,36 @@ function PostDetail() {
               readingTime={readingTime}
             />
 
-            {post.image && (
+            {hero && (
               <Box
                 sx={{
                   mb: 3,
                   borderRadius: 2,
                   overflow: "hidden",
-                  maxHeight: 400,
+                  // CLS'yi önlemek için alan ayır
+                  aspectRatio: "1200/630",
+                  maxHeight: 430,
                   "& img": {
                     width: "100%",
-                    height: "auto",
+                    height: "100%",
                     objectFit: "cover",
+                    display: "block",
                     borderRadius: 2,
                     boxShadow: 3,
                   },
                 }}
               >
-                <img src={post.image} alt={post.title} />
+                <img
+                  src={hero.src}
+                  srcSet={hero.srcSet}
+                  sizes={hero.sizes}
+                  alt={post.title}
+                  width={1200}
+                  height={630}
+                  // LCP için:
+                  fetchpriority="high"
+                  decoding="async"
+                />
               </Box>
             )}
 
@@ -228,12 +301,13 @@ function PostDetail() {
                 color: theme.palette.text.primary,
                 "& img": {
                   maxWidth: "100%",
+                  height: "auto",
                   borderRadius: 2,
                   my: 2,
                   boxShadow: 3,
                 },
               }}
-              dangerouslySetInnerHTML={{ __html: post.content }}
+              dangerouslySetInnerHTML={{ __html: optimizedHtml }}
             />
 
             <EmbeddedInteractionBar
