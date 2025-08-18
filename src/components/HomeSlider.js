@@ -11,8 +11,6 @@ import {
 import { ArrowBackIos, ArrowForwardIos } from "@mui/icons-material";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import "slick-carousel/slick/slick.css";
-import "slick-carousel/slick/slick-theme.css";
 
 const HomeSlider = () => {
   const [posts, setPosts] = useState([]);
@@ -20,6 +18,12 @@ const HomeSlider = () => {
   const sliderRef = useRef();
   const theme = useTheme();
   const navigate = useNavigate();
+
+  // 📌 Slick CSS sadece bu component açıldığında import ediliyor
+  useEffect(() => {
+    import("slick-carousel/slick/slick.css");
+    import("slick-carousel/slick/slick-theme.css");
+  }, []);
 
   useEffect(() => {
     axios
@@ -44,12 +48,7 @@ const HomeSlider = () => {
     slidesToShow: 2,
     slidesToScroll: 1,
     arrows: false,
-    responsive: [
-      {
-        breakpoint: 768,
-        settings: { slidesToShow: 1 },
-      },
-    ],
+    responsive: [{ breakpoint: 768, settings: { slidesToShow: 1 } }],
     appendDots: (dots) => (
       <Box
         component="ul"
@@ -116,7 +115,6 @@ const HomeSlider = () => {
             </Box>
           ))}
         </Box>
-        {/* Dots placeholder */}
         <Box sx={{ display: "flex", justifyContent: "center", mt: 3, gap: 1 }}>
           {[0, 1, 2].map((d) => (
             <Skeleton
@@ -132,7 +130,6 @@ const HomeSlider = () => {
     );
   }
 
-  // 📌 Normal Slider
   if (!posts?.length) return null;
 
   return (
@@ -257,7 +254,6 @@ const HomeSlider = () => {
         ))}
       </Slider>
 
-      {/* Dots active renk */}
       <style>{`
         .slick-dots li.slick-active div {
           background-color: ${theme.palette.primary.main} !important;
