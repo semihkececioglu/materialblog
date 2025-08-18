@@ -7,7 +7,7 @@
     <meta name="theme-color" content="#000000" />
     <meta
       name="description"
-      content="Web site created using create-react-app"
+      content="MERN Blog Application using Material UI"
     />
     <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
     <!--
@@ -24,7 +24,24 @@
       work correctly both with client-side routing and a non-root public URL.
       Learn how to configure a non-root public URL by running `npm run build`.
     -->
-    <title>React App</title>
+    <title>MUI Blog</title>
+    <!-- Optimize CSS yükleme: preload + non-blocking -->
+    <script>
+      (function () {
+        var cssHref = "%PUBLIC_URL%/static/css/main.css";
+        var link = document.createElement("link");
+        link.rel = "preload";
+        link.as = "style";
+        link.href = cssHref;
+        link.onload = function () {
+          this.rel = "stylesheet";
+        };
+        document.head.appendChild(link);
+      })();
+    </script>
+    <noscript>
+      <link rel="stylesheet" href="%PUBLIC_URL%/static/css/main.css" />
+    </noscript>
   </head>
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
