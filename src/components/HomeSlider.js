@@ -20,9 +20,11 @@ const HomeSlider = () => {
   const theme = useTheme();
   const navigate = useNavigate();
 
+  // CSS lazy load
   useLazyCss(() => import("slick-carousel/slick/slick.css"));
   useLazyCss(() => import("slick-carousel/slick/slick-theme.css"));
 
+  // Slider verileri
   useEffect(() => {
     axios
       .get(
@@ -75,6 +77,7 @@ const HomeSlider = () => {
     ),
   };
 
+  // 📌 Loading Skeleton
   if (loading) {
     return (
       <Box
@@ -129,6 +132,7 @@ const HomeSlider = () => {
 
   if (!posts?.length) return null;
 
+  // 📌 Slider render
   return (
     <Box
       sx={{
@@ -146,6 +150,7 @@ const HomeSlider = () => {
         boxShadow: "0 12px 24px rgba(0,0,0,0.1)",
       }}
     >
+      {/* Arrows */}
       <Tooltip title="Önceki">
         <IconButton
           aria-label="Önceki slayt"
@@ -188,8 +193,9 @@ const HomeSlider = () => {
         </IconButton>
       </Tooltip>
 
+      {/* Slider */}
       <Slider ref={sliderRef} {...settings}>
-        {posts.map((post) => (
+        {posts.map((post, index) => (
           <Box
             key={post._id}
             onClick={() => navigate(`/post/${post.slug}`)}
@@ -212,6 +218,9 @@ const HomeSlider = () => {
                 src={post.image || "/default.jpg"}
                 alt={post.title}
                 className="slider-img"
+                loading={index === 0 ? "eager" : "lazy"} // ✅ İlk görsel hemen yüklenir
+                fetchpriority={index === 0 ? "high" : "auto"} // ✅ İlk görsele yüksek öncelik
+                decoding="async"
                 sx={{
                   width: "100%",
                   height: "100%",
@@ -249,6 +258,7 @@ const HomeSlider = () => {
         ))}
       </Slider>
 
+      {/* Aktif dot rengi */}
       <style>{`
         .slick-dots li.slick-active div {
           background-color: ${theme.palette.primary.main} !important;

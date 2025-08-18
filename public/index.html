@@ -11,14 +11,20 @@
     />
     <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
     <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
+
+    <!-- ✅ Kritik domain preconnect -->
     <link rel="preconnect" href="https://materialblog.vercel.app" crossorigin />
     <link rel="dns-prefetch" href="https://materialblog.vercel.app" />
+    <link rel="preconnect" href="https://res.cloudinary.com" crossorigin />
+    <link rel="dns-prefetch" href="https://res.cloudinary.com" />
+
     <title>MUI Blog</title>
-    <!-- fonts stylesheet'ine erken handshake -->
+
+    <!-- ✅ Google Fonts erken handshake -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 
-    <!-- stylesheeti render-blocking olmadan yükle -->
+    <!-- ✅ Google Fonts preload + async stylesheet -->
     <link
       rel="preload"
       as="style"
@@ -31,7 +37,8 @@
         href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap"
       />
     </noscript>
-    <!-- Optimize CSS preload -->
+
+    <!-- ✅ Main CSS preload -->
     <link
       rel="preload"
       href="%PUBLIC_URL%/static/css/main.css"
@@ -41,6 +48,14 @@
     <noscript>
       <link rel="stylesheet" href="%PUBLIC_URL%/static/css/main.css" />
     </noscript>
+
+    <!-- 🚀 LCP görsel preload -->
+    <link
+      rel="preload"
+      as="image"
+      href="https://res.cloudinary.com/da2mjic2e/image/upload/v1755516063/boj1paeueao2.jpg"
+      fetchpriority="high"
+    />
   </head>
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
