@@ -14,7 +14,23 @@
     <link rel="preconnect" href="https://materialblog.vercel.app" crossorigin />
     <link rel="dns-prefetch" href="https://materialblog.vercel.app" />
     <title>MUI Blog</title>
+    <!-- fonts stylesheet'ine erken handshake -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 
+    <!-- stylesheeti render-blocking olmadan yükle -->
+    <link
+      rel="preload"
+      as="style"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap"
+      onload="this.onload=null;this.rel='stylesheet'"
+    />
+    <noscript>
+      <link
+        rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap"
+      />
+    </noscript>
     <!-- Optimize CSS preload -->
     <link
       rel="preload"
