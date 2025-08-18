@@ -1,6 +1,13 @@
 import React, { useEffect, useState, useRef } from "react";
 import Slider from "react-slick";
-import { Box, Typography, IconButton, Skeleton, useTheme } from "@mui/material";
+import {
+  Box,
+  Typography,
+  IconButton,
+  Skeleton,
+  useTheme,
+  Tooltip,
+} from "@mui/material";
 import { ArrowBackIos, ArrowForwardIos } from "@mui/icons-material";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
@@ -9,7 +16,7 @@ import "slick-carousel/slick/slick-theme.css";
 
 const HomeSlider = () => {
   const [posts, setPosts] = useState([]);
-  const [loading, setLoading] = useState(true); // 📌 İlk başta true
+  const [loading, setLoading] = useState(true);
   const sliderRef = useRef();
   const theme = useTheme();
   const navigate = useNavigate();
@@ -146,41 +153,47 @@ const HomeSlider = () => {
       }}
     >
       {/* Arrows */}
-      <IconButton
-        onClick={() => sliderRef.current?.slickPrev()}
-        sx={{
-          position: "absolute",
-          top: "50%",
-          left: 8,
-          transform: "translateY(-50%)",
-          zIndex: 2,
-          bgcolor: "rgba(255,255,255,0.25)",
-          backdropFilter: "blur(6px)",
-          width: 36,
-          height: 36,
-          "&:hover": { bgcolor: "rgba(255,255,255,0.5)" },
-        }}
-      >
-        <ArrowBackIos sx={{ fontSize: "16px", ml: "1px" }} />
-      </IconButton>
+      <Tooltip title="Önceki">
+        <IconButton
+          aria-label="Önceki slayt"
+          onClick={() => sliderRef.current?.slickPrev()}
+          sx={{
+            position: "absolute",
+            top: "50%",
+            left: 8,
+            transform: "translateY(-50%)",
+            zIndex: 2,
+            bgcolor: "rgba(255,255,255,0.25)",
+            backdropFilter: "blur(6px)",
+            width: 36,
+            height: 36,
+            "&:hover": { bgcolor: "rgba(255,255,255,0.5)" },
+          }}
+        >
+          <ArrowBackIos sx={{ fontSize: "16px", ml: "1px" }} />
+        </IconButton>
+      </Tooltip>
 
-      <IconButton
-        onClick={() => sliderRef.current?.slickNext()}
-        sx={{
-          position: "absolute",
-          top: "50%",
-          right: 8,
-          transform: "translateY(-50%)",
-          zIndex: 2,
-          bgcolor: "rgba(255,255,255,0.25)",
-          backdropFilter: "blur(6px)",
-          width: 36,
-          height: 36,
-          "&:hover": { bgcolor: "rgba(255,255,255,0.5)" },
-        }}
-      >
-        <ArrowForwardIos sx={{ fontSize: "16px", mr: "1px" }} />
-      </IconButton>
+      <Tooltip title="Sonraki">
+        <IconButton
+          aria-label="Sonraki slayt"
+          onClick={() => sliderRef.current?.slickNext()}
+          sx={{
+            position: "absolute",
+            top: "50%",
+            right: 8,
+            transform: "translateY(-50%)",
+            zIndex: 2,
+            bgcolor: "rgba(255,255,255,0.25)",
+            backdropFilter: "blur(6px)",
+            width: 36,
+            height: 36,
+            "&:hover": { bgcolor: "rgba(255,255,255,0.5)" },
+          }}
+        >
+          <ArrowForwardIos sx={{ fontSize: "16px", mr: "1px" }} />
+        </IconButton>
+      </Tooltip>
 
       {/* Slider */}
       <Slider ref={sliderRef} {...settings}>

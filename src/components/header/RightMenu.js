@@ -10,6 +10,7 @@ import {
   Snackbar,
   CircularProgress,
   Alert,
+  Tooltip,
 } from "@mui/material";
 import { Search as SearchIcon, Brightness4 } from "@mui/icons-material";
 import { Link, useNavigate } from "react-router-dom";
@@ -84,36 +85,54 @@ const RightMenu = ({
         </>
       )}
 
-      <IconButton color="inherit" onClick={() => setSearchOpen(true)}>
-        <SearchIcon />
-      </IconButton>
+      {/* 🔍 Arama butonu */}
+      <Tooltip title="Ara">
+        <IconButton
+          aria-label="Ara"
+          color="inherit"
+          onClick={() => setSearchOpen(true)}
+        >
+          <SearchIcon />
+        </IconButton>
+      </Tooltip>
 
-      <IconButton color="inherit" onClick={toggleTheme}>
-        <Brightness4 />
-      </IconButton>
+      {/* 🌙 Tema butonu */}
+      <Tooltip title="Tema Değiştir">
+        <IconButton
+          aria-label="Tema değiştir"
+          color="inherit"
+          onClick={toggleTheme}
+        >
+          <Brightness4 />
+        </IconButton>
+      </Tooltip>
 
       {user && (
         <>
-          <IconButton
-            onClick={(e) => setProfileAnchorEl(e.currentTarget)}
-            sx={{ display: { xs: "none", sm: "inline-flex" } }}
-          >
-            <Avatar
-              src={user.profileImage || ""}
-              sx={{
-                width: 32,
-                height: 32,
-                bgcolor: user.profileImage
-                  ? "transparent"
-                  : stringToColor(user.username),
-                fontSize: "0.875rem",
-                color: "white",
-                fontWeight: 600,
-              }}
+          {/* 👤 Profil butonu */}
+          <Tooltip title="Profil Menüsü">
+            <IconButton
+              aria-label="Profil menüsünü aç"
+              onClick={(e) => setProfileAnchorEl(e.currentTarget)}
+              sx={{ display: { xs: "none", sm: "inline-flex" } }}
             >
-              {!user.profileImage && user.username.charAt(0).toUpperCase()}
-            </Avatar>
-          </IconButton>
+              <Avatar
+                src={user.profileImage || ""}
+                sx={{
+                  width: 32,
+                  height: 32,
+                  bgcolor: user.profileImage
+                    ? "transparent"
+                    : stringToColor(user.username),
+                  fontSize: "0.875rem",
+                  color: "white",
+                  fontWeight: 600,
+                }}
+              >
+                {!user.profileImage && user.username.charAt(0).toUpperCase()}
+              </Avatar>
+            </IconButton>
+          </Tooltip>
 
           <Menu
             anchorEl={profileAnchorEl}
