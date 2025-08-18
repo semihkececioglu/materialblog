@@ -21,6 +21,7 @@ import { BASE_URL } from "../config";
 import ReactQuill from "react-quill";
 import Quill from "quill";
 import ImageResize from "quill-image-resize-module-react";
+import useLazyCss from "../hooks/useLazyCss";
 
 // Redux
 import { useDispatch, useSelector } from "react-redux";
@@ -132,9 +133,7 @@ const PostEditorPage = () => {
     severity: "success",
   });
 
-  useEffect(() => {
-    import("react-quill/dist/quill.snow.css");
-  }, []);
+  useLazyCss(() => import("react-quill/dist/quill.snow.css"));
 
   // Kategori ve etiketleri al
   useEffect(() => {

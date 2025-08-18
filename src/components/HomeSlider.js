@@ -11,6 +11,7 @@ import {
 import { ArrowBackIos, ArrowForwardIos } from "@mui/icons-material";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import useLazyCss from "../hooks/useLazyCss";
 
 const HomeSlider = () => {
   const [posts, setPosts] = useState([]);
@@ -19,11 +20,8 @@ const HomeSlider = () => {
   const theme = useTheme();
   const navigate = useNavigate();
 
-  // 📌 Slick CSS sadece bu component açıldığında import ediliyor
-  useEffect(() => {
-    import("slick-carousel/slick/slick.css");
-    import("slick-carousel/slick/slick-theme.css");
-  }, []);
+  useLazyCss(() => import("slick-carousel/slick/slick.css"));
+  useLazyCss(() => import("slick-carousel/slick/slick-theme.css"));
 
   useEffect(() => {
     axios
@@ -77,7 +75,6 @@ const HomeSlider = () => {
     ),
   };
 
-  // 📌 Loading Skeleton
   if (loading) {
     return (
       <Box
@@ -149,7 +146,6 @@ const HomeSlider = () => {
         boxShadow: "0 12px 24px rgba(0,0,0,0.1)",
       }}
     >
-      {/* Arrows */}
       <Tooltip title="Önceki">
         <IconButton
           aria-label="Önceki slayt"
@@ -192,7 +188,6 @@ const HomeSlider = () => {
         </IconButton>
       </Tooltip>
 
-      {/* Slider */}
       <Slider ref={sliderRef} {...settings}>
         {posts.map((post) => (
           <Box
