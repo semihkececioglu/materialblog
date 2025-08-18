@@ -68,7 +68,7 @@ const postSlice = createSlice({
     posts: [],
     selectedPost: null,
     totalPages: 1,
-    loading: false,
+    loading: true,
     error: null,
   },
   reducers: {

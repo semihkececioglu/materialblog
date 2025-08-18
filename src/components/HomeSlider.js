@@ -1,12 +1,6 @@
 import React, { useEffect, useState, useRef } from "react";
 import Slider from "react-slick";
-import {
-  Box,
-  Typography,
-  IconButton,
-  CircularProgress,
-  useTheme,
-} from "@mui/material";
+import { Box, Typography, IconButton, Skeleton, useTheme } from "@mui/material";
 import { ArrowBackIos, ArrowForwardIos } from "@mui/icons-material";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
@@ -15,7 +9,7 @@ import "slick-carousel/slick/slick-theme.css";
 
 const HomeSlider = () => {
   const [posts, setPosts] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(true); // 📌 İlk başta true
   const sliderRef = useRef();
   const theme = useTheme();
   const navigate = useNavigate();
@@ -46,9 +40,7 @@ const HomeSlider = () => {
     responsive: [
       {
         breakpoint: 768,
-        settings: {
-          slidesToShow: 1,
-        },
+        settings: { slidesToShow: 1 },
       },
     ],
     appendDots: (dots) => (
@@ -79,13 +71,62 @@ const HomeSlider = () => {
     ),
   };
 
+  // 📌 Loading Skeleton
   if (loading) {
     return (
-      <Box sx={{ display: "flex", justifyContent: "center", py: 6 }}>
-        <CircularProgress />
+      <Box
+        sx={{
+          position: "relative",
+          borderRadius: 4,
+          overflow: "hidden",
+          px: 2,
+          py: 4,
+          mb: 6,
+          backgroundColor:
+            theme.palette.mode === "dark"
+              ? "rgba(255,255,255,0.02)"
+              : "rgba(255,255,255,0.4)",
+          backdropFilter: "blur(14px)",
+          boxShadow: "0 12px 24px rgba(0,0,0,0.1)",
+        }}
+      >
+        <Box sx={{ display: "flex", gap: 2 }}>
+          {[0, 1].map((i) => (
+            <Box key={i} sx={{ flex: 1 }}>
+              <Skeleton
+                variant="rectangular"
+                height={240}
+                animation="wave"
+                sx={{ borderRadius: 3 }}
+              />
+              <Skeleton
+                variant="rounded"
+                height={36}
+                width="70%"
+                animation="wave"
+                sx={{ mt: 1.5, borderRadius: 2 }}
+              />
+            </Box>
+          ))}
+        </Box>
+        {/* Dots placeholder */}
+        <Box sx={{ display: "flex", justifyContent: "center", mt: 3, gap: 1 }}>
+          {[0, 1, 2].map((d) => (
+            <Skeleton
+              key={d}
+              variant="circular"
+              width={8}
+              height={8}
+              animation="wave"
+            />
+          ))}
+        </Box>
       </Box>
     );
   }
+
+  // 📌 Normal Slider
+  if (!posts?.length) return null;
 
   return (
     <Box
@@ -117,9 +158,7 @@ const HomeSlider = () => {
           backdropFilter: "blur(6px)",
           width: 36,
           height: 36,
-          "&:hover": {
-            bgcolor: "rgba(255,255,255,0.5)",
-          },
+          "&:hover": { bgcolor: "rgba(255,255,255,0.5)" },
         }}
       >
         <ArrowBackIos sx={{ fontSize: "16px", ml: "1px" }} />
@@ -137,9 +176,7 @@ const HomeSlider = () => {
           backdropFilter: "blur(6px)",
           width: 36,
           height: 36,
-          "&:hover": {
-            bgcolor: "rgba(255,255,255,0.5)",
-          },
+          "&:hover": { bgcolor: "rgba(255,255,255,0.5)" },
         }}
       >
         <ArrowForwardIos sx={{ fontSize: "16px", mr: "1px" }} />
@@ -207,7 +244,7 @@ const HomeSlider = () => {
         ))}
       </Slider>
 
-      {/* Dots */}
+      {/* Dots active renk */}
       <style>{`
         .slick-dots li.slick-active div {
           background-color: ${theme.palette.primary.main} !important;
