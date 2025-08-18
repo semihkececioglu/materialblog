@@ -34,29 +34,21 @@ import {
 } from "../redux/interactionSlice";
 
 /* ---------- Görsel yardımcıları ---------- */
-
-// Cloudinary mi?
 const isCloudinary = (url) =>
   typeof url === "string" &&
   url.includes("res.cloudinary.com") &&
   url.includes("/image/upload/");
 
-// Cloudinary URL'ine dönüşüm ekle
 const cld = (url, params) =>
   url.replace("/image/upload/", `/image/upload/${params}/`);
 
-// Kapak için responsive kaynak üret
 const buildHeroSources = (url) => {
   if (!isCloudinary(url)) {
-    return {
-      src: url,
-      srcSet: undefined,
-      sizes: undefined,
-    };
+    return { src: url, srcSet: undefined, sizes: undefined };
   }
-  const w1200 = cld(url, "f_auto,q_auto,c_limit,w_1200");
-  const w768 = cld(url, "f_auto,q_auto,c_limit,w_768");
   const w480 = cld(url, "f_auto,q_auto,c_limit,w_480");
+  const w768 = cld(url, "f_auto,q_auto,c_limit,w_768");
+  const w1200 = cld(url, "f_auto,q_auto,c_limit,w_1200");
   return {
     src: w1200,
     srcSet: `${w480} 480w, ${w768} 768w, ${w1200} 1200w`,
@@ -64,22 +56,18 @@ const buildHeroSources = (url) => {
   };
 };
 
-// İçerik HTML'indeki <img> taglarını optimize et
+// İçerik HTML içindeki resimleri optimize et
 const optimizeHtmlImages = (html) => {
   if (!html) return "";
-
   return html.replace(
     /<img([^>]+)src=["']([^"']+)["']([^>]*)>/gi,
     (full, pre, src, post) => {
       let newSrc = src;
-      // Cloudinary ise küçült + modern format + kalite
       if (isCloudinary(src)) {
         newSrc = cld(src, "f_auto,q_auto,c_limit,w_1200");
       }
-      // loading/decoding ekle; varsa üzerine yazmayalım diye basit kontrol
       const hasLoading = /loading=/.test(full);
       const hasDecoding = /decoding=/.test(full);
-
       return `<img${pre}src="${newSrc}"${hasLoading ? "" : ' loading="lazy"'}${
         hasDecoding ? "" : ' decoding="async"'
       }${post}>`;
@@ -106,12 +94,10 @@ function PostDetail() {
     };
   }, [dispatch, slug]);
 
-  // Scroll to top
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [slug]);
 
-  // Interaction verileri
   useEffect(() => {
     if (post?._id) {
       dispatch(fetchInteractionData({ postId: post._id, userId: user?._id }));
@@ -120,7 +106,6 @@ function PostDetail() {
     }
   }, [post?._id, user?._id, dispatch]);
 
-  // EmbeddedInteractionBar görünürlüğü
   useEffect(() => {
     const handleScroll = () => {
       const postPaper = document.getElementById("post-paper");
@@ -129,11 +114,9 @@ function PostDetail() {
       const paperBottom = postPaper.offsetTop + postPaper.offsetHeight;
       setShowEmbeddedBar(scrollBottom >= paperBottom - 50);
     };
-
     window.addEventListener("scroll", handleScroll);
     window.addEventListener("resize", handleScroll);
     handleScroll();
-
     return () => {
       window.removeEventListener("scroll", handleScroll);
       window.removeEventListener("resize", handleScroll);
@@ -192,27 +175,20 @@ function PostDetail() {
     month: "long",
     day: "numeric",
   });
-
   const readingTime = Math.ceil(post.content.split(" ").length / 150);
-
   const author = post.user || {
     name: "Bilinmeyen",
     username: "anonymous",
     profileImage: "",
   };
-
   const currentIndex = allPosts.findIndex((p) => p._id === post._id);
   const prevPost = allPosts[currentIndex - 1];
   const nextPost = allPosts[currentIndex + 1];
-
   const relatedPosts = allPosts
     .filter((p) => p.category === post.category && p._id !== post._id)
     .slice(0, 3);
 
-  // --- Kapak görseli kaynakları ---
   const hero = post.image ? buildHeroSources(post.image) : null;
-
-  // --- İçerik HTML optimize ---
   const optimizedHtml = optimizeHtmlImages(post.content);
 
   return (
@@ -225,7 +201,6 @@ function PostDetail() {
         }}
       >
         <ScrollProgressBar />
-
         <Box sx={{ flex: 3 }}>
           <Paper
             id="post-paper"
@@ -265,7 +240,6 @@ function PostDetail() {
                   mb: 3,
                   borderRadius: 2,
                   overflow: "hidden",
-                  // CLS'yi önlemek için alan ayır
                   aspectRatio: "1200/630",
                   maxHeight: 430,
                   "& img": {
@@ -285,7 +259,6 @@ function PostDetail() {
                   alt={post.title}
                   width={1200}
                   height={630}
-                  // LCP için:
                   fetchpriority="high"
                   decoding="async"
                 />
@@ -341,6 +314,7 @@ function PostDetail() {
             )}
           </Paper>
 
+          {/* Prev/Next */}
           <Box
             sx={{
               mt: 6,
@@ -364,10 +338,7 @@ function PostDetail() {
                   display: "flex",
                   alignItems: "center",
                   gap: 1,
-                  "&:hover": {
-                    bgcolor: "primary.light",
-                    color: "white",
-                  },
+                  "&:hover": { bgcolor: "primary.light", color: "white" },
                 }}
               >
                 <ArrowBackIosNewIcon fontSize="small" />
@@ -389,10 +360,7 @@ function PostDetail() {
                   justifyContent: "flex-end",
                   alignItems: "center",
                   gap: 1,
-                  "&:hover": {
-                    bgcolor: "primary.light",
-                    color: "white",
-                  },
+                  "&:hover": { bgcolor: "primary.light", color: "white" },
                 }}
               >
                 {nextPost.title}
@@ -401,6 +369,7 @@ function PostDetail() {
             )}
           </Box>
 
+          {/* Related */}
           {relatedPosts.length > 0 && (
             <Box id="recommendations" sx={{ mt: 6 }}>
               <Typography variant="h6" gutterBottom>
@@ -410,10 +379,7 @@ function PostDetail() {
                 {relatedPosts.map((related) => (
                   <Box
                     key={related._id}
-                    sx={{
-                      flex: "1 1 calc(33.333% - 20px)",
-                      minWidth: "250px",
-                    }}
+                    sx={{ flex: "1 1 calc(33.333% - 20px)", minWidth: "250px" }}
                   >
                     <PostCard post={related} />
                   </Box>
