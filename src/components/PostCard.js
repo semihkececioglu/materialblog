@@ -27,41 +27,37 @@ const formatDate = (isoString) => {
   return new Date(isoString).toLocaleDateString("tr-TR", options);
 };
 
-/** Cloudinary URL'ine dönüşüm (transform) ekle. */
+/** Cloudinary mi? */
+const isCloudinary = (url) =>
+  typeof url === "string" &&
+  url.includes("res.cloudinary.com") &&
+  url.includes("/image/upload/");
+
+/** Cloudinary URL'ine dönüşüm (KESKİN PROFİL) */
 const buildCloudinaryUrl = (url, w) => {
-  if (!url) return "";
-  try {
-    const isCloudinary =
-      url.includes("res.cloudinary.com") && url.includes("/image/upload/");
-    if (!isCloudinary) return url;
-    return url.replace(
-      "/image/upload/",
-      `/image/upload/f_auto,q_auto,c_limit,w_${w}/`
-    );
-  } catch {
-    return url;
-  }
+  if (!url || !isCloudinary(url)) return url || "";
+  // Kart için ideal: c_fill,g_auto => kadrajı doldur; e_sharpen => hafif netlik
+  return url.replace(
+    "/image/upload/",
+    `/image/upload/f_auto,q_auto:best,dpr_auto,c_fill,g_auto,w_${w},e_sharpen/`
+  );
 };
 
-/** srcset & sizes üretici – Cloudinary için */
+/** srcset & sizes üretici – Cloudinary için (400/600/900) */
 const buildResponsive = (url) => {
-  if (!url) return { src: url, srcSet: undefined, sizes: undefined };
+  if (!url) return { src: "", srcSet: undefined, sizes: undefined };
+  if (!isCloudinary(url))
+    return { src: url, srcSet: undefined, sizes: undefined };
 
-  const w360 = buildCloudinaryUrl(url, 360);
-  const w480 = buildCloudinaryUrl(url, 480);
-  const w768 = buildCloudinaryUrl(url, 768);
-  const w1024 = buildCloudinaryUrl(url, 1024);
+  const w400 = buildCloudinaryUrl(url, 400);
+  const w600 = buildCloudinaryUrl(url, 600);
+  const w900 = buildCloudinaryUrl(url, 900);
 
   return {
-    src: w480, // default src orta boy
-    srcSet: `
-      ${w360} 360w,
-      ${w480} 480w,
-      ${w768} 768w,
-      ${w1024} 1024w
-    `,
-    // ekran genişliğine göre gerçek render boyutlarını tarif et
-    sizes: "(max-width: 600px) 100vw, (max-width: 1200px) 50vw, 33vw",
+    src: w600, // varsayılan orta boy
+    srcSet: `${w400} 400w, ${w600} 600w, ${w900} 900w`,
+    // kart düzenine uygun boyutlar
+    sizes: "(max-width: 600px) 100vw, 50vw",
   };
 };
 

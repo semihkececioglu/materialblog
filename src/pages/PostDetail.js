@@ -22,6 +22,7 @@ import TableOfContents from "../components/postDetail/TableOfContents";
 import slugify from "../utils/slugify";
 import SidebarSkeleton from "../components/skeletons/SidebarSkeleton";
 import PostDetailSkeleton from "../components/skeletons/PostDetailSkeleton";
+
 import { useDispatch, useSelector } from "react-redux";
 import {
   fetchPostBySlug,
@@ -33,36 +34,41 @@ import {
   resetInteraction,
 } from "../redux/interactionSlice";
 
-/* ---------- Görsel yardımcıları (güncel) ---------- */
+/* ---------- Görsel yardımcıları (KESKİN PROFİL) ---------- */
 const isCloudinary = (url) =>
   typeof url === "string" &&
   url.includes("res.cloudinary.com") &&
   url.includes("/image/upload/");
 
-/** Cloudinary param ekleyici (q_auto:good + dpr_auto default) */
+/** Temel dönüştürücü: keskin profil (q_auto:best + dpr_auto) */
 const cld = (url, params) =>
   url.replace(
     "/image/upload/",
-    `/image/upload/f_auto,q_auto:good,dpr_auto,${params}/`
+    `/image/upload/f_auto,q_auto:best,dpr_auto,${params}/`
   );
 
-/** srcset üretici */
-const buildSrcSet = (url, widths = [800, 1200, 1600, 2000]) =>
-  widths.map((w) => `${cld(url, `c_limit,w_${w}`)} ${w}w`).join(", ");
+/** srcset üretici (c_fit ile sığdır, upscaleye izin ver) */
+const buildSrcSet = (url, widths) =>
+  widths.map((w) => `${cld(url, `c_fit,w_${w}`)} ${w}w`).join(", ");
 
-/** Kapak görseli kaynakları */
+/** HERO (kapak) kaynakları — kadrajı doldur, kompozisyonu koru, hafif netleştir */
 const buildHeroSources = (url) => {
   if (!isCloudinary(url)) {
     return { src: url, srcSet: undefined, sizes: undefined };
   }
   return {
-    src: cld(url, "c_limit,w_1600"),
-    srcSet: buildSrcSet(url, [800, 1200, 1600, 2000]),
+    src: cld(url, "c_fill,g_auto,w_1600,e_sharpen"),
+    srcSet: [
+      `${cld(url, "c_fill,g_auto,w_1000,e_sharpen")} 1000w`,
+      `${cld(url, "c_fill,g_auto,w_1400,e_sharpen")} 1400w`,
+      `${cld(url, "c_fill,g_auto,w_1600,e_sharpen")} 1600w`,
+      `${cld(url, "c_fill,g_auto,w_2000,e_sharpen")} 2000w`,
+    ].join(", "),
     sizes: "(max-width: 900px) 100vw, 900px",
   };
 };
 
-// İçerik HTML içindeki resimleri optimize et (src + srcset + lazy)
+/** İçerik HTML içindeki <img> etiketlerini optimize et (src+srcset+lazy/async) */
 const optimizeHtmlImages = (html) => {
   if (!html) return "";
   return html.replace(
@@ -72,12 +78,14 @@ const optimizeHtmlImages = (html) => {
       let extra = "";
 
       if (isCloudinary(src)) {
-        // Ana kaynak (1600w) + srcset/sizes
-        newSrc = cld(src, "c_limit,w_1600");
+        // İçerikte oranı koru, upscaleye izin ver; hafif netleştir.
+        newSrc = cld(src, "c_fit,w_1600,e_sharpen");
+
         const hasSrcSet = /\ssrcset=/.test(full);
         const hasSizes = /\ssizes=/.test(full);
         if (!hasSrcSet) {
-          extra += ` srcset="${buildSrcSet(src, [800, 1200, 1600, 2000])}"`;
+          const srcSet = buildSrcSet(src, [800, 1200, 1600, 2000]);
+          extra += ` srcset="${srcSet}"`;
         }
         if (!hasSizes) {
           extra += ` sizes="(max-width: 900px) 100vw, 900px"`;
