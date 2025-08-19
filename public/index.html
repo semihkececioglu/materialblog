@@ -12,7 +12,7 @@
     <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
     <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
 
-    <!-- ✅ Kritik domain preconnect -->
+    <!-- Kritk domain preconnect -->
     <link rel="preconnect" href="https://materialblog.vercel.app" crossorigin />
     <link rel="dns-prefetch" href="https://materialblog.vercel.app" />
     <link rel="preconnect" href="https://res.cloudinary.com" crossorigin />
@@ -20,34 +20,50 @@
 
     <title>MUI Blog</title>
 
-    <!-- ✅ Google Fonts erken handshake -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <!-- ✅ SELF-HOST FONT PRELOAD (bloklamaz) -->
+    <link
+      rel="preload"
+      as="font"
+      type="font/woff2"
+      crossorigin
+      href="%PUBLIC_URL%/fonts/inter-latin-400.woff2"
+    />
+    <link
+      rel="preload"
+      as="font"
+      type="font/woff2"
+      crossorigin
+      href="%PUBLIC_URL%/fonts/inter-latin-600.woff2"
+    />
+    <link
+      rel="preload"
+      as="font"
+      type="font/woff2"
+      crossorigin
+      href="%PUBLIC_URL%/fonts/inter-latin-700.woff2"
+    />
 
-    <!-- ✅ Google Fonts preload + async stylesheet -->
+    <!-- ✅ FONT FACE tanımları için küçük bir CSS (async yüklenir) -->
     <link
       rel="preload"
       as="style"
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap"
+      href="%PUBLIC_URL%/fonts/fonts.css"
       onload="this.onload=null;this.rel='stylesheet'"
     />
-    <noscript>
-      <link
-        rel="stylesheet"
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap"
-      />
-    </noscript>
+    <noscript
+      ><link rel="stylesheet" href="%PUBLIC_URL%/fonts/fonts.css"
+    /></noscript>
 
-    <!-- ✅ Main CSS preload -->
+    <!-- ✅ Main CSS non‑blocking -->
     <link
       rel="preload"
       href="%PUBLIC_URL%/static/css/main.css"
       as="style"
       onload="this.onload=null;this.rel='stylesheet'"
     />
-    <noscript>
-      <link rel="stylesheet" href="%PUBLIC_URL%/static/css/main.css" />
-    </noscript>
+    <noscript
+      ><link rel="stylesheet" href="%PUBLIC_URL%/static/css/main.css"
+    /></noscript>
 
     <!-- 🚀 LCP görsel preload -->
     <link
@@ -56,6 +72,20 @@
       href="https://res.cloudinary.com/da2mjic2e/image/upload/v1755516063/boj1paeueao2.jpg"
       fetchpriority="high"
     />
+
+    <!-- 🧩 Kritik, minik inline CSS: fallback font + layout flash’ını azaltır -->
+    <style>
+      :root {
+        --ff: Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial,
+          "Noto Sans", "Helvetica Neue", sans-serif;
+      }
+      html {
+        font-family: var(--ff);
+      }
+      body {
+        margin: 0;
+      }
+    </style>
   </head>
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
