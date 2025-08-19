@@ -20,6 +20,7 @@ import {
   fetchLatestComments,
   fetchLatestPosts,
 } from "../redux/dashboardSlice";
+import GAStatsPanel from "./GAStatsPanel";
 
 const DashboardPage = () => {
   const dispatch = useDispatch();
@@ -266,18 +267,7 @@ const DashboardPage = () => {
         </Box>
       </Box>
       {/* Sol: Grafik/istatistik kutusu */}
-      <Box sx={{ flex: { xs: "100%", md: "66.66%" } }}>
-        <Typography variant="h6" fontWeight="bold" gutterBottom>
-          İSTATİSTİKLER
-        </Typography>
-        <Paper
-          sx={{
-            height: 400,
-            borderRadius: 3,
-            backgroundColor: theme.palette.mode === "dark" ? "#222" : "#e0e0e0",
-          }}
-        />
-      </Box>
+      <GAStatsPanel />
     </Box>
   );
 };
