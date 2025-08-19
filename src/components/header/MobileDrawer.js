@@ -3,12 +3,12 @@ import {
   Drawer,
   Avatar,
   List,
-  ListItem,
   ListItemText,
   Collapse,
   Divider,
   Box,
   useTheme,
+  ListItemButton,
 } from "@mui/material";
 import { ExpandLess, ExpandMore } from "@mui/icons-material";
 import { Link } from "react-router-dom";
@@ -39,6 +39,10 @@ const MobileDrawer = ({
   const hoverBg = isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)";
   const dividerColor = isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)";
 
+  // id’ler: aria-controls hedefleri
+  const catPanelId = "drawer-categories-panel";
+  const userPanelId = "drawer-user-panel";
+
   return (
     <Drawer
       anchor="left"
@@ -54,6 +58,8 @@ const MobileDrawer = ({
           boxShadow: "0 8px 32px rgba(0,0,0,0.2)",
           borderRadius: "0 12px 12px 0",
         },
+        // Drawer’ın kendisine isim veriyoruz
+        "aria-label": "Ana menü çekmecesi",
       }}
     >
       <MotionBox
@@ -64,17 +70,15 @@ const MobileDrawer = ({
       >
         <List>
           {/* Ana Sayfa */}
-          <ListItem
-            button
+          <ListItemButton
             component={Link}
             to="/"
+            aria-label="Ana sayfaya git"
             onClick={() => {
               window.scrollTo(0, 0);
               setDrawerOpen(false);
             }}
-            sx={{
-              "&:hover": { backgroundColor: hoverBg },
-            }}
+            sx={{ "&:hover": { backgroundColor: hoverBg } }}
           >
             <ListItemText
               primary="Ana Sayfa"
@@ -83,39 +87,40 @@ const MobileDrawer = ({
                 fontWeight: 500,
               }}
             />
-          </ListItem>
+          </ListItemButton>
 
-          {/* Kategoriler */}
-          <ListItem
-            button
+          {/* Kategoriler (açılır) */}
+          <ListItemButton
             onClick={() => setDrawerCatOpen(!drawerCatOpen)}
+            aria-label="Kategorileri aç"
+            aria-expanded={drawerCatOpen ? "true" : "false"}
+            aria-controls={catPanelId}
             sx={{ "&:hover": { backgroundColor: hoverBg } }}
           >
             <ListItemText primary="Kategoriler" />
             {drawerCatOpen ? <ExpandLess /> : <ExpandMore />}
-          </ListItem>
+          </ListItemButton>
+
           <Collapse in={drawerCatOpen} timeout="auto" unmountOnExit>
-            <List component="div" disablePadding>
+            <List component="div" disablePadding id={catPanelId}>
               {categories.map((cat) => (
-                <ListItem
+                <ListItemButton
                   key={cat}
-                  button
                   sx={{
                     pl: 4,
                     borderRadius: 2,
                     mx: 1,
                     my: 0.5,
-                    "&:hover": {
-                      backgroundColor: hoverBg,
-                    },
+                    "&:hover": { backgroundColor: hoverBg },
                   }}
+                  aria-label={`Kategori: ${cat}`}
                   onClick={() => {
                     handleCategoryClick(cat);
                     setDrawerOpen(false);
                   }}
                 >
                   <ListItemText primary={cat} />
-                </ListItem>
+                </ListItemButton>
               ))}
             </List>
           </Collapse>
@@ -125,10 +130,10 @@ const MobileDrawer = ({
           {/* Kullanıcı Bölümü */}
           {!user ? (
             <>
-              <ListItem
-                button
+              <ListItemButton
                 component={Link}
                 to="/login"
+                aria-label="Giriş yap sayfasına git"
                 onClick={() => {
                   window.scrollTo(0, 0);
                   setDrawerOpen(false);
@@ -136,11 +141,12 @@ const MobileDrawer = ({
                 sx={{ "&:hover": { backgroundColor: hoverBg } }}
               >
                 <ListItemText primary="Giriş Yap" />
-              </ListItem>
-              <ListItem
-                button
+              </ListItemButton>
+
+              <ListItemButton
                 component={Link}
                 to="/register"
+                aria-label="Kayıt ol sayfasına git"
                 onClick={() => {
                   window.scrollTo(0, 0);
                   setDrawerOpen(false);
@@ -148,14 +154,17 @@ const MobileDrawer = ({
                 sx={{ "&:hover": { backgroundColor: hoverBg } }}
               >
                 <ListItemText primary="Kayıt Ol" />
-              </ListItem>
+              </ListItemButton>
             </>
           ) : (
             <>
-              {/* 🔽 Üst: Avatar + Kullanıcı Adı (tıklanabilir menü başlığı) */}
-              <ListItem
-                button
+              {/* Avatar + Kullanıcı Adı (açılır başlık) */}
+              <ListItemButton
                 onClick={() => setDrawerUserOpen(!drawerUserOpen)}
+                aria-label="Kullanıcı menüsünü aç"
+                aria-expanded={drawerUserOpen ? "true" : "false"}
+                aria-controls={userPanelId}
+                aria-haspopup="true"
                 sx={{
                   "&:hover": { backgroundColor: hoverBg },
                   display: "flex",
@@ -165,6 +174,7 @@ const MobileDrawer = ({
               >
                 <Avatar
                   src={user.profileImage || ""}
+                  alt={`${user.username} profil resmi`}
                   sx={{
                     width: 32,
                     height: 32,
@@ -184,67 +194,61 @@ const MobileDrawer = ({
                   }}
                 />
                 {drawerUserOpen ? <ExpandLess /> : <ExpandMore />}
-              </ListItem>
+              </ListItemButton>
 
-              {/* 🔽 Alt: Açılan menü */}
+              {/* Kullanıcı menüsü */}
               <Collapse in={drawerUserOpen} timeout="auto" unmountOnExit>
-                <List component="div" disablePadding>
-                  <ListItem
-                    button
+                <List component="div" disablePadding id={userPanelId}>
+                  <ListItemButton
                     sx={{
                       pl: 4,
                       borderRadius: 2,
                       mx: 1,
                       my: 0.5,
-                      "&:hover": {
-                        backgroundColor: hoverBg,
-                      },
+                      "&:hover": { backgroundColor: hoverBg },
                     }}
+                    aria-label="Profili görüntüle"
                     onClick={() => {
                       handleProfileNavigate("");
                       setDrawerOpen(false);
                     }}
                   >
                     <ListItemText primary="Profili Görüntüle" />
-                  </ListItem>
+                  </ListItemButton>
 
-                  <ListItem
-                    button
+                  <ListItemButton
                     sx={{
                       pl: 4,
                       borderRadius: 2,
                       mx: 1,
                       my: 0.5,
-                      "&:hover": {
-                        backgroundColor: hoverBg,
-                      },
+                      "&:hover": { backgroundColor: hoverBg },
                     }}
+                    aria-label="Profili düzenle"
                     onClick={() => {
                       handleProfileNavigate("/edit");
                       setDrawerOpen(false);
                     }}
                   >
                     <ListItemText primary="Profili Düzenle" />
-                  </ListItem>
+                  </ListItemButton>
 
-                  <ListItem
-                    button
+                  <ListItemButton
                     sx={{
                       pl: 4,
                       borderRadius: 2,
                       mx: 1,
                       my: 0.5,
-                      "&:hover": {
-                        backgroundColor: hoverBg,
-                      },
+                      "&:hover": { backgroundColor: hoverBg },
                     }}
+                    aria-label="Çıkış yap"
                     onClick={() => {
                       dispatch({ type: "user/logout" });
                       setDrawerOpen(false);
                     }}
                   >
                     <ListItemText primary="Çıkış Yap" />
-                  </ListItem>
+                  </ListItemButton>
                 </List>
               </Collapse>
             </>
