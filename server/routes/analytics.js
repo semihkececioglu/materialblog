@@ -53,7 +53,7 @@ router.get("/timeseries", async (req, res) => {
   }
 });
 
-// Örnek: En çok ziyaret edilen sayfalar
+// Top Pages
 router.get("/top-pages", async (req, res) => {
   try {
     const property = await getPropertyId();
