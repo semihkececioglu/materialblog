@@ -27,7 +27,7 @@ const formatDate = (isoString) => {
   return new Date(isoString).toLocaleDateString("tr-TR", options);
 };
 
-/** Cloudinary URL'ine dönüşüm (transform) ekle - İyileştirilmiş */
+/** Cloudinary URL'ine dönüşüm (transform) ekle - Çok Agresif Optimizasyon */
 const buildCloudinaryUrl = (url, w, h = null, quality = "auto") => {
   if (!url) return "";
   try {
@@ -36,12 +36,12 @@ const buildCloudinaryUrl = (url, w, h = null, quality = "auto") => {
 
     if (!isCloudinary) return url;
 
-    // Daha agresif optimizasyon parametreleri
+    // Çok agresif optimizasyon - dosya boyutunu minimize et
     let transforms = `f_auto,q_${quality},c_fill,w_${w}`;
     if (h) transforms += `,h_${h}`;
 
-    // Ek optimizasyonlar
-    transforms += ",g_auto,dpr_auto"; // Otomatik odak ve DPR
+    // Maksimum sıkıştırma parametreleri
+    transforms += ",g_auto,dpr_auto,fl_progressive,fl_lossy";
 
     return url.replace("/upload/", `/upload/${transforms}/`);
   } catch {
@@ -49,27 +49,27 @@ const buildCloudinaryUrl = (url, w, h = null, quality = "auto") => {
   }
 };
 
-/** srcset & sizes üretici – Daha küçük boyutlar */
+/** srcset & sizes üretici – Maksimum Optimizasyon */
 const buildResponsive = (url) => {
   if (!url) return { src: url, srcSet: undefined, sizes: undefined };
 
-  // Daha küçük boyutlar - card içinde 140px yükseklik için uygun
-  const w240 = buildCloudinaryUrl(url, 240, 140, "60"); // Düşük kalite küçük ekranlar için
-  const w320 = buildCloudinaryUrl(url, 320, 140, "70");
-  const w480 = buildCloudinaryUrl(url, 480, 140, "80");
-  const w640 = buildCloudinaryUrl(url, 640, 140, "auto");
+  // Çok küçük boyutlar ve düşük kalite
+  const w200 = buildCloudinaryUrl(url, 200, 120, "50"); // En küçük
+  const w280 = buildCloudinaryUrl(url, 280, 140, "55"); // Küçük
+  const w400 = buildCloudinaryUrl(url, 400, 160, "60"); // Orta
+  const w480 = buildCloudinaryUrl(url, 480, 180, "65"); // Büyük
 
   return {
-    src: w320, // Daha küçük default
+    src: w280, // Çok küçük default
     srcSet: `
-      ${w240} 240w,
-      ${w320} 320w,
-      ${w480} 480w,
-      ${w640} 640w
+      ${w200} 200w,
+      ${w280} 280w,
+      ${w400} 400w,
+      ${w480} 480w
     `.trim(),
-    // Card genişliğine göre ayarlanmış sizes
+    // Daha küçük boyutlara odaklı sizes
     sizes:
-      "(max-width: 480px) 240px, (max-width: 768px) 320px, (max-width: 1200px) 480px, 640px",
+      "(max-width: 400px) 200px, (max-width: 600px) 280px, (max-width: 900px) 400px, 480px",
   };
 };
 
@@ -116,8 +116,8 @@ const PostCard = ({ post, priority = false }) => {
       {rawImageUrl ? (
         <CardMedia
           component="img"
-          // CLS için sabit boyutlar
-          width={320}
+          // CLS için sabit boyutlar - küçültüldü
+          width={280}
           height={140}
           image={responsive.src}
           srcSet={responsive.srcSet}
