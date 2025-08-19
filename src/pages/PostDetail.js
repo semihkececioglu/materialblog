@@ -33,44 +33,63 @@ import {
   resetInteraction,
 } from "../redux/interactionSlice";
 
-/* ---------- Görsel yardımcıları ---------- */
+/* ---------- Görsel yardımcıları (güncel) ---------- */
 const isCloudinary = (url) =>
   typeof url === "string" &&
   url.includes("res.cloudinary.com") &&
   url.includes("/image/upload/");
 
+/** Cloudinary param ekleyici (q_auto:good + dpr_auto default) */
 const cld = (url, params) =>
-  url.replace("/image/upload/", `/image/upload/${params}/`);
+  url.replace(
+    "/image/upload/",
+    `/image/upload/f_auto,q_auto:good,dpr_auto,${params}/`
+  );
 
+/** srcset üretici */
+const buildSrcSet = (url, widths = [800, 1200, 1600, 2000]) =>
+  widths.map((w) => `${cld(url, `c_limit,w_${w}`)} ${w}w`).join(", ");
+
+/** Kapak görseli kaynakları */
 const buildHeroSources = (url) => {
   if (!isCloudinary(url)) {
     return { src: url, srcSet: undefined, sizes: undefined };
   }
-  const w480 = cld(url, "f_auto,q_auto,c_limit,w_480");
-  const w768 = cld(url, "f_auto,q_auto,c_limit,w_768");
-  const w1200 = cld(url, "f_auto,q_auto,c_limit,w_1200");
   return {
-    src: w1200,
-    srcSet: `${w480} 480w, ${w768} 768w, ${w1200} 1200w`,
+    src: cld(url, "c_limit,w_1600"),
+    srcSet: buildSrcSet(url, [800, 1200, 1600, 2000]),
     sizes: "(max-width: 900px) 100vw, 900px",
   };
 };
 
-// İçerik HTML içindeki resimleri optimize et
+// İçerik HTML içindeki resimleri optimize et (src + srcset + lazy)
 const optimizeHtmlImages = (html) => {
   if (!html) return "";
   return html.replace(
-    /<img([^>]+)src=["']([^"']+)["']([^>]*)>/gi,
+    /<img([^>]*?)\s+src=["']([^"']+)["']([^>]*)>/gi,
     (full, pre, src, post) => {
       let newSrc = src;
+      let extra = "";
+
       if (isCloudinary(src)) {
-        newSrc = cld(src, "f_auto,q_auto,c_limit,w_1200");
+        // Ana kaynak (1600w) + srcset/sizes
+        newSrc = cld(src, "c_limit,w_1600");
+        const hasSrcSet = /\ssrcset=/.test(full);
+        const hasSizes = /\ssizes=/.test(full);
+        if (!hasSrcSet) {
+          extra += ` srcset="${buildSrcSet(src, [800, 1200, 1600, 2000])}"`;
+        }
+        if (!hasSizes) {
+          extra += ` sizes="(max-width: 900px) 100vw, 900px"`;
+        }
       }
-      const hasLoading = /loading=/.test(full);
-      const hasDecoding = /decoding=/.test(full);
-      return `<img${pre}src="${newSrc}"${hasLoading ? "" : ' loading="lazy"'}${
+
+      const hasLoading = /\sloading=/.test(full);
+      const hasDecoding = /\sdecoding=/.test(full);
+
+      return `<img${pre} src="${newSrc}"${hasLoading ? "" : ' loading="lazy"'}${
         hasDecoding ? "" : ' decoding="async"'
-      }${post}>`;
+      }${extra}${post}>`;
     }
   );
 };
