@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import {
   TextField,
   Box,
@@ -18,9 +18,10 @@ import {
 import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 import { BASE_URL } from "../config";
-import ReactQuill from "react-quill";
-import Quill from "quill";
-import ImageResize from "quill-image-resize-module-react";
+// ❌ ReactQuill/Quill/ImageResize'ı ESKİDEN burada import ediyorduk
+// import ReactQuill from "react-quill";
+// import Quill from "quill";
+// import ImageResize from "quill-image-resize-module-react";
 import useLazyCss from "../hooks/useLazyCss";
 
 // Redux
@@ -32,13 +33,14 @@ import {
   updatePost,
 } from "../redux/postSlice";
 
-Quill.register("modules/imageResize", ImageResize);
+// ✅ ReactQuill artık lazy
+const ReactQuill = React.lazy(() => import("react-quill"));
 
 // 🔧 Cloudinary upload
 const uploadToCloudinary = async (file) => {
   const formData = new FormData();
   formData.append("file", file);
-  formData.append("upload_preset", "materialblog"); // senin preset adın
+  formData.append("upload_preset", "materialblog");
   const res = await axios.post(
     "https://api.cloudinary.com/v1_1/da2mjic2e/image/upload",
     formData
@@ -46,52 +48,7 @@ const uploadToCloudinary = async (file) => {
   return res.data.secure_url;
 };
 
-// 🔧 Quill toolbar
-const quillModules = {
-  toolbar: {
-    container: [
-      [{ header: [1, 2, 3, false] }],
-      ["bold", "italic", "underline", "strike"],
-      [{ list: "ordered" }, { list: "bullet" }],
-      ["blockquote", "code-block"],
-      ["link", "image"],
-      ["clean"],
-    ],
-    handlers: {
-      image: function () {
-        const input = document.createElement("input");
-        input.setAttribute("type", "file");
-        input.setAttribute("accept", "image/*");
-        input.click();
-
-        input.onchange = async () => {
-          const file = input.files[0];
-          if (!file) return;
-          try {
-            const url = await uploadToCloudinary(file);
-            // 🔁 optimize edilmiş versiyonu kullan
-            const optimized = url.includes("/image/upload/")
-              ? url.replace(
-                  "/image/upload/",
-                  "/image/upload/f_auto,q_auto,c_limit,w_1200/"
-                )
-              : url;
-            const range = this.quill.getSelection(true);
-            this.quill.insertEmbed(range.index, "image", optimized, "user");
-            this.quill.setSelection(range.index + 1, 0, "user");
-          } catch (err) {
-            console.error("İçerik görseli yüklenemedi:", err);
-          }
-        };
-      },
-    },
-  },
-  imageResize: {
-    parchment: Quill.import("parchment"),
-    modules: ["Resize", "DisplaySize", "Toolbar"],
-  },
-};
-
+// ✅ Formats sabit kalabilir (bundle etkisi minimal)
 const quillFormats = [
   "header",
   "bold",
@@ -111,7 +68,6 @@ const PostEditorPage = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const user = useSelector((state) => state.user.currentUser);
-
   const loading = useSelector((state) => state.posts.loading);
 
   const [form, setForm] = useState({
@@ -133,7 +89,15 @@ const PostEditorPage = () => {
     severity: "success",
   });
 
-  useLazyCss(() => import("react-quill/dist/quill.snow.css"));
+  // 🔽 Editor yükleninceye kadar modülleri boş tutacağız
+  const [editorReady, setEditorReady] = useState(false);
+  const [quillModules, setQuillModules] = useState(undefined);
+
+  // ✅ Quill CSS'ini sadece editor görünürken yükle
+  useLazyCss(
+    () => (editorReady ? import("react-quill/dist/quill.snow.css") : null),
+    [editorReady]
+  );
 
   // Kategori ve etiketleri al
   useEffect(() => {
@@ -185,9 +149,78 @@ const PostEditorPage = () => {
     };
 
     fetchData();
-
     return () => dispatch(clearSelectedPost());
   }, [id, dispatch]);
+
+  // ✅ QUILL ve image-resize modülünü dinamik import + register
+  useEffect(() => {
+    let mounted = true;
+
+    const loadEditor = async () => {
+      // Quill ve image-resize modülü sadece bu sayfada gerektiğinde iner
+      const [{ default: Quill }, { default: ImageResize }] = await Promise.all([
+        import("quill"),
+        import("quill-image-resize-module-react"),
+      ]);
+
+      // register
+      Quill.register("modules/imageResize", ImageResize);
+
+      // handler içinde ihtiyaç duyacağımız upload fonksiyonu ve Quill referansı
+      const imageHandler = function () {
+        const input = document.createElement("input");
+        input.setAttribute("type", "file");
+        input.setAttribute("accept", "image/*");
+        input.click();
+
+        input.onchange = async () => {
+          const file = input.files && input.files[0];
+          if (!file) return;
+          try {
+            const url = await uploadToCloudinary(file);
+            const optimized = url.includes("/image/upload/")
+              ? url.replace(
+                  "/image/upload/",
+                  "/image/upload/f_auto,q_auto,c_limit,w_1200/"
+                )
+              : url;
+            const range = this.quill.getSelection(true);
+            this.quill.insertEmbed(range.index, "image", optimized, "user");
+            this.quill.setSelection(range.index + 1, 0, "user");
+          } catch (err) {
+            console.error("İçerik görseli yüklenemedi:", err);
+          }
+        };
+      };
+
+      if (!mounted) return;
+
+      setQuillModules({
+        toolbar: {
+          container: [
+            [{ header: [1, 2, 3, false] }],
+            ["bold", "italic", "underline", "strike"],
+            [{ list: "ordered" }, { list: "bullet" }],
+            ["blockquote", "code-block"],
+            ["link", "image"],
+            ["clean"],
+          ],
+          handlers: { image: imageHandler },
+        },
+        imageResize: {
+          parchment: Quill.import("parchment"),
+          modules: ["Resize", "DisplaySize", "Toolbar"],
+        },
+      });
+
+      setEditorReady(true);
+    };
+
+    loadEditor();
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -195,7 +228,7 @@ const PostEditorPage = () => {
 
   // Kapak görseli yükleme
   const handleCoverUpload = async (e) => {
-    const file = e.target.files[0];
+    const file = e.target.files?.[0];
     if (!file) return;
     setIsCoverUploading(true);
     try {
@@ -253,7 +286,6 @@ const PostEditorPage = () => {
           severity: "success",
         });
       }
-
       setTimeout(() => navigate("/admin/posts"), 1500);
     } catch (err) {
       console.error("Gönderim hatası:", err);
@@ -343,10 +375,7 @@ const PostEditorPage = () => {
               form._imagePreview && (
                 <Box
                   mt={2}
-                  sx={{
-                    position: "relative",
-                    display: "inline-block",
-                  }}
+                  sx={{ position: "relative", display: "inline-block" }}
                 >
                   <img
                     src={form._imagePreview}
@@ -357,7 +386,6 @@ const PostEditorPage = () => {
                       border: "1px solid #ccc",
                     }}
                   />
-                  {/* X ikonu */}
                   <Button
                     size="small"
                     onClick={() =>
@@ -397,19 +425,49 @@ const PostEditorPage = () => {
           <Typography variant="subtitle1" sx={{ mb: 1 }}>
             İçerik:
           </Typography>
-          <ReactQuill
-            value={form.content}
-            onChange={(val) => setForm({ ...form, content: val })}
-            modules={quillModules}
-            formats={quillFormats}
-            theme="snow"
-            style={{
-              height: "300px",
-              marginBottom: "50px",
-              backgroundColor: "#fff",
-              borderRadius: 8,
-            }}
-          />
+
+          {/* ✅ ReactQuill yalnızca hazır olduğunda ve lazy olarak render edilir */}
+          <Suspense
+            fallback={
+              <Box
+                sx={{
+                  height: 300,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <CircularProgress />
+              </Box>
+            }
+          >
+            {editorReady ? (
+              <ReactQuill
+                value={form.content}
+                onChange={(val) => setForm({ ...form, content: val })}
+                modules={quillModules}
+                formats={quillFormats}
+                theme="snow"
+                style={{
+                  height: "300px",
+                  marginBottom: "50px",
+                  backgroundColor: "#fff",
+                  borderRadius: 8,
+                }}
+              />
+            ) : (
+              <Box
+                sx={{
+                  height: 300,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <CircularProgress />
+              </Box>
+            )}
+          </Suspense>
 
           <Autocomplete
             multiple
