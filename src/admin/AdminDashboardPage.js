@@ -3,7 +3,6 @@ import {
   Box,
   Paper,
   Typography,
-  Grid,
   Avatar,
   useTheme,
   CircularProgress,
@@ -22,7 +21,7 @@ import {
 } from "../redux/dashboardSlice";
 import GAStatsPanel from "./GAStatsPanel";
 
-const DashboardPage = () => {
+const AdminDashboardPage = () => {
   const dispatch = useDispatch();
   const theme = useTheme();
   const navigate = useNavigate();
@@ -88,100 +87,108 @@ const DashboardPage = () => {
   }
 
   return (
-    <Box
-      sx={{ display: "flex", flexDirection: "row", gap: 3, flexWrap: "wrap" }}
-    >
-      {/* SOL ÜST – Stat Kartlar (üst üste stacked) */}
+    <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
+      {/* Üst Satır: Stat Kartlar + Son Yazılar */}
       <Box
         sx={{
-          flex: { xs: "100%", md: "66.66%" },
           display: "flex",
-          flexDirection: "column",
-          gap: 2,
+          flexDirection: "row",
+          gap: 3,
+          flexWrap: "wrap",
         }}
       >
-        <StatCard
-          title="Toplam Yazı"
-          value={stats.totalPosts}
-          icon={<ArticleIcon />}
-          iconColor={theme.palette.primary.main}
-        />
-        <StatCard
-          title="Toplam Kategori"
-          value={stats.totalCategories}
-          icon={<CategoryIcon />}
-          iconColor={theme.palette.secondary.main}
-        />
-        <StatCard
-          title="Toplam Yorum"
-          value={stats.totalComments}
-          icon={<CommentIcon />}
-          iconColor={theme.palette.info.main}
-        />
-      </Box>
-
-      {/* SAĞ ÜST – Son Yazılar */}
-      <Box
-        sx={{
-          flex: { xs: "100%", md: "33.33%" },
-          display: "flex",
-          flexDirection: "column",
-          gap: 1,
-        }}
-      >
-        <Typography variant="h6" gutterBottom>
-          SON YAZILAR
-        </Typography>
-        <Paper
+        {/* Sol: Stat Kartlar */}
+        <Box
           sx={{
-            p: 2,
-            borderRadius: 3,
-            backgroundColor: "background.paper",
-            boxShadow: 2,
+            flex: { xs: "100%", md: "66.66%" },
+            display: "flex",
+            flexDirection: "column",
+            gap: 2,
           }}
         >
-          {latestPosts.map((post) => (
-            <Box
-              key={post._id}
-              onClick={() => navigate(`/post/${post.slug}`)}
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                gap: 2,
-                mb: 2,
-                pb: 1,
-                borderBottom: "1px solid rgba(0,0,0,0.05)",
-                cursor: "pointer",
-                "&:hover": {
-                  backgroundColor:
-                    theme.palette.mode === "dark"
-                      ? "rgba(255,255,255,0.05)"
-                      : "rgba(0,0,0,0.03)",
-                },
-                px: 1,
-                py: 1,
-                borderRadius: 1.5,
-              }}
-            >
-              <Avatar
-                variant="rounded"
-                src={post.image}
-                sx={{ width: 56, height: 40 }}
-              />
-              <Box>
-                <Typography variant="subtitle2" fontWeight="bold">
-                  {post.title}
-                </Typography>
-                <Typography variant="caption" color="text.disabled">
-                  {new Date(post.date).toLocaleDateString()}
-                </Typography>
+          <StatCard
+            title="Toplam Yazı"
+            value={stats.totalPosts}
+            icon={<ArticleIcon />}
+            iconColor={theme.palette.primary.main}
+          />
+          <StatCard
+            title="Toplam Kategori"
+            value={stats.totalCategories}
+            icon={<CategoryIcon />}
+            iconColor={theme.palette.secondary.main}
+          />
+          <StatCard
+            title="Toplam Yorum"
+            value={stats.totalComments}
+            icon={<CommentIcon />}
+            iconColor={theme.palette.info.main}
+          />
+        </Box>
+
+        {/* Sağ: Son Yazılar */}
+        <Box
+          sx={{
+            flex: { xs: "100%", md: "33.33%" },
+            display: "flex",
+            flexDirection: "column",
+            gap: 1,
+          }}
+        >
+          <Typography variant="h6" gutterBottom>
+            SON YAZILAR
+          </Typography>
+          <Paper
+            sx={{
+              p: 2,
+              borderRadius: 3,
+              backgroundColor: "background.paper",
+              boxShadow: 2,
+            }}
+          >
+            {latestPosts.map((post) => (
+              <Box
+                key={post._id}
+                onClick={() => navigate(`/post/${post.slug}`)}
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 2,
+                  mb: 2,
+                  pb: 1,
+                  borderBottom: "1px solid rgba(0,0,0,0.05)",
+                  cursor: "pointer",
+                  "&:hover": {
+                    backgroundColor:
+                      theme.palette.mode === "dark"
+                        ? "rgba(255,255,255,0.05)"
+                        : "rgba(0,0,0,0.03)",
+                  },
+                  px: 1,
+                  py: 1,
+                  borderRadius: 1.5,
+                }}
+              >
+                <Avatar
+                  variant="rounded"
+                  src={post.image}
+                  sx={{ width: 56, height: 40 }}
+                />
+                <Box>
+                  <Typography variant="subtitle2" fontWeight="bold">
+                    {post.title}
+                  </Typography>
+                  <Typography variant="caption" color="text.disabled">
+                    {new Date(post.date).toLocaleDateString()}
+                  </Typography>
+                </Box>
               </Box>
-            </Box>
-          ))}
-        </Paper>
+            ))}
+          </Paper>
+        </Box>
       </Box>
 
-      {/* ALT SATIR: İSTATİSTİKLER + SON YORUMLAR */}
+      {/* Alt Satır: Son Yorumlar */}
       <Box
         sx={{
           display: "flex",
@@ -189,10 +196,8 @@ const DashboardPage = () => {
           flexWrap: "wrap",
           width: "100%",
           gap: 3,
-          mt: 3,
         }}
       >
-        {/* Sağ: Son Yorumlar */}
         <Box
           sx={{
             flex: { xs: "100%", md: "33.33%" },
@@ -266,10 +271,11 @@ const DashboardPage = () => {
           </Paper>
         </Box>
       </Box>
-      {/* Sol: Grafik/istatistik kutusu */}
+
+      {/* GA Panel (tam genişlik) */}
       <GAStatsPanel />
     </Box>
   );
 };
 
-export default DashboardPage;
+export default AdminDashboardPage;

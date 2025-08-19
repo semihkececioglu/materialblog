@@ -1,76 +1,73 @@
-const router = require("express").Router();
-const analytics = require("../services/gaClient");
-const Setting = require("../models/Settings");
+const express = require("express");
+const router = express.Router();
+const { analytics, getPropertyId } = require("../services/gaClient");
 
-// Property ID'yi ayarlardan oku
-async function getPropertyId() {
-  const s = await Setting.findOne();
-  if (!s?.gaEnabled || !s?.gaPropertyId) {
-    throw new Error("GA etkin değil veya Property ID eksik.");
-  }
-  return `properties/${s.gaPropertyId}`;
-}
-
-// Örnek: Genel özet
+// Overview
 router.get("/overview", async (req, res) => {
   try {
-    const property = await getPropertyId();
-    const { startDate = "7daysAgo", endDate = "today" } = req.query;
+    const propertyId = await getPropertyId();
+    const { startDate, endDate } = req.query;
 
-    const [report] = await analytics.runReport({
-      property,
+    const [response] = await analytics.runReport({
+      property: `properties/${propertyId}`,
       dateRanges: [{ startDate, endDate }],
-      metrics: [
-        { name: "activeUsers" },
-        { name: "sessions" },
-        { name: "screenPageViews" },
-      ],
+      metrics: [{ name: "activeUsers" }, { name: "screenPageViews" }],
     });
 
-    res.json(report);
+    res.json(response);
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    console.error(err);
+    res.status(500).json({ message: "GA overview alınamadı" });
   }
 });
 
-// Örnek: Günlük zaman serisi
+// Timeseries
 router.get("/timeseries", async (req, res) => {
   try {
-    const property = await getPropertyId();
-    const { startDate = "30daysAgo", endDate = "today" } = req.query;
+    const propertyId = await getPropertyId();
+    const { startDate, endDate, metric = "activeUsers" } = req.query;
 
-    const [report] = await analytics.runReport({
-      property,
+    const [response] = await analytics.runReport({
+      property: `properties/${propertyId}`,
       dateRanges: [{ startDate, endDate }],
+      metrics: [{ name: metric }],
       dimensions: [{ name: "date" }],
-      metrics: [{ name: "activeUsers" }],
-      orderBys: [{ dimension: { dimensionName: "date" } }],
     });
 
-    res.json(report);
+    const rows = response.rows?.map((r) => ({
+      date: r.dimensionValues?.[0]?.value,
+      value: Number(r.metricValues?.[0]?.value || 0),
+    }));
+
+    res.json(rows);
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    res.status(500).json({ message: "GA timeseries alınamadı" });
   }
 });
 
 // Top Pages
 router.get("/top-pages", async (req, res) => {
   try {
-    const property = await getPropertyId();
-    const { startDate = "30daysAgo", endDate = "today" } = req.query;
+    const propertyId = await getPropertyId();
+    const { startDate, endDate, limit = 10 } = req.query;
 
-    const [report] = await analytics.runReport({
-      property,
+    const [response] = await analytics.runReport({
+      property: `properties/${propertyId}`,
       dateRanges: [{ startDate, endDate }],
-      dimensions: [{ name: "pagePathPlusQueryString" }, { name: "pageTitle" }],
       metrics: [{ name: "screenPageViews" }],
-      orderBys: [{ metric: { metricName: "screenPageViews" }, desc: true }],
-      limit: 10,
+      dimensions: [{ name: "pagePath" }, { name: "pageTitle" }],
+      limit: Number(limit),
     });
 
-    res.json(report);
+    const rows = response.rows?.map((r) => ({
+      path: r.dimensionValues?.[0]?.value,
+      title: r.dimensionValues?.[1]?.value,
+      views: Number(r.metricValues?.[0]?.value || 0),
+    }));
+
+    res.json(rows);
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    res.status(500).json({ message: "GA top pages alınamadı" });
   }
 });
 

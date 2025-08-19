@@ -1,16 +1,16 @@
-import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
+import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 
-/* ===========================
-   EXISTING DASHBOARD ENDPOINTS
-   =========================== */
 const BASE = "https://materialblog-server-production.up.railway.app/api";
 
+/* ===========================
+   Dashboard Backend Endpoints
+   =========================== */
 export const fetchDashboardStats = createAsyncThunk(
   "dashboard/fetchStats",
   async () => {
     const { data } = await axios.get(`${BASE}/dashboard`);
-    return data; // { postsCount, commentsCount, categoriesCount, ... } (örnek)
+    return data; // { postsCount, commentsCount, categoriesCount, ... }
   }
 );
 
@@ -31,7 +31,7 @@ export const fetchLatestPosts = createAsyncThunk(
 );
 
 /* ====================
-   GA4 ANALYTICS ENDPOINTS
+   GA4 Analytics Endpoints
    ==================== */
 const ANALYTICS = `${BASE}/analytics`;
 
@@ -41,7 +41,7 @@ export const fetchGaOverview = createAsyncThunk(
     const { data } = await axios.get(`${ANALYTICS}/overview`, {
       params: { startDate, endDate },
     });
-    return data; // raw GA response
+    return data?.rows || [];
   }
 );
 
@@ -51,7 +51,7 @@ export const fetchGaTimeseries = createAsyncThunk(
     const { data } = await axios.get(`${ANALYTICS}/timeseries`, {
       params: { startDate, endDate, metric },
     });
-    return data; // raw GA response
+    return data || [];
   }
 );
 
@@ -61,27 +61,27 @@ export const fetchGaTopPages = createAsyncThunk(
     const { data } = await axios.get(`${ANALYTICS}/top-pages`, {
       params: { startDate, endDate, limit },
     });
-    return data; // raw GA response
+    return data || [];
   }
 );
 
-/* ===========
-   SLICE STATE
+/* =========== 
+   Slice State
    =========== */
 const initialState = {
-  // Mevcut backend istatistikleri
+  // Dashboard verileri
   stats: null,
   latestComments: [],
   latestPosts: [],
-  loading: false, // mevcut dashboard istekleri için
+  loading: false,
   error: null,
 
   // GA verileri
-  gaLoading: false, // GA istekleri için ayrı loading
+  gaLoading: false,
   gaError: null,
-  gaOverview: null, // overview raw response
-  gaSeries: [], // [{ date: "YYYYMMDD", value: number }]
-  gaTopPages: [], // [{ path, title, views }]
+  gaOverview: [],
+  gaSeries: [],
+  gaTopPages: [],
 };
 
 const dashboardSlice = createSlice({
@@ -89,7 +89,7 @@ const dashboardSlice = createSlice({
   initialState,
   reducers: {},
   extraReducers: (b) => {
-    /* ---- Mevcut: İstatistikler ---- */
+    /* ---- Dashboard Stats ---- */
     b.addCase(fetchDashboardStats.pending, (s) => {
       s.loading = true;
       s.error = null;
@@ -103,35 +103,17 @@ const dashboardSlice = createSlice({
       s.error = a.error?.message || "İstatistikler alınamadı";
     });
 
-    /* ---- Mevcut: Son 5 yorum ---- */
-    b.addCase(fetchLatestComments.pending, (s) => {
-      s.loading = true;
-      s.error = null;
-    });
+    /* ---- Latest Comments ---- */
     b.addCase(fetchLatestComments.fulfilled, (s, { payload }) => {
-      s.loading = false;
       s.latestComments = payload || [];
     });
-    b.addCase(fetchLatestComments.rejected, (s, a) => {
-      s.loading = false;
-      s.error = a.error?.message || "Son yorumlar alınamadı";
-    });
 
-    /* ---- Mevcut: Son 5 yazı ---- */
-    b.addCase(fetchLatestPosts.pending, (s) => {
-      s.loading = true;
-      s.error = null;
-    });
+    /* ---- Latest Posts ---- */
     b.addCase(fetchLatestPosts.fulfilled, (s, { payload }) => {
-      s.loading = false;
       s.latestPosts = payload || [];
     });
-    b.addCase(fetchLatestPosts.rejected, (s, a) => {
-      s.loading = false;
-      s.error = a.error?.message || "Son yazılar alınamadı";
-    });
 
-    /* ---- GA: Overview ---- */
+    /* ---- GA Overview ---- */
     b.addCase(fetchGaOverview.pending, (s) => {
       s.gaLoading = true;
       s.gaError = null;
@@ -145,48 +127,23 @@ const dashboardSlice = createSlice({
       s.gaError = a.error?.message || "GA overview alınamadı";
     });
 
-    /* ---- GA: Timeseries ---- */
-    b.addCase(fetchGaTimeseries.pending, (s) => {
-      s.gaLoading = true;
-      s.gaError = null;
-    });
+    /* ---- GA Timeseries ---- */
     b.addCase(fetchGaTimeseries.fulfilled, (s, { payload }) => {
       s.gaLoading = false;
-      const rows = payload?.rows || [];
-      s.gaSeries = rows.map((r) => ({
-        date: r.dimensionValues?.[0]?.value || "", // YYYYMMDD
-        value: Number(r.metricValues?.[0]?.value || 0),
-      }));
-    });
-    b.addCase(fetchGaTimeseries.rejected, (s, a) => {
-      s.gaLoading = false;
-      s.gaError = a.error?.message || "GA timeseries alınamadı";
+      s.gaSeries = payload;
     });
 
-    /* ---- GA: Top Pages ---- */
-    b.addCase(fetchGaTopPages.pending, (s) => {
-      s.gaLoading = true;
-      s.gaError = null;
-    });
+    /* ---- GA Top Pages ---- */
     b.addCase(fetchGaTopPages.fulfilled, (s, { payload }) => {
       s.gaLoading = false;
-      const rows = payload?.rows || [];
-      s.gaTopPages = rows.map((r) => ({
-        path: r.dimensionValues?.[0]?.value || "",
-        title: r.dimensionValues?.[1]?.value || "",
-        views: Number(r.metricValues?.[0]?.value || 0),
-      }));
-    });
-    b.addCase(fetchGaTopPages.rejected, (s, a) => {
-      s.gaLoading = false;
-      s.gaError = a.error?.message || "GA top pages alınamadı";
+      s.gaTopPages = payload;
     });
   },
 });
 
 export default dashboardSlice.reducer;
 
-/* (Opsiyonel) Seçiciler */
+/* Selectors */
 export const selectDashboardStats = (s) => s.dashboard.stats;
 export const selectLatestComments = (s) => s.dashboard.latestComments;
 export const selectLatestPosts = (s) => s.dashboard.latestPosts;
@@ -194,6 +151,7 @@ export const selectLatestPosts = (s) => s.dashboard.latestPosts;
 export const selectGaOverview = (s) => s.dashboard.gaOverview;
 export const selectGaSeries = (s) => s.dashboard.gaSeries;
 export const selectGaTopPages = (s) => s.dashboard.gaTopPages;
+
 export const selectDashboardLoading = (s) =>
   s.dashboard.loading || s.dashboard.gaLoading;
 export const selectDashboardError = (s) =>

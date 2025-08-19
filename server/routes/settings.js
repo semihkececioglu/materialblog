@@ -1,54 +1,50 @@
 const express = require("express");
 const router = express.Router();
-const Settings = require("../models/Settings");
+const Setting = require("../models/Settings");
 
-// ── Yardımcı: Tekil (singleton) kaydı getir/oluştur
-async function getSingleton() {
-  let s = await Settings.findOne({});
-  if (!s) s = await Settings.create({});
-  return s;
-}
-
-// ── PUBLIC: Frontend'in GA bilgilerini güvenli şekilde alması için
-// (Auth yok; yalnızca gerekli alanlar döner)
-router.get("/public", async (_req, res) => {
+// GET /api/settings → tüm ayarlar
+router.get("/", async (req, res) => {
   try {
-    const s = await getSingleton();
+    const settings = await Setting.getSingleton();
+    res.json(settings);
+  } catch (err) {
+    res.status(500).json({ message: "Ayarlar alınamadı" });
+  }
+});
+
+// GET /api/settings/public → sadece public alanlar
+router.get("/public", async (req, res) => {
+  try {
+    const settings = await Setting.getSingleton();
     res.json({
-      gaEnabled: !!s.gaEnabled,
-      gaMeasurementId: s.gaMeasurementId || "",
+      gaEnabled: settings.gaEnabled,
+      gaMeasurementId: settings.gaMeasurementId,
     });
   } catch (err) {
     res.status(500).json({ message: "Public ayarlar alınamadı" });
   }
 });
 
-// ── ADMIN: Tüm ayarları getir (site + GA)
-router.get("/", async (_req, res) => {
-  try {
-    const s = await getSingleton();
-    res.json(s);
-  } catch (err) {
-    res.status(500).json({ message: "Ayarlar alınamadı" });
-  }
-});
-
+// PUT /api/settings → güncelle
 router.put("/", async (req, res) => {
-  const { siteTitle, siteDescription, gaEnabled, gaMeasurementId } = req.body;
   try {
-    const s = await getSingleton();
+    let settings = await Setting.getSingleton();
+    const {
+      siteTitle,
+      siteDescription,
+      gaEnabled,
+      gaMeasurementId,
+      gaPropertyId,
+    } = req.body;
 
-    if (typeof siteTitle === "string") s.siteTitle = siteTitle;
-    if (typeof siteDescription === "string")
-      s.siteDescription = siteDescription;
+    settings.siteTitle = siteTitle;
+    settings.siteDescription = siteDescription;
+    settings.gaEnabled = gaEnabled;
+    settings.gaMeasurementId = gaMeasurementId;
+    settings.gaPropertyId = gaPropertyId;
 
-    // GA alanları (Faz 1)
-    if (typeof gaEnabled === "boolean") s.gaEnabled = gaEnabled;
-    if (typeof gaMeasurementId === "string")
-      s.gaMeasurementId = gaMeasurementId.trim();
-
-    await s.save();
-    res.json(s);
+    await settings.save();
+    res.json(settings);
   } catch (err) {
     res.status(500).json({ message: "Ayarlar güncellenemedi" });
   }

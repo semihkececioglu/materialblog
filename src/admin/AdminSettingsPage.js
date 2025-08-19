@@ -1,46 +1,40 @@
-// src/admin/AdminSettingsPage.jsx
 import React, { useEffect, useState } from "react";
 import {
   Box,
   Typography,
-  Paper,
   TextField,
   Button,
+  Paper,
+  CircularProgress,
   Snackbar,
   Alert,
-  CircularProgress,
   Switch,
   FormControlLabel,
-  Stack,
-  Tooltip,
 } from "@mui/material";
 import { useDispatch, useSelector } from "react-redux";
 import {
   fetchSettings,
   updateSettings,
   clearSuccess,
+  selectSettings,
+  selectSettingsLoading,
+  selectSettingsError,
+  selectSettingsSuccess,
 } from "../redux/settingsSlice";
 
 const AdminSettingsPage = () => {
   const dispatch = useDispatch();
-  const {
-    data: settings,
-    loading,
-    success,
-  } = useSelector((state) => state.settings);
+  const settings = useSelector(selectSettings);
+  const loading = useSelector(selectSettingsLoading);
+  const error = useSelector(selectSettingsError);
+  const success = useSelector(selectSettingsSuccess);
 
-  const [siteTitle, setSiteTitle] = useState("");
-  const [siteDescription, setSiteDescription] = useState("");
-
-  // 🔹 GA alanları
-  const [gaEnabled, setGaEnabled] = useState(false);
-  const [gaMeasurementId, setGaMeasurementId] = useState("");
-
-  const [saving, setSaving] = useState(false);
-  const [snackbar, setSnackbar] = useState({
-    open: false,
-    message: "",
-    severity: "success",
+  const [form, setForm] = useState({
+    siteTitle: "",
+    siteDescription: "",
+    gaEnabled: false,
+    gaMeasurementId: "",
+    gaPropertyId: "",
   });
 
   useEffect(() => {
@@ -49,152 +43,109 @@ const AdminSettingsPage = () => {
 
   useEffect(() => {
     if (settings) {
-      setSiteTitle(settings.siteTitle || "");
-      setSiteDescription(settings.siteDescription || "");
-      setGaEnabled(Boolean(settings.gaEnabled));
-      setGaMeasurementId(settings.gaMeasurementId || "");
+      setForm({
+        siteTitle: settings.siteTitle || "",
+        siteDescription: settings.siteDescription || "",
+        gaEnabled: settings.gaEnabled || false,
+        gaMeasurementId: settings.gaMeasurementId || "",
+        gaPropertyId: settings.gaPropertyId || "",
+      });
     }
   }, [settings]);
 
-  useEffect(() => {
-    if (success) {
-      setSnackbar({
-        open: true,
-        message: "Ayarlar kaydedildi",
-        severity: "success",
-      });
-      dispatch(clearSuccess());
-      setSaving(false);
-    }
-  }, [success, dispatch]);
-
-  const handleSave = () => {
-    // Basit doğrulama: GA açıkken ID boş olmasın
-    if (gaEnabled && !/^G-[A-Z0-9]+$/i.test(gaMeasurementId.trim())) {
-      setSnackbar({
-        open: true,
-        message: "Geçerli bir GA4 Measurement ID girin (örn. G-ABCD1234)",
-        severity: "warning",
-      });
-      return;
-    }
-
-    setSaving(true);
-    dispatch(
-      updateSettings({
-        siteTitle,
-        siteDescription,
-        gaEnabled,
-        gaMeasurementId: gaMeasurementId.trim(),
-      })
-    ).catch(() => {
-      setSnackbar({
-        open: true,
-        message: "Kaydetme hatası",
-        severity: "error",
-      });
-      setSaving(false);
-    });
+  const handleChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setForm((prev) => ({
+      ...prev,
+      [name]: type === "checkbox" ? checked : value,
+    }));
   };
 
-  if (loading) return <CircularProgress />;
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    dispatch(updateSettings(form));
+  };
 
   return (
-    <Box>
-      <Typography
-        variant="h5"
-        sx={{
-          fontWeight: "bold",
-          mb: 3,
-          textShadow: "1px 1px 2px rgba(0,0,0,0.1)",
-        }}
-      >
-        Ayarlar
+    <Box p={3}>
+      <Typography variant="h5" mb={2}>
+        Site Ayarları
       </Typography>
 
-      <Paper
-        sx={{
-          p: 3,
-          borderRadius: 3,
-          maxWidth: 720,
-          backgroundColor: "rgba(255, 255, 255, 0.7)",
-          backdropFilter: "blur(10px)",
-          boxShadow: "0 8px 24px rgba(0, 0, 0, 0.1)",
-        }}
-      >
-        <Stack spacing={2}>
+      <Paper sx={{ p: 3 }}>
+        <form onSubmit={handleSubmit}>
           <TextField
             fullWidth
             label="Site Başlığı"
-            value={siteTitle}
-            onChange={(e) => setSiteTitle(e.target.value)}
+            name="siteTitle"
+            value={form.siteTitle}
+            onChange={handleChange}
+            margin="normal"
           />
-
           <TextField
             fullWidth
             label="Site Açıklaması"
-            value={siteDescription}
-            onChange={(e) => setSiteDescription(e.target.value)}
-            multiline
-            rows={3}
+            name="siteDescription"
+            value={form.siteDescription}
+            onChange={handleChange}
+            margin="normal"
           />
-
-          {/* 🔹 Google Analytics Alanları */}
-          <Typography variant="subtitle1" sx={{ mt: 1, fontWeight: 600 }}>
-            Google Analytics (GA4)
-          </Typography>
 
           <FormControlLabel
             control={
               <Switch
-                checked={gaEnabled}
-                onChange={(e) => setGaEnabled(e.target.checked)}
+                checked={form.gaEnabled}
+                onChange={handleChange}
+                name="gaEnabled"
               />
             }
-            label="Google Analytics'i etkinleştir"
+            label="Google Analytics Aktif"
           />
 
-          <Tooltip
-            title="GA4 → Admin → Data Streams → Web → Measurement ID (G-XXXX...)"
-            arrow
-          >
-            <TextField
-              fullWidth
-              label="GA4 Measurement ID (G-XXXXXXX)"
-              value={gaMeasurementId}
-              onChange={(e) => setGaMeasurementId(e.target.value)}
-              placeholder="G-ABCD1234"
-              disabled={!gaEnabled}
-              helperText={
-                gaEnabled
-                  ? "Örnek: G-ABCD1234 — SPA takip için otomatik kullanılacak."
-                  : "Önce GA'yı etkinleştirin."
-              }
-            />
-          </Tooltip>
+          <TextField
+            fullWidth
+            label="GA Measurement ID"
+            name="gaMeasurementId"
+            value={form.gaMeasurementId}
+            onChange={handleChange}
+            margin="normal"
+            helperText="Örn: G-XXXXXXXX"
+          />
 
-          <Box>
-            <Button
-              variant="contained"
-              onClick={handleSave}
-              disabled={saving}
-              sx={{ borderRadius: 2 }}
-            >
-              {saving ? "Kaydediliyor..." : "Kaydet"}
+          <TextField
+            fullWidth
+            label="GA Property ID"
+            name="gaPropertyId"
+            value={form.gaPropertyId}
+            onChange={handleChange}
+            margin="normal"
+            helperText="Örn: 123456789"
+          />
+
+          <Box mt={2}>
+            <Button type="submit" variant="contained" disabled={loading}>
+              {loading ? <CircularProgress size={24} /> : "Kaydet"}
             </Button>
           </Box>
-        </Stack>
+        </form>
       </Paper>
 
       <Snackbar
-        open={snackbar.open}
-        autoHideDuration={3000}
-        onClose={() => setSnackbar({ ...snackbar, open: false })}
+        open={!!error}
+        autoHideDuration={4000}
+        onClose={() => {}}
         anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
       >
-        <Alert severity={snackbar.severity} variant="filled">
-          {snackbar.message}
-        </Alert>
+        <Alert severity="error">{error}</Alert>
+      </Snackbar>
+
+      <Snackbar
+        open={success}
+        autoHideDuration={3000}
+        onClose={() => dispatch(clearSuccess())}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      >
+        <Alert severity="success">Ayarlar başarıyla kaydedildi</Alert>
       </Snackbar>
     </Box>
   );

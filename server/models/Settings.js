@@ -1,20 +1,20 @@
 const mongoose = require("mongoose");
 
-const settingsSchema = new mongoose.Schema(
-  {
-    siteTitle: { type: String, default: "Material Blog" },
-    siteDescription: { type: String, default: "" },
-    gaEnabled: { type: Boolean, default: false },
-    gaMeasurementId: { type: String, default: "" }, // Örn: G-ABCD1234
-  },
-  { timestamps: true }
-);
+const SettingsSchema = new mongoose.Schema({
+  siteTitle: { type: String, default: "Material Blog" },
+  siteDescription: { type: String, default: "Modern Blog Platform" },
+  gaEnabled: { type: Boolean, default: false },
+  gaMeasurementId: { type: String, default: "" },
+  gaPropertyId: { type: String, default: "" },
+});
 
-// Tekil kayıt (singleton) yaklaşımı: ilk istek geldiğinde yoksa oluşturur
-settingsSchema.statics.getSingleton = async function () {
-  let doc = await this.findOne();
-  if (!doc) doc = await this.create({});
-  return doc;
+// Singleton settings kaydı
+SettingsSchema.statics.getSingleton = async function () {
+  let settings = await this.findOne();
+  if (!settings) {
+    settings = await this.create({});
+  }
+  return settings;
 };
 
-module.exports = mongoose.model("Setting", settingsSchema);
+module.exports = mongoose.model("Settings", SettingsSchema);
