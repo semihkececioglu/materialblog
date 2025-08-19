@@ -21,7 +21,8 @@ export const getTheme = (mode) =>
           }),
     },
     typography: {
-      fontFamily: '"Inter", sans-serif',
+      fontFamily:
+        'Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial, "Noto Sans", "Helvetica Neue", sans-serif',
       fontSize: 14,
     },
     components: {
