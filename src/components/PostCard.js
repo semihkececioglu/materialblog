@@ -27,45 +27,53 @@ const formatDate = (isoString) => {
   return new Date(isoString).toLocaleDateString("tr-TR", options);
 };
 
-/** Cloudinary URL'ine dönüşüm (transform) ekle. */
-const buildCloudinaryUrl = (url, w) => {
+/** Cloudinary URL'ine dönüşüm (transform) ekle - İyileştirilmiş */
+const buildCloudinaryUrl = (url, w, h = null, quality = "auto") => {
   if (!url) return "";
   try {
     const isCloudinary =
-      url.includes("res.cloudinary.com") && url.includes("/image/upload/");
+      url.includes("res.cloudinary.com") && url.includes("/upload/");
+
     if (!isCloudinary) return url;
-    return url.replace(
-      "/image/upload/",
-      `/image/upload/f_auto,q_auto,c_limit,w_${w}/`
-    );
+
+    // Daha agresif optimizasyon parametreleri
+    let transforms = `f_auto,q_${quality},c_fill,w_${w}`;
+    if (h) transforms += `,h_${h}`;
+
+    // Ek optimizasyonlar
+    transforms += ",g_auto,dpr_auto"; // Otomatik odak ve DPR
+
+    return url.replace("/upload/", `/upload/${transforms}/`);
   } catch {
     return url;
   }
 };
 
-/** srcset & sizes üretici – Cloudinary için */
+/** srcset & sizes üretici – Daha küçük boyutlar */
 const buildResponsive = (url) => {
   if (!url) return { src: url, srcSet: undefined, sizes: undefined };
 
-  const w360 = buildCloudinaryUrl(url, 360);
-  const w480 = buildCloudinaryUrl(url, 480);
-  const w768 = buildCloudinaryUrl(url, 768);
-  const w1024 = buildCloudinaryUrl(url, 1024);
+  // Daha küçük boyutlar - card içinde 140px yükseklik için uygun
+  const w240 = buildCloudinaryUrl(url, 240, 140, "60"); // Düşük kalite küçük ekranlar için
+  const w320 = buildCloudinaryUrl(url, 320, 140, "70");
+  const w480 = buildCloudinaryUrl(url, 480, 140, "80");
+  const w640 = buildCloudinaryUrl(url, 640, 140, "auto");
 
   return {
-    src: w480, // default src orta boy
+    src: w320, // Daha küçük default
     srcSet: `
-      ${w360} 360w,
+      ${w240} 240w,
+      ${w320} 320w,
       ${w480} 480w,
-      ${w768} 768w,
-      ${w1024} 1024w
-    `,
-    // ekran genişliğine göre gerçek render boyutlarını tarif et
-    sizes: "(max-width: 600px) 100vw, (max-width: 1200px) 50vw, 33vw",
+      ${w640} 640w
+    `.trim(),
+    // Card genişliğine göre ayarlanmış sizes
+    sizes:
+      "(max-width: 480px) 240px, (max-width: 768px) 320px, (max-width: 1200px) 480px, 640px",
   };
 };
 
-const PostCard = ({ post }) => {
+const PostCard = ({ post, priority = false }) => {
   const theme = useTheme();
   const navigate = useNavigate();
 
@@ -108,25 +116,41 @@ const PostCard = ({ post }) => {
       {rawImageUrl ? (
         <CardMedia
           component="img"
-          // CLS için boyut ver
-          width={480}
+          // CLS için sabit boyutlar
+          width={320}
           height={140}
           image={responsive.src}
           srcSet={responsive.srcSet}
           sizes={responsive.sizes}
           alt={post.title}
-          loading="lazy"
+          // LCP optimizasyonu için priority kontrolü
+          loading={priority ? "eager" : "lazy"}
+          fetchPriority={priority ? "high" : "auto"}
           decoding="async"
           sx={{
             height: 140,
             objectFit: "cover",
             transition: "transform 0.3s ease",
+            // Görsel yüklenene kadar placeholder
+            backgroundColor:
+              theme.palette.mode === "dark" ? "grey.800" : "grey.200",
             "&:hover": {
               transform: "scale(1.03)",
             },
           }}
+          // Hata durumunda fallback
+          onError={(e) => {
+            e.target.style.display = "none";
+            const nextSibling = e.target.nextSibling;
+            if (nextSibling) {
+              nextSibling.style.display = "flex";
+            }
+          }}
         />
-      ) : (
+      ) : null}
+
+      {/* Fallback görsel */}
+      {!rawImageUrl && (
         <Box
           sx={{
             height: 140,
