@@ -41,7 +41,7 @@ export const fetchGaOverview = createAsyncThunk(
     const { data } = await axios.get(`${ANALYTICS}/overview`, {
       params: { startDate, endDate },
     });
-    return data?.rows || [];
+    return data;
   }
 );
 
@@ -51,7 +51,7 @@ export const fetchGaTimeseries = createAsyncThunk(
     const { data } = await axios.get(`${ANALYTICS}/timeseries`, {
       params: { startDate, endDate, metric },
     });
-    return data || [];
+    return data;
   }
 );
 
@@ -61,7 +61,7 @@ export const fetchGaTopPages = createAsyncThunk(
     const { data } = await axios.get(`${ANALYTICS}/top-pages`, {
       params: { startDate, endDate, limit },
     });
-    return data || [];
+    return data;
   }
 );
 
