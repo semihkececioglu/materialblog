@@ -19,7 +19,6 @@ import {
   fetchLatestComments,
   fetchLatestPosts,
 } from "../redux/dashboardSlice";
-import GAStatsPanel from "./GAStatsPanel";
 
 const AdminDashboardPage = () => {
   const dispatch = useDispatch();
@@ -273,7 +272,9 @@ const AdminDashboardPage = () => {
       </Box>
 
       {/* GA Panel (tam genişlik) */}
-      <GAStatsPanel />
+      <Typography variant="h6" gutterBottom>
+        GOOGLE ANALYTICS PANELİ
+      </Typography>
     </Box>
   );
 };

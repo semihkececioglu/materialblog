@@ -30,9 +30,6 @@ import AdminUsersPage from "./admin/AdminUsersPage";
 import NotFound from "./pages/NotFound";
 import RoleBasedAdminRedirect from "./auth/RoleBasedAdminRedirect";
 
-// 🔹 GA Provider
-import GoogleAnalyticsProvider from "./analytics/GoogleAnalyticsProvider";
-
 // Redux
 import { Provider, useDispatch, useSelector } from "react-redux";
 import store from "./redux/store";
@@ -68,7 +65,6 @@ function App() {
   const [searchTerm, setSearchTerm] = useState("");
 
   const theme = useMemo(() => getTheme(mode), [mode]);
-
   const user = useSelector((state) => state.user.currentUser);
 
   return (
@@ -76,126 +72,123 @@ function App() {
       <ThemeProvider theme={theme}>
         <CssBaseline />
         <Router>
-          {/* 🔹 GA: Ayarlardaki G-XXXX girildiğinde otomatik aktif olur */}
-          <GoogleAnalyticsProvider>
-            <AuthLoader>
-              <Routes>
-                {/* Genel Kullanıcı Rotaları */}
+          <AuthLoader>
+            <Routes>
+              {/* Genel Kullanıcı Rotaları */}
+              <Route
+                element={
+                  <Layout
+                    toggleTheme={() =>
+                      setMode(mode === "light" ? "dark" : "light")
+                    }
+                    searchTerm={searchTerm}
+                    setSearchTerm={setSearchTerm}
+                  />
+                }
+              >
+                <Route path="/" element={<Home />} />
+                <Route path="/post/:slug" element={<PostDetail />} />
                 <Route
-                  element={
-                    <Layout
-                      toggleTheme={() =>
-                        setMode(mode === "light" ? "dark" : "light")
-                      }
-                      searchTerm={searchTerm}
-                      setSearchTerm={setSearchTerm}
-                    />
-                  }
-                >
-                  <Route path="/" element={<Home />} />
-                  <Route path="/post/:slug" element={<PostDetail />} />
-                  <Route
-                    path="/category/:kategoriAdi"
-                    element={<CategoryPage />}
-                  />
-                  <Route
-                    path="/category/:kategoriAdi/page/:pageNumber"
-                    element={<CategoryPage />}
-                  />
-                  <Route path="/tag/:tag" element={<TagPosts />} />
-                  <Route
-                    path="/tag/:tag/page/:pageNumber"
-                    element={<TagPosts />}
-                  />
-                  <Route path="/register" element={<Register />} />
-                  <Route path="/login" element={<Login />} />
-                  <Route path="/search" element={<SearchResults />} />
-                  <Route path="/profile/:username" element={<ProfilePage />} />
-                  <Route
-                    path="/profile/:username/edit"
-                    element={<EditProfilePage />}
-                  />
-                  <Route path="/page/:pageNumber" element={<Home />} />
-                  <Route path="*" element={<NotFound />} />
-                </Route>
+                  path="/category/:kategoriAdi"
+                  element={<CategoryPage />}
+                />
+                <Route
+                  path="/category/:kategoriAdi/page/:pageNumber"
+                  element={<CategoryPage />}
+                />
+                <Route path="/tag/:tag" element={<TagPosts />} />
+                <Route
+                  path="/tag/:tag/page/:pageNumber"
+                  element={<TagPosts />}
+                />
+                <Route path="/register" element={<Register />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/search" element={<SearchResults />} />
+                <Route path="/profile/:username" element={<ProfilePage />} />
+                <Route
+                  path="/profile/:username/edit"
+                  element={<EditProfilePage />}
+                />
+                <Route path="/page/:pageNumber" element={<Home />} />
+                <Route path="*" element={<NotFound />} />
+              </Route>
 
-                {/* Admin Paneli */}
+              {/* Admin Paneli */}
+              <Route
+                path="/admin/*"
+                element={
+                  <AdminRoute>
+                    <AdminLayout />
+                  </AdminRoute>
+                }
+              >
+                <Route index element={<RoleBasedAdminRedirect />} />
                 <Route
-                  path="/admin/*"
+                  path="dashboard"
                   element={
-                    <AdminRoute>
-                      <AdminLayout />
-                    </AdminRoute>
+                    user?.role === "admin" ? (
+                      <DashboardPage />
+                    ) : (
+                      <Navigate to="/admin/posts" replace />
+                    )
                   }
-                >
-                  <Route index element={<RoleBasedAdminRedirect />} />
-                  <Route
-                    path="dashboard"
-                    element={
-                      user?.role === "admin" ? (
-                        <DashboardPage />
-                      ) : (
-                        <Navigate to="/admin/posts" replace />
-                      )
-                    }
-                  />
-                  <Route path="posts" element={<PostsPage />} />
-                  <Route path="posts/edit/:id" element={<PostEditorPage />} />
-                  <Route path="editor" element={<PostEditorPage />} />
-                  <Route
-                    path="categories"
-                    element={
-                      user?.role === "admin" ? (
-                        <AdminCategoriesPage />
-                      ) : (
-                        <Navigate to="/admin/posts" replace />
-                      )
-                    }
-                  />
-                  <Route
-                    path="tags"
-                    element={
-                      user?.role === "admin" ? (
-                        <AdminTagsPage />
-                      ) : (
-                        <Navigate to="/admin/posts" replace />
-                      )
-                    }
-                  />
-                  <Route
-                    path="comments"
-                    element={
-                      user?.role === "admin" ? (
-                        <AdminCommentsPage />
-                      ) : (
-                        <Navigate to="/admin/posts" replace />
-                      )
-                    }
-                  />
-                  <Route
-                    path="users"
-                    element={
-                      user?.role === "admin" ? (
-                        <AdminUsersPage />
-                      ) : (
-                        <Navigate to="/admin/posts" replace />
-                      )
-                    }
-                  />
-                  <Route
-                    path="settings"
-                    element={
-                      user?.role === "admin" ? (
-                        <AdminSettingsPage />
-                      ) : (
-                        <Navigate to="/admin/posts" replace />
-                      )
-                    }
-                  />
-                </Route>
-              </Routes>
-            </AuthLoader>
-          </GoogleAnalyticsProvider>
+                />
+                <Route path="posts" element={<PostsPage />} />
+                <Route path="posts/edit/:id" element={<PostEditorPage />} />
+                <Route path="editor" element={<PostEditorPage />} />
+                <Route
+                  path="categories"
+                  element={
+                    user?.role === "admin" ? (
+                      <AdminCategoriesPage />
+                    ) : (
+                      <Navigate to="/admin/posts" replace />
+                    )
+                  }
+                />
+                <Route
+                  path="tags"
+                  element={
+                    user?.role === "admin" ? (
+                      <AdminTagsPage />
+                    ) : (
+                      <Navigate to="/admin/posts" replace />
+                    )
+                  }
+                />
+                <Route
+                  path="comments"
+                  element={
+                    user?.role === "admin" ? (
+                      <AdminCommentsPage />
+                    ) : (
+                      <Navigate to="/admin/posts" replace />
+                    )
+                  }
+                />
+                <Route
+                  path="users"
+                  element={
+                    user?.role === "admin" ? (
+                      <AdminUsersPage />
+                    ) : (
+                      <Navigate to="/admin/posts" replace />
+                    )
+                  }
+                />
+                <Route
+                  path="settings"
+                  element={
+                    user?.role === "admin" ? (
+                      <AdminSettingsPage />
+                    ) : (
+                      <Navigate to="/admin/posts" replace />
+                    )
+                  }
+                />
+              </Route>
+            </Routes>
+          </AuthLoader>
         </Router>
       </ThemeProvider>
     </Provider>

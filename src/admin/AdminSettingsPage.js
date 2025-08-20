@@ -8,8 +8,6 @@ import {
   CircularProgress,
   Snackbar,
   Alert,
-  Switch,
-  FormControlLabel,
 } from "@mui/material";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -32,9 +30,6 @@ const AdminSettingsPage = () => {
   const [form, setForm] = useState({
     siteTitle: "",
     siteDescription: "",
-    gaEnabled: false,
-    gaMeasurementId: "",
-    gaPropertyId: "",
   });
 
   useEffect(() => {
@@ -46,18 +41,15 @@ const AdminSettingsPage = () => {
       setForm({
         siteTitle: settings.siteTitle || "",
         siteDescription: settings.siteDescription || "",
-        gaEnabled: settings.gaEnabled || false,
-        gaMeasurementId: settings.gaMeasurementId || "",
-        gaPropertyId: settings.gaPropertyId || "",
       });
     }
   }, [settings]);
 
   const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
+    const { name, value } = e.target;
     setForm((prev) => ({
       ...prev,
-      [name]: type === "checkbox" ? checked : value,
+      [name]: value,
     }));
   };
 
@@ -89,37 +81,8 @@ const AdminSettingsPage = () => {
             value={form.siteDescription}
             onChange={handleChange}
             margin="normal"
-          />
-
-          <FormControlLabel
-            control={
-              <Switch
-                checked={form.gaEnabled}
-                onChange={handleChange}
-                name="gaEnabled"
-              />
-            }
-            label="Google Analytics Aktif"
-          />
-
-          <TextField
-            fullWidth
-            label="GA Measurement ID"
-            name="gaMeasurementId"
-            value={form.gaMeasurementId}
-            onChange={handleChange}
-            margin="normal"
-            helperText="Örn: G-XXXXXXXX"
-          />
-
-          <TextField
-            fullWidth
-            label="GA Property ID"
-            name="gaPropertyId"
-            value={form.gaPropertyId}
-            onChange={handleChange}
-            margin="normal"
-            helperText="Örn: 123456789"
+            multiline
+            rows={3}
           />
 
           <Box mt={2}>

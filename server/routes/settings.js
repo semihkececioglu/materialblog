@@ -17,8 +17,8 @@ router.get("/public", async (req, res) => {
   try {
     const settings = await Setting.getSingleton();
     res.json({
-      gaEnabled: settings.gaEnabled,
-      gaMeasurementId: settings.gaMeasurementId,
+      siteTitle: settings.siteTitle,
+      siteDescription: settings.siteDescription,
     });
   } catch (err) {
     res.status(500).json({ message: "Public ayarlar alınamadı" });
@@ -29,19 +29,10 @@ router.get("/public", async (req, res) => {
 router.put("/", async (req, res) => {
   try {
     let settings = await Setting.getSingleton();
-    const {
-      siteTitle,
-      siteDescription,
-      gaEnabled,
-      gaMeasurementId,
-      gaPropertyId,
-    } = req.body;
+    const { siteTitle, siteDescription } = req.body;
 
     settings.siteTitle = siteTitle;
     settings.siteDescription = siteDescription;
-    settings.gaEnabled = gaEnabled;
-    settings.gaMeasurementId = gaMeasurementId;
-    settings.gaPropertyId = gaPropertyId;
 
     await settings.save();
     res.json(settings);

@@ -30,58 +30,15 @@ export const fetchLatestPosts = createAsyncThunk(
   }
 );
 
-/* ====================
-   GA4 Analytics Endpoints
-   ==================== */
-const ANALYTICS = `${BASE}/analytics`;
-
-export const fetchGaOverview = createAsyncThunk(
-  "dashboard/fetchGaOverview",
-  async ({ startDate, endDate }) => {
-    const { data } = await axios.get(`${ANALYTICS}/overview`, {
-      params: { startDate, endDate },
-    });
-    return data;
-  }
-);
-
-export const fetchGaTimeseries = createAsyncThunk(
-  "dashboard/fetchGaTimeseries",
-  async ({ startDate, endDate, metric = "activeUsers" }) => {
-    const { data } = await axios.get(`${ANALYTICS}/timeseries`, {
-      params: { startDate, endDate, metric },
-    });
-    return data;
-  }
-);
-
-export const fetchGaTopPages = createAsyncThunk(
-  "dashboard/fetchGaTopPages",
-  async ({ startDate, endDate, limit = 10 }) => {
-    const { data } = await axios.get(`${ANALYTICS}/top-pages`, {
-      params: { startDate, endDate, limit },
-    });
-    return data;
-  }
-);
-
 /* =========== 
    Slice State
    =========== */
 const initialState = {
-  // Dashboard verileri
   stats: null,
   latestComments: [],
   latestPosts: [],
   loading: false,
   error: null,
-
-  // GA verileri
-  gaLoading: false,
-  gaError: null,
-  gaOverview: [],
-  gaSeries: [],
-  gaTopPages: [],
 };
 
 const dashboardSlice = createSlice({
@@ -112,32 +69,6 @@ const dashboardSlice = createSlice({
     b.addCase(fetchLatestPosts.fulfilled, (s, { payload }) => {
       s.latestPosts = payload || [];
     });
-
-    /* ---- GA Overview ---- */
-    b.addCase(fetchGaOverview.pending, (s) => {
-      s.gaLoading = true;
-      s.gaError = null;
-    });
-    b.addCase(fetchGaOverview.fulfilled, (s, { payload }) => {
-      s.gaLoading = false;
-      s.gaOverview = payload;
-    });
-    b.addCase(fetchGaOverview.rejected, (s, a) => {
-      s.gaLoading = false;
-      s.gaError = a.error?.message || "GA overview alınamadı";
-    });
-
-    /* ---- GA Timeseries ---- */
-    b.addCase(fetchGaTimeseries.fulfilled, (s, { payload }) => {
-      s.gaLoading = false;
-      s.gaSeries = payload;
-    });
-
-    /* ---- GA Top Pages ---- */
-    b.addCase(fetchGaTopPages.fulfilled, (s, { payload }) => {
-      s.gaLoading = false;
-      s.gaTopPages = payload;
-    });
   },
 });
 
@@ -148,11 +79,5 @@ export const selectDashboardStats = (s) => s.dashboard.stats;
 export const selectLatestComments = (s) => s.dashboard.latestComments;
 export const selectLatestPosts = (s) => s.dashboard.latestPosts;
 
-export const selectGaOverview = (s) => s.dashboard.gaOverview;
-export const selectGaSeries = (s) => s.dashboard.gaSeries;
-export const selectGaTopPages = (s) => s.dashboard.gaTopPages;
-
-export const selectDashboardLoading = (s) =>
-  s.dashboard.loading || s.dashboard.gaLoading;
-export const selectDashboardError = (s) =>
-  s.dashboard.error || s.dashboard.gaError;
+export const selectDashboardLoading = (s) => s.dashboard.loading;
+export const selectDashboardError = (s) => s.dashboard.error;
