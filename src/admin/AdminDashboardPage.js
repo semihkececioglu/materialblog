@@ -11,6 +11,7 @@ import ArticleIcon from "@mui/icons-material/Article";
 import CategoryIcon from "@mui/icons-material/Category";
 import CommentIcon from "@mui/icons-material/Comment";
 import { useNavigate } from "react-router-dom";
+import GAStatsPanel from "./GAStatsPanel";
 
 // Redux
 import { useDispatch, useSelector } from "react-redux";
@@ -272,9 +273,9 @@ const AdminDashboardPage = () => {
       </Box>
 
       {/* GA Panel (tam genişlik) */}
-      <Typography variant="h6" gutterBottom>
-        GOOGLE ANALYTICS PANELİ
-      </Typography>
+      <Box>
+        <GAStatsPanel />
+      </Box>
     </Box>
   );
 };
