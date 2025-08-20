@@ -29,6 +29,7 @@ import AdminRoute from "./auth/AdminRoute";
 import AdminUsersPage from "./admin/AdminUsersPage";
 import NotFound from "./pages/NotFound";
 import RoleBasedAdminRedirect from "./auth/RoleBasedAdminRedirect";
+import "./firebase";
 
 // Redux
 import { Provider, useDispatch, useSelector } from "react-redux";
