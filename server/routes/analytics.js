@@ -2,7 +2,20 @@ const express = require("express");
 const router = express.Router();
 const { analytics, getPropertyId } = require("../services/gaClient");
 
-// Overview
+// ✅ DEBUG ENDPOINT
+router.get("/debug", async (req, res) => {
+  try {
+    const propertyId = await getPropertyId();
+    res.json({ propertyId });
+  } catch (err) {
+    console.error("GA Debug Error:", err);
+    res
+      .status(500)
+      .json({ message: "PropertyId alınamadı", error: err.message });
+  }
+});
+
+// ✅ OVERVIEW
 router.get("/overview", async (req, res) => {
   try {
     const propertyId = await getPropertyId();
@@ -14,14 +27,23 @@ router.get("/overview", async (req, res) => {
       metrics: [{ name: "activeUsers" }, { name: "screenPageViews" }],
     });
 
-    res.json(response);
+    // Basitleştirilmiş çıktı
+    const rows = response.rows?.map((r) => {
+      const metricValues = r.metricValues?.map((m) => Number(m.value) || 0);
+      return {
+        activeUsers: metricValues[0],
+        screenPageViews: metricValues[1],
+      };
+    });
+
+    res.json(rows || []);
   } catch (err) {
-    console.error(err);
+    console.error("GA Overview Error:", err);
     res.status(500).json({ message: "GA overview alınamadı" });
   }
 });
 
-// Timeseries
+// ✅ TIMESERIES
 router.get("/timeseries", async (req, res) => {
   try {
     const propertyId = await getPropertyId();
@@ -39,13 +61,14 @@ router.get("/timeseries", async (req, res) => {
       value: Number(r.metricValues?.[0]?.value || 0),
     }));
 
-    res.json(rows);
+    res.json(rows || []);
   } catch (err) {
+    console.error("GA Timeseries Error:", err);
     res.status(500).json({ message: "GA timeseries alınamadı" });
   }
 });
 
-// Top Pages
+// ✅ TOP PAGES
 router.get("/top-pages", async (req, res) => {
   try {
     const propertyId = await getPropertyId();
@@ -65,13 +88,11 @@ router.get("/top-pages", async (req, res) => {
       views: Number(r.metricValues?.[0]?.value || 0),
     }));
 
-    res.json(rows);
+    res.json(rows || []);
   } catch (err) {
+    console.error("GA Top Pages Error:", err);
     res.status(500).json({ message: "GA top pages alınamadı" });
   }
 });
-
-const propertyId = await getPropertyId();
-console.log("🚀 Using GA propertyId:", propertyId);
 
 module.exports = router;
