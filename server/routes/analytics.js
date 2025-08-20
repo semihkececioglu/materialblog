@@ -71,4 +71,7 @@ router.get("/top-pages", async (req, res) => {
   }
 });
 
+const propertyId = await getPropertyId();
+console.log("🚀 Using GA propertyId:", propertyId);
+
 module.exports = router;
