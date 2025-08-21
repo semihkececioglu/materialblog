@@ -11,7 +11,7 @@ const featuredPosts = [
     id: 1,
     title: "Modern Web Development: Best Practices for 2023",
     image:
-      "https://bayaiyi.com/wp-content/uploads/2014/03/The-Starry-Night-Vincent-van-Gogh.jpg",
+      "https://res.cloudinary.com/da2mjic2e/image/upload/v1755797318/The-Starry-Night-Vincent-van-Gogh_iw0tvv.jpg",
     category: "Development",
     author: {
       name: "Alex Johnson",
@@ -23,7 +23,7 @@ const featuredPosts = [
     id: 2,
     title: "Modern Web Development: Best Practices for 2023",
     image:
-      "https://bayaiyi.com/wp-content/uploads/2014/03/The-Starry-Night-Vincent-van-Gogh.jpg",
+      "https://res.cloudinary.com/da2mjic2e/image/upload/v1755797318/The-Starry-Night-Vincent-van-Gogh_iw0tvv.jpg",
     category: "Development",
     author: {
       name: "Alex Johnson",
@@ -35,7 +35,7 @@ const featuredPosts = [
     id: 3,
     title: "Modern Web Development: Best Practices for 2023",
     image:
-      "https://bayaiyi.com/wp-content/uploads/2014/03/The-Starry-Night-Vincent-van-Gogh.jpg",
+      "https://res.cloudinary.com/da2mjic2e/image/upload/v1755797318/The-Starry-Night-Vincent-van-Gogh_iw0tvv.jpg",
     category: "Development",
     author: {
       name: "Alex Johnson",
