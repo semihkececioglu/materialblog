@@ -1,13 +1,5 @@
 import React, { useState, useEffect } from "react";
-import {
-  Box,
-  Typography,
-  IconButton,
-  Avatar,
-  Skeleton,
-  useTheme,
-  useMediaQuery,
-} from "@mui/material";
+import { Box, Typography, IconButton, Avatar, Skeleton } from "@mui/material";
 import { useKeenSlider } from "keen-slider/react";
 import { alpha } from "@mui/material/styles";
 import NavigateNextIcon from "@mui/icons-material/NavigateNext";
@@ -53,96 +45,66 @@ const featuredPosts = [
   },
 ];
 
-const SliderSkeleton = () => {
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
-
-  return (
+const SliderSkeleton = () => (
+  <Box sx={{ position: "relative", mb: 4 }}>
     <Box
-      component="section"
-      aria-label="Loading featured posts"
-      sx={{ position: "relative", mb: 4 }}
+      sx={{
+        borderRadius: 3,
+        overflow: "hidden",
+        height: { xs: "400px", sm: "450px", md: "500px" },
+        bgcolor: (theme) =>
+          theme.palette.mode === "dark" ? "grey.900" : "grey.100",
+      }}
     >
+      <Skeleton
+        variant="rectangular"
+        width="100%"
+        height="100%"
+        animation="wave"
+      />
       <Box
         sx={{
-          borderRadius: 3,
-          overflow: "hidden",
-          height: { xs: "300px", sm: "450px", md: "500px" },
-          bgcolor: (theme) =>
-            theme.palette.mode === "dark" ? "grey.900" : "grey.100",
+          position: "absolute",
+          bottom: 0,
+          left: 0,
+          right: 0,
+          p: { xs: 3, md: 5 },
+          background: "linear-gradient(to top, rgba(0,0,0,0.8), transparent)",
         }}
       >
         <Skeleton
-          variant="rectangular"
-          width="100%"
-          height="100%"
-          animation="wave"
+          variant="text"
+          width="60%"
+          height={60}
           sx={{
-            transform: "none",
-            transformOrigin: "0 0",
+            mb: 2,
+            bgcolor: "rgba(255,255,255,0.1)",
           }}
         />
-        <Box
-          sx={{
-            position: "absolute",
-            bottom: 0,
-            left: 0,
-            right: 0,
-            p: { xs: 2, sm: 3, md: 5 },
-            background: "linear-gradient(to top, rgba(0,0,0,0.8), transparent)",
-          }}
-        >
+        <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
           <Skeleton
-            variant="text"
-            width={isMobile ? "90%" : "60%"}
-            height={isMobile ? 40 : 60}
-            sx={{
-              mb: { xs: 1, sm: 2 },
-              bgcolor: "rgba(255,255,255,0.1)",
-              transform: "none",
-              transformOrigin: "0 0",
-            }}
+            variant="circular"
+            width={40}
+            height={40}
+            sx={{ bgcolor: "rgba(255,255,255,0.1)" }}
           />
-          {!isMobile && (
+          <Box>
             <Skeleton
               variant="text"
-              width="40%"
-              height={24}
-              sx={{
-                bgcolor: "rgba(255,255,255,0.1)",
-                transform: "none",
-              }}
+              width={120}
+              sx={{ bgcolor: "rgba(255,255,255,0.1)" }}
             />
-          )}
+            <Skeleton
+              variant="text"
+              width={80}
+              sx={{ bgcolor: "rgba(255,255,255,0.1)" }}
+            />
+          </Box>
         </Box>
       </Box>
-
-      {/* Skeleton Navigation Dots */}
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "center",
-          gap: 1,
-          mt: 2,
-        }}
-      >
-        {[...Array(3)].map((_, idx) => (
-          <Skeleton
-            key={idx}
-            variant="rectangular"
-            width={idx === 0 ? 24 : 8}
-            height={8}
-            sx={{
-              borderRadius: 4,
-              bgcolor: idx === 0 ? "primary.main" : "rgba(255,255,255,0.1)",
-              transform: "none",
-            }}
-          />
-        ))}
-      </Box>
     </Box>
-  );
-};
+  </Box>
+);
 
 const HomeSlider = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
