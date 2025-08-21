@@ -14,15 +14,16 @@ import {
   Snackbar,
   Alert,
   Autocomplete,
+  IconButton,
 } from "@mui/material";
 import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 import { BASE_URL } from "../config";
-// ❌ ReactQuill/Quill/ImageResize'ı ESKİDEN burada import ediyorduk
-// import ReactQuill from "react-quill";
-// import Quill from "quill";
-// import ImageResize from "quill-image-resize-module-react";
 import useLazyCss from "../hooks/useLazyCss";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import CloudUploadIcon from "@mui/icons-material/CloudUpload";
+import CloseIcon from "@mui/icons-material/Close";
+import { alpha } from "@mui/material/styles";
 
 // Redux
 import { useDispatch, useSelector } from "react-redux";
@@ -33,10 +34,10 @@ import {
   updatePost,
 } from "../redux/postSlice";
 
-// ✅ ReactQuill artık lazy
+// ✅ ReactQuill lazy import
 const ReactQuill = React.lazy(() => import("react-quill"));
 
-// 🔧 Cloudinary upload
+// ✅ Cloudinary upload
 const uploadToCloudinary = async (file) => {
   const formData = new FormData();
   formData.append("file", file);
@@ -48,7 +49,7 @@ const uploadToCloudinary = async (file) => {
   return res.data.secure_url;
 };
 
-// ✅ Formats sabit kalabilir (bundle etkisi minimal)
+// ✅ Formats
 const quillFormats = [
   "header",
   "bold",
@@ -89,17 +90,13 @@ const PostEditorPage = () => {
     severity: "success",
   });
 
-  // 🔽 Editor yükleninceye kadar modülleri boş tutacağız
-  const [editorReady, setEditorReady] = useState(false);
-  const [quillModules, setQuillModules] = useState(undefined);
+  // 🔽 Quill modules
+  const [quillModules, setQuillModules] = useState(null);
 
-  // ✅ Quill CSS'ini sadece editor görünürken yükle
-  useLazyCss(
-    () => (editorReady ? import("react-quill/dist/quill.snow.css") : null),
-    [editorReady]
-  );
+  // ✅ Quill CSS’i global olarak yükle
+  useLazyCss(() => import("react-quill/dist/quill.snow.css"));
 
-  // Kategori ve etiketleri al
+  // Kategoriler & Etiketler
   useEffect(() => {
     axios
       .get(`${BASE_URL}/api/categories`)
@@ -152,21 +149,19 @@ const PostEditorPage = () => {
     return () => dispatch(clearSelectedPost());
   }, [id, dispatch]);
 
-  // ✅ QUILL ve image-resize modülünü dinamik import + register
+  // ✅ Quill + imageResize dinamik import
   useEffect(() => {
     let mounted = true;
 
     const loadEditor = async () => {
-      // Quill ve image-resize modülü sadece bu sayfada gerektiğinde iner
       const [{ default: Quill }, { default: ImageResize }] = await Promise.all([
         import("quill"),
         import("quill-image-resize-module-react"),
       ]);
 
-      // register
       Quill.register("modules/imageResize", ImageResize);
 
-      // handler içinde ihtiyaç duyacağımız upload fonksiyonu ve Quill referansı
+      // Custom image upload handler
       const imageHandler = function () {
         const input = document.createElement("input");
         input.setAttribute("type", "file");
@@ -212,8 +207,6 @@ const PostEditorPage = () => {
           modules: ["Resize", "DisplaySize", "Toolbar"],
         },
       });
-
-      setEditorReady(true);
     };
 
     loadEditor();
@@ -250,7 +243,7 @@ const PostEditorPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Yeni etiketleri DB'ye kaydet
+    // Yeni etiketleri ekle
     for (const tag of form.tags) {
       const exists = allTags.some(
         (t) => t.name.toLowerCase() === tag.toLowerCase()
@@ -306,169 +299,259 @@ const PostEditorPage = () => {
   }
 
   return (
-    <Container maxWidth="md" sx={{ py: 4 }}>
-      <Typography
-        variant="h5"
-        gutterBottom
+    <Container maxWidth="lg" sx={{ py: 4 }}>
+      {/* Header */}
+      <Box
         sx={{
-          fontWeight: "bold",
-          mb: 3,
-          textShadow: "1px 1px 2px rgba(0,0,0,0.1)",
+          display: "flex",
+          alignItems: "center",
+          gap: 2,
+          mb: 4,
+          px: 2,
         }}
       >
-        {id ? "Yazıyı Düzenle" : "Yeni Yazı Oluştur"}
-      </Typography>
+        <Button
+          startIcon={<ArrowBackIcon />}
+          onClick={() => navigate("/admin/posts")}
+          sx={{
+            color: "text.secondary",
+            "&:hover": { bgcolor: "action.hover" },
+          }}
+        >
+          Geri
+        </Button>
+        <Typography
+          variant="h5"
+          sx={{
+            fontWeight: 600,
+            color: "text.primary",
+          }}
+        >
+          {id ? "Yazıyı Düzenle" : "Yeni Yazı Oluştur"}
+        </Typography>
+      </Box>
 
       <Paper
+        elevation={0}
         sx={{
-          p: 3,
+          p: { xs: 2, md: 4 },
           borderRadius: 3,
-          backgroundColor: "rgba(255, 255, 255, 0.75)",
-          backdropFilter: "blur(10px)",
-          boxShadow: "0 8px 24px rgba(0, 0, 0, 0.1)",
+          backgroundColor: (theme) =>
+            theme.palette.mode === "dark"
+              ? "rgba(255, 255, 255, 0.04)"
+              : "rgba(255, 255, 255, 0.95)",
+          backdropFilter: "blur(20px)",
+          border: "1px solid",
+          borderColor: "divider",
         }}
       >
-        <Box component="form" onSubmit={handleSubmit}>
-          <TextField
-            fullWidth
-            label="Başlık"
-            name="title"
-            value={form.title}
-            onChange={handleChange}
-            sx={{ mb: 2 }}
-          />
-
-          <FormControl fullWidth sx={{ mb: 2 }}>
-            <InputLabel>Kategori</InputLabel>
-            <Select
-              name="category"
-              value={form.category}
+        <Box
+          component="form"
+          onSubmit={handleSubmit}
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            gap: 3,
+          }}
+        >
+          {/* Başlık ve Kategori Grid */}
+          <Box
+            sx={{
+              display: "flex",
+              gap: 2,
+              flexDirection: { xs: "column", md: "row" },
+            }}
+          >
+            <TextField
+              fullWidth
+              label="Başlık"
+              name="title"
+              value={form.title}
               onChange={handleChange}
-              label="Kategori"
-            >
-              {categories.map((cat, i) => (
-                <MenuItem key={i} value={cat}>
-                  {cat}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
+              sx={{
+                flex: 2,
+                "& .MuiOutlinedInput-root": {
+                  borderRadius: 2,
+                  bgcolor: (theme) =>
+                    alpha(theme.palette.background.paper, 0.6),
+                },
+              }}
+            />
+
+            <FormControl sx={{ flex: 1 }}>
+              <InputLabel>Kategori</InputLabel>
+              <Select
+                name="category"
+                value={form.category}
+                onChange={handleChange}
+                label="Kategori"
+                sx={{
+                  borderRadius: 2,
+                  bgcolor: (theme) =>
+                    alpha(theme.palette.background.paper, 0.6),
+                }}
+              >
+                {categories.map((cat, i) => (
+                  <MenuItem key={i} value={cat}>
+                    {cat}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Box>
 
           {/* Kapak Görseli */}
-          <Box sx={{ mb: 2 }}>
-            <Typography variant="subtitle1">Kapak Görseli:</Typography>
-            <Button variant="outlined" component="label" sx={{ mt: 1 }}>
-              Görsel Yükle
-              <input
-                type="file"
-                hidden
-                accept="image/*"
-                onChange={handleCoverUpload}
-              />
-            </Button>
+          <Box
+            sx={{
+              p: 3,
+              border: "2px dashed",
+              borderColor: "divider",
+              borderRadius: 2,
+              bgcolor: (theme) => alpha(theme.palette.background.paper, 0.3),
+            }}
+          >
+            <Typography variant="subtitle1" sx={{ mb: 2, fontWeight: 500 }}>
+              Kapak Görseli
+            </Typography>
+
+            {!form._imagePreview && (
+              <Button
+                variant="outlined"
+                component="label"
+                startIcon={<CloudUploadIcon />}
+                sx={{
+                  borderRadius: 2,
+                  textTransform: "none",
+                }}
+              >
+                Görsel Yükle
+                <input
+                  type="file"
+                  hidden
+                  accept="image/*"
+                  onChange={handleCoverUpload}
+                />
+              </Button>
+            )}
 
             {isCoverUploading ? (
-              <Box mt={2} display="flex" justifyContent="center">
-                <CircularProgress />
+              <Box sx={{ display: "flex", justifyContent: "center", my: 2 }}>
+                <CircularProgress size={40} />
               </Box>
             ) : (
               form._imagePreview && (
-                <Box
-                  mt={2}
-                  sx={{ position: "relative", display: "inline-block" }}
-                >
+                <Box sx={{ position: "relative", display: "inline-block" }}>
                   <img
                     src={form._imagePreview}
                     alt="Kapak"
                     style={{
-                      maxHeight: 150,
+                      maxWidth: "100%",
+                      height: 200,
+                      objectFit: "cover",
                       borderRadius: 8,
-                      border: "1px solid #ccc",
                     }}
                   />
-                  <Button
+                  <IconButton
                     size="small"
                     onClick={() =>
                       setForm({ ...form, image: "", _imagePreview: "" })
                     }
                     sx={{
                       position: "absolute",
-                      top: 6,
-                      right: 6,
-                      minWidth: 0,
-                      width: 28,
-                      height: 28,
-                      borderRadius: "50%",
+                      top: 8,
+                      right: 8,
                       bgcolor: "rgba(0,0,0,0.6)",
-                      color: "#fff",
+                      color: "white",
                       "&:hover": { bgcolor: "rgba(0,0,0,0.8)" },
                     }}
                   >
-                    ✕
-                  </Button>
+                    <CloseIcon fontSize="small" />
+                  </IconButton>
                 </Box>
               )
             )}
           </Box>
 
+          {/* Özet */}
           <TextField
             fullWidth
             multiline
             minRows={3}
+            maxRows={5}
             label="Özet"
             name="summary"
             value={form.summary}
             onChange={handleChange}
-            sx={{ mb: 2 }}
+            sx={{
+              "& .MuiOutlinedInput-root": {
+                borderRadius: 2,
+                bgcolor: (theme) => alpha(theme.palette.background.paper, 0.6),
+              },
+            }}
           />
 
-          <Typography variant="subtitle1" sx={{ mb: 1 }}>
-            İçerik:
-          </Typography>
+          {/* İçerik Editörü */}
+          <Box>
+            <Typography variant="subtitle1" sx={{ mb: 2, fontWeight: 500 }}>
+              İçerik
+            </Typography>
 
-          {/* ✅ ReactQuill yalnızca hazır olduğunda ve lazy olarak render edilir */}
-          <Suspense
-            fallback={
-              <Box
-                sx={{
-                  height: 300,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <CircularProgress />
-              </Box>
-            }
-          >
-            {editorReady ? (
-              <ReactQuill
-                value={form.content}
-                onChange={(val) => setForm({ ...form, content: val })}
-                modules={quillModules}
-                formats={quillFormats}
-                theme="snow"
-                style={{
-                  height: "300px",
-                  marginBottom: "50px",
-                  backgroundColor: "#fff",
-                  borderRadius: 8,
-                }}
-              />
-            ) : (
-              <Box
-                sx={{
-                  height: 300,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <CircularProgress />
-              </Box>
-            )}
-          </Suspense>
+            <Suspense
+              fallback={
+                <Box
+                  sx={{
+                    height: 400,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <CircularProgress />
+                </Box>
+              }
+            >
+              {quillModules ? (
+                <Box
+                  sx={{
+                    ".ql-container": {
+                      borderBottomLeftRadius: 8,
+                      borderBottomRightRadius: 8,
+                      bgcolor: "background.paper",
+                    },
+                    ".ql-toolbar": {
+                      borderTopLeftRadius: 8,
+                      borderTopRightRadius: 8,
+                      bgcolor: "background.paper",
+                    },
+                    ".ql-editor": {
+                      minHeight: 400,
+                    },
+                  }}
+                >
+                  <ReactQuill
+                    value={form.content}
+                    onChange={(val) => setForm({ ...form, content: val })}
+                    modules={quillModules}
+                    formats={quillFormats}
+                    theme="snow"
+                  />
+                </Box>
+              ) : (
+                <Box
+                  sx={{
+                    height: 400,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <CircularProgress />
+                </Box>
+              )}
+            </Suspense>
+          </Box>
 
+          {/* Etiketler */}
           <Autocomplete
             multiple
             freeSolo
@@ -476,13 +559,45 @@ const PostEditorPage = () => {
             value={form.tags}
             onChange={(e, newValue) => setForm({ ...form, tags: newValue })}
             renderInput={(params) => (
-              <TextField {...params} label="Etiketler" sx={{ my: 3 }} />
+              <TextField
+                {...params}
+                label="Etiketler"
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    borderRadius: 2,
+                    bgcolor: (theme) =>
+                      alpha(theme.palette.background.paper, 0.6),
+                  },
+                }}
+              />
             )}
           />
 
-          <Button variant="contained" type="submit" sx={{ borderRadius: 2 }}>
-            Gönder
-          </Button>
+          {/* Submit Button */}
+          <Box sx={{ display: "flex", gap: 2, mt: 2 }}>
+            <Button
+              variant="outlined"
+              onClick={() => navigate("/admin/posts")}
+              sx={{
+                borderRadius: 2,
+                px: 4,
+                textTransform: "none",
+              }}
+            >
+              İptal
+            </Button>
+            <Button
+              variant="contained"
+              type="submit"
+              sx={{
+                borderRadius: 2,
+                px: 4,
+                textTransform: "none",
+              }}
+            >
+              {id ? "Güncelle" : "Yayınla"}
+            </Button>
+          </Box>
         </Box>
       </Paper>
 

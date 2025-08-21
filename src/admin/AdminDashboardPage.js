@@ -10,9 +10,11 @@ import {
 import ArticleIcon from "@mui/icons-material/Article";
 import CategoryIcon from "@mui/icons-material/Category";
 import CommentIcon from "@mui/icons-material/Comment";
+import PersonIcon from "@mui/icons-material/Person";
 import { useNavigate } from "react-router-dom";
 import GAStatsPanel from "./GAStatsPanel";
-
+import TrendingUpIcon from "@mui/icons-material/TrendingUp";
+import VisibilityIcon from "@mui/icons-material/Visibility";
 // Redux
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -26,9 +28,8 @@ const AdminDashboardPage = () => {
   const theme = useTheme();
   const navigate = useNavigate();
 
-  const { stats, latestComments, latestPosts, loading, error } = useSelector(
-    (state) => state.dashboard
-  );
+  const { stats, latestComments, latestPosts, loadingStats, error } =
+    useSelector((state) => state.dashboard);
 
   useEffect(() => {
     dispatch(fetchDashboardStats());
@@ -36,41 +37,49 @@ const AdminDashboardPage = () => {
     dispatch(fetchLatestPosts());
   }, [dispatch]);
 
+  // StatCard bileşenini güncelleyelim
   const StatCard = ({ title, value, icon, iconColor }) => (
     <Paper
       elevation={0}
       sx={{
-        p: 3,
-        borderRadius: 3,
+        p: 2.5,
+        borderRadius: 2,
         display: "flex",
         alignItems: "center",
         gap: 2,
-        backgroundColor: "rgba(255, 255, 255, 0.75)",
+        flex: 1,
+        minWidth: 240,
+        backgroundColor: (theme) =>
+          theme.palette.mode === "dark"
+            ? "rgba(255,255,255,0.05)"
+            : "rgba(255,255,255,0.9)",
         backdropFilter: "blur(10px)",
-        boxShadow: "0 8px 24px rgba(0, 0, 0, 0.1)",
+        border: "1px solid",
+        borderColor: "divider",
       }}
     >
       <Avatar
         sx={{
-          bgcolor: iconColor || "primary.main",
-          width: 48,
-          height: 48,
+          bgcolor: "transparent",
+          color: iconColor,
+          width: 45,
+          height: 45,
         }}
       >
         {icon}
       </Avatar>
       <Box>
-        <Typography variant="h6" fontWeight="bold">
+        <Typography variant="h5" fontSize="1.5rem" fontWeight="600">
           {value}
         </Typography>
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
           {title}
         </Typography>
       </Box>
     </Paper>
   );
 
-  if (loading || !stats) {
+  if (loadingStats || !stats) {
     return (
       <Box sx={{ display: "flex", justifyContent: "center", mt: 6 }}>
         <CircularProgress />
@@ -86,67 +95,126 @@ const AdminDashboardPage = () => {
     );
   }
 
+  // Import kısmının altına dummy data ekleyelim
+  const dummyPopularPosts = [
+    {
+      _id: "1",
+      title: "React Hooks Kullanım Rehberi",
+      viewCount: 1250,
+      slug: "react-hooks",
+    },
+    {
+      _id: "2",
+      title: "Material UI ile Modern Tasarımlar",
+      viewCount: 980,
+      slug: "material-ui",
+    },
+    {
+      _id: "3",
+      title: "Redux Toolkit Best Practices",
+      viewCount: 854,
+      slug: "redux-toolkit",
+    },
+    {
+      _id: "4",
+      title: "Next.js SSR ve SSG Karşılaştırması",
+      viewCount: 743,
+      slug: "nextjs-ssr-ssg",
+    },
+    {
+      _id: "5",
+      title: "TypeScript ile Güvenli Kodlama",
+      viewCount: 621,
+      slug: "typescript",
+    },
+  ];
+
+  // Return kısmını güncelleyin
   return (
-    <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
-      {/* Üst Satır: Stat Kartlar + Son Yazılar */}
+    <Box sx={{ p: 3, display: "flex", flexDirection: "column", gap: 3 }}>
+      {/* Stat Cards */}
       <Box
         sx={{
           display: "flex",
-          flexDirection: "row",
           gap: 3,
           flexWrap: "wrap",
+          width: "100%",
         }}
       >
-        {/* Sol: Stat Kartlar */}
-        <Box
-          sx={{
-            flex: { xs: "100%", md: "66.66%" },
-            display: "flex",
-            flexDirection: "column",
-            gap: 2,
-          }}
-        >
-          <StatCard
-            title="Toplam Yazı"
-            value={stats.totalPosts}
-            icon={<ArticleIcon />}
-            iconColor={theme.palette.primary.main}
-          />
-          <StatCard
-            title="Toplam Kategori"
-            value={stats.totalCategories}
-            icon={<CategoryIcon />}
-            iconColor={theme.palette.secondary.main}
-          />
-          <StatCard
-            title="Toplam Yorum"
-            value={stats.totalComments}
-            icon={<CommentIcon />}
-            iconColor={theme.palette.info.main}
-          />
-        </Box>
+        <StatCard
+          title="Toplam Yazı"
+          value={stats.totalPosts}
+          icon={<ArticleIcon />}
+          iconColor={theme.palette.primary.main}
+        />
+        <StatCard
+          title="Toplam Kategori"
+          value={stats.totalCategories}
+          icon={<CategoryIcon />}
+          iconColor={theme.palette.secondary.main}
+        />
+        <StatCard
+          title="Toplam Yorum"
+          value={stats.totalComments}
+          icon={<CommentIcon />}
+          iconColor={theme.palette.info.main}
+        />
+        <StatCard
+          title="Toplam Kullanıcı"
+          value={stats.totalUsers || "0"} // API'den gelen değeri kullanın
+          icon={<PersonIcon />}
+          iconColor={theme.palette.success.main}
+        />
+      </Box>
 
-        {/* Sağ: Son Yazılar */}
-        <Box
-          sx={{
-            flex: { xs: "100%", md: "33.33%" },
+      {/* Content Cards */}
+      <Box
+        sx={{
+          display: "flex",
+          gap: 3,
+          flexDirection: { xs: "column", lg: "row" },
+          width: "100%",
+          "& > *": {
+            // Tüm child Paper'lar için ortak stiller
+            flex: "1 1 0",
+            p: 3,
+            borderRadius: 2,
+            backgroundColor: (theme) =>
+              theme.palette.mode === "dark"
+                ? "rgba(255,255,255,0.05)"
+                : "rgba(255,255,255,0.9)",
+            border: "1px solid",
+            borderColor: "divider",
+            minHeight: 480, // Sabit yükseklik
+            overflow: "hidden",
             display: "flex",
             flexDirection: "column",
-            gap: 1,
-          }}
-        >
-          <Typography variant="h6" gutterBottom>
-            SON YAZILAR
-          </Typography>
-          <Paper
+          },
+        }}
+      >
+        {/* Son Yazılar */}
+        <Paper>
+          <Typography
+            variant="h6"
+            gutterBottom
             sx={{
-              p: 2,
-              borderRadius: 3,
-              backgroundColor: "background.paper",
-              boxShadow: 2,
+              pb: 2,
+              borderBottom: 1,
+              borderColor: "divider",
             }}
           >
-            {latestPosts.map((post) => (
+            SON YAZILAR
+          </Typography>
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: "column",
+              gap: 2,
+              mt: 2,
+              flex: 1,
+            }}
+          >
+            {latestPosts.slice(0, 5).map((post) => (
               <Box
                 key={post._id}
                 onClick={() => navigate(`/post/${post.slug}`)}
@@ -154,70 +222,49 @@ const AdminDashboardPage = () => {
                   display: "flex",
                   alignItems: "center",
                   gap: 2,
-                  mb: 2,
-                  pb: 1,
-                  borderBottom: "1px solid rgba(0,0,0,0.05)",
+                  p: 1.5,
+                  borderRadius: 1,
                   cursor: "pointer",
+                  transition: "all 0.2s",
                   "&:hover": {
-                    backgroundColor:
-                      theme.palette.mode === "dark"
-                        ? "rgba(255,255,255,0.05)"
-                        : "rgba(0,0,0,0.03)",
+                    backgroundColor: "action.hover",
+                    transform: "translateX(6px)",
                   },
-                  px: 1,
-                  py: 1,
-                  borderRadius: 1.5,
                 }}
               >
                 <Avatar
                   variant="rounded"
                   src={post.image}
-                  sx={{ width: 56, height: 40 }}
+                  sx={{ width: 52, height: 52 }}
                 />
                 <Box>
-                  <Typography variant="subtitle2" fontWeight="bold">
+                  <Typography variant="subtitle1" fontWeight="500">
                     {post.title}
                   </Typography>
-                  <Typography variant="caption" color="text.disabled">
+                  <Typography variant="caption" color="text.secondary">
                     {new Date(post.date).toLocaleDateString()}
                   </Typography>
                 </Box>
               </Box>
             ))}
-          </Paper>
-        </Box>
-      </Box>
+          </Box>
+        </Paper>
 
-      {/* Alt Satır: Son Yorumlar */}
-      <Box
-        sx={{
-          display: "flex",
-          flexDirection: "row",
-          flexWrap: "wrap",
-          width: "100%",
-          gap: 3,
-        }}
-      >
-        <Box
-          sx={{
-            flex: { xs: "100%", md: "33.33%" },
-            display: "flex",
-            flexDirection: "column",
-            gap: 1,
-          }}
-        >
-          <Typography variant="h6" gutterBottom>
-            SON YORUMLAR
-          </Typography>
-          <Paper
+        {/* Son Yorumlar */}
+        <Paper>
+          <Typography
+            variant="h6"
+            gutterBottom
             sx={{
-              p: 2,
-              borderRadius: 3,
-              backgroundColor: "background.paper",
-              boxShadow: 2,
+              pb: 2,
+              borderBottom: 1,
+              borderColor: "divider",
             }}
           >
-            {latestComments.map((comment) => (
+            SON YORUMLAR
+          </Typography>
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+            {latestComments.slice(0, 5).map((comment) => (
               <Box
                 key={comment._id}
                 onClick={() => navigate(`/post/${comment.postId?.slug}`)}
@@ -225,9 +272,6 @@ const AdminDashboardPage = () => {
                   display: "flex",
                   alignItems: "flex-start",
                   gap: 2,
-                  mb: 2,
-                  pb: 1,
-                  borderBottom: "1px solid rgba(0,0,0,0.05)",
                   cursor: "pointer",
                   "&:hover": {
                     backgroundColor:
@@ -235,8 +279,7 @@ const AdminDashboardPage = () => {
                         ? "rgba(255,255,255,0.05)"
                         : "rgba(0,0,0,0.03)",
                   },
-                  px: 1,
-                  py: 1,
+                  p: 1,
                   borderRadius: 1.5,
                 }}
               >
@@ -262,20 +305,87 @@ const AdminDashboardPage = () => {
                     variant="caption"
                     sx={{ color: "text.disabled", mt: 0.5 }}
                   >
-                    {new Date(comment.date).toLocaleString()} •{" "}
-                    {comment.postId?.title}
+                    {new Date(comment.date).toLocaleString()}
                   </Typography>
                 </Box>
               </Box>
             ))}
-          </Paper>
-        </Box>
+          </Box>
+        </Paper>
+
+        {/* Popüler Yazılar */}
+        <Paper>
+          <Typography
+            variant="h6"
+            gutterBottom
+            sx={{
+              pb: 2,
+              borderBottom: 1,
+              borderColor: "divider",
+            }}
+          >
+            POPÜLER YAZILAR
+          </Typography>
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 2 }}>
+            {dummyPopularPosts.map((post, index) => (
+              <Box
+                key={post._id}
+                onClick={() => navigate(`/post/${post.slug}`)}
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 2,
+                  p: 1.5,
+                  borderRadius: 1,
+                  cursor: "pointer",
+                  transition: "all 0.2s",
+                  "&:hover": {
+                    backgroundColor: "action.hover",
+                    transform: "translateX(6px)",
+                  },
+                }}
+              >
+                <Avatar
+                  sx={{
+                    width: 32,
+                    height: 32,
+                    bgcolor: "primary.main",
+                    fontSize: "0.875rem",
+                    fontWeight: "600",
+                  }}
+                >
+                  {index + 1}
+                </Avatar>
+                <Box sx={{ flex: 1 }}>
+                  <Typography variant="subtitle1" fontWeight="500">
+                    {post.title}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    {post.viewCount.toLocaleString()} görüntülenme
+                  </Typography>
+                </Box>
+              </Box>
+            ))}
+          </Box>
+        </Paper>
       </Box>
 
-      {/* GA Panel (tam genişlik) */}
-      <Box>
+      {/* GA Panel */}
+      <Paper
+        elevation={0}
+        sx={{
+          p: 3,
+          borderRadius: 2,
+          border: "1px solid",
+          borderColor: "divider",
+          backgroundColor: (theme) =>
+            theme.palette.mode === "dark"
+              ? "rgba(255,255,255,0.05)"
+              : "rgba(255,255,255,0.9)",
+        }}
+      >
         <GAStatsPanel />
-      </Box>
+      </Paper>
     </Box>
   );
 };

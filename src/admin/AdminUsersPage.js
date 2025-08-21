@@ -23,8 +23,15 @@ import {
   DialogActions,
   Button,
   Tooltip,
+  Container,
+  Chip,
 } from "@mui/material";
 import axios from "axios";
+import { alpha } from "@mui/material/styles";
+import PeopleIcon from "@mui/icons-material/People";
+import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettings";
+import EditIcon from "@mui/icons-material/Edit";
+import PersonIcon from "@mui/icons-material/Person";
 
 const AdminUsersPage = () => {
   const [users, setUsers] = useState([]);
@@ -107,121 +114,248 @@ const AdminUsersPage = () => {
   if (loading) return <CircularProgress />;
 
   return (
-    <Box>
-      <Typography
-        variant="h5"
+    <Container maxWidth="lg" sx={{ py: 4 }}>
+      {/* Header Card */}
+      <Paper
+        elevation={0}
         sx={{
-          mb: 3,
-          fontWeight: "bold",
-          textShadow: "1px 1px 2px rgba(0,0,0,0.1)",
+          p: 3,
+          mb: 4,
+          borderRadius: 3,
+          backgroundColor: (theme) =>
+            theme.palette.mode === "dark"
+              ? "rgba(255,255,255,0.04)"
+              : "rgba(255,255,255,0.95)",
+          backdropFilter: "blur(20px)",
+          border: "1px solid",
+          borderColor: "divider",
         }}
       >
-        Kullanıcılar
-      </Typography>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+          <Box
+            sx={{
+              p: 1.5,
+              borderRadius: 2,
+              bgcolor: (theme) => alpha(theme.palette.primary.main, 0.1),
+            }}
+          >
+            <PeopleIcon sx={{ fontSize: 28, color: "primary.main" }} />
+          </Box>
+          <Box>
+            <Typography variant="h5" sx={{ fontWeight: 600, mb: 0.5 }}>
+              Kullanıcılar
+            </Typography>
+            <Chip
+              label={`${users.length} kullanıcı`}
+              size="small"
+              sx={{
+                bgcolor: (theme) => alpha(theme.palette.primary.main, 0.1),
+                color: "primary.main",
+                fontWeight: 500,
+                height: "24px",
+              }}
+            />
+          </Box>
+        </Box>
+      </Paper>
 
+      {/* Users Table */}
       <Paper
+        elevation={0}
         sx={{
-          backgroundColor: "rgba(255, 255, 255, 0.7)",
-          backdropFilter: "blur(10px)",
           borderRadius: 3,
-          boxShadow: "0 8px 24px rgba(0, 0, 0, 0.1)",
+          backgroundColor: (theme) =>
+            theme.palette.mode === "dark"
+              ? "rgba(255,255,255,0.04)"
+              : "rgba(255,255,255,0.95)",
+          backdropFilter: "blur(20px)",
+          border: "1px solid",
+          borderColor: "divider",
           overflow: "hidden",
         }}
       >
         <TableContainer>
           <Table>
             <TableHead>
-              <TableRow sx={{ backgroundColor: "#f9f9f9" }}>
-                <TableCell>
-                  <strong>Kullanıcı Adı</strong>
+              <TableRow>
+                <TableCell sx={{ py: 2.5, px: 3, fontWeight: 600 }}>
+                  Kullanıcı
                 </TableCell>
-                <TableCell>
-                  <strong>Ad Soyad</strong>
+                <TableCell sx={{ py: 2.5, px: 3, fontWeight: 600 }}>
+                  İletişim
                 </TableCell>
-                <TableCell>
-                  <strong>Email</strong>
-                </TableCell>
-                <TableCell>
-                  <strong>Rol</strong>
+                <TableCell sx={{ py: 2.5, px: 3, fontWeight: 600 }}>
+                  Yetki
                 </TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {users.map((user) => {
                 const isProtected = user.username === "semihkececioglu";
+                const roleColors = {
+                  admin: {
+                    light: "#FBE9E7",
+                    main: "#FF5722",
+                    icon: <AdminPanelSettingsIcon sx={{ fontSize: 18 }} />,
+                  },
+                  editor: {
+                    light: "#E3F2FD",
+                    main: "#2196F3",
+                    icon: <EditIcon sx={{ fontSize: 18 }} />,
+                  },
+                  user: {
+                    light: "#F5F5F5",
+                    main: "#9E9E9E",
+                    icon: <PersonIcon sx={{ fontSize: 18 }} />,
+                  },
+                };
 
                 return (
                   <TableRow
                     key={user._id}
                     sx={{
-                      transition: "all 0.2s ease-in-out",
                       "&:hover": {
-                        backgroundColor: "rgba(0, 0, 0, 0.04)",
+                        bgcolor: (theme) =>
+                          alpha(theme.palette.primary.main, 0.02),
                       },
                     }}
                   >
-                    <TableCell>
-                      <Box display="flex" alignItems="center" gap={1}>
-                        <Avatar
-                          src={user.profileImage}
-                          alt={user.username}
+                    <TableCell sx={{ py: 2, px: 3 }}>
+                      <Box
+                        sx={{ display: "flex", alignItems: "center", gap: 2 }}
+                      >
+                        <Tooltip
+                          title="Profili görüntüle"
+                          placement="top"
+                          arrow
                           sx={{
-                            width: 36,
-                            height: 36,
-                            bgcolor: "primary.main",
+                            backgroundColor: "background.paper",
+                            "& .MuiTooltip-arrow": {
+                              color: "background.paper",
+                            },
                           }}
                         >
-                          {user.username?.[0]?.toUpperCase()}
-                        </Avatar>
-                        <Tooltip title="Profili Gör" arrow>
-                          <Typography
+                          <Avatar
+                            src={user.profileImage}
                             sx={{
+                              width: 42,
+                              height: 42,
                               cursor: "pointer",
+                              transition: "all 0.2s ease",
                               "&:hover": {
-                                textDecoration: "underline",
-                                color: "primary.main",
+                                transform: "scale(1.05)",
+                                boxShadow: 2,
                               },
                             }}
                             onClick={() =>
                               navigate(`/profile/${user.username}`)
                             }
                           >
-                            {user.username}
-                          </Typography>
+                            {user.username?.[0]?.toUpperCase()}
+                          </Avatar>
                         </Tooltip>
+                        <Box>
+                          <Typography
+                            sx={{
+                              fontWeight: 600,
+                              fontSize: "0.95rem",
+                              color: "text.primary",
+                              lineHeight: 1.2,
+                              mb: 0.5,
+                            }}
+                          >
+                            {user.firstName && user.lastName
+                              ? `${user.firstName} ${user.lastName}`
+                              : user.username}
+                          </Typography>
+                          <Typography
+                            variant="caption"
+                            sx={{
+                              color: "text.secondary",
+                              fontSize: "0.75rem",
+                            }}
+                          >
+                            @{user.username}
+                          </Typography>
+                        </Box>
                       </Box>
                     </TableCell>
-
-                    <TableCell>
-                      {user.firstName && user.lastName
-                        ? `${user.firstName} ${user.lastName}`
-                        : "-"}
+                    <TableCell sx={{ py: 2, px: 3 }}>
+                      <Box
+                        sx={{
+                          display: "flex",
+                          flexDirection: "column",
+                          gap: 0.5,
+                        }}
+                      >
+                        <Typography
+                          sx={{
+                            color: "text.secondary",
+                            fontSize: "0.875rem",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 1,
+                          }}
+                        >
+                          {user.email}
+                        </Typography>
+                      </Box>
                     </TableCell>
-                    <TableCell>{user.email}</TableCell>
-                    <TableCell>
+                    <TableCell sx={{ py: 2, px: 3 }}>
                       <Tooltip
                         title={
                           isProtected
                             ? "Bu kullanıcının rolü değiştirilemez"
-                            : ""
+                            : "Rolü değiştirmek için tıklayın"
                         }
                         arrow
-                        placement="top"
+                        placement="left"
+                        sx={{
+                          "& .MuiTooltip-tooltip": {
+                            bgcolor: "background.paper",
+                            color: "text.primary",
+                            boxShadow: (theme) =>
+                              `0 4px 8px ${alpha(
+                                theme.palette.common.black,
+                                0.1
+                              )}`,
+                            fontSize: "0.75rem",
+                            p: 1,
+                            borderRadius: 1,
+                          },
+                        }}
                       >
-                        <span>
-                          <Select
-                            value={user.role}
+                        <Box>
+                          <Chip
+                            icon={roleColors[user.role].icon}
+                            label={user.role.toUpperCase()}
                             size="small"
-                            onChange={(e) =>
-                              handleRoleSelect(user, e.target.value)
+                            sx={{
+                              bgcolor: roleColors[user.role].light,
+                              color: roleColors[user.role].main,
+                              fontWeight: 500,
+                              minWidth: 90,
+                              height: 28,
+                              cursor: isProtected ? "not-allowed" : "pointer",
+                              transition: "all 0.2s ease",
+                              "& .MuiChip-icon": {
+                                fontSize: 16,
+                                mr: 0.5,
+                              },
+                              "&:hover": !isProtected && {
+                                bgcolor: alpha(
+                                  roleColors[user.role].light,
+                                  0.8
+                                ),
+                                transform: "translateY(-1px)",
+                                boxShadow: 1,
+                              },
+                            }}
+                            onClick={() =>
+                              !isProtected && setSelectedUser(user)
                             }
-                            disabled={isProtected}
-                          >
-                            <MenuItem value="user">User</MenuItem>
-                            <MenuItem value="admin">Admin</MenuItem>
-                            <MenuItem value="editor">Editör</MenuItem>
-                          </Select>
-                        </span>
+                          />
+                        </Box>
                       </Tooltip>
                     </TableCell>
                   </TableRow>
@@ -232,37 +366,69 @@ const AdminUsersPage = () => {
         </TableContainer>
       </Paper>
 
-      {/* Dialog */}
+      {/* Role Change Dialog */}
       <Dialog
-        open={dialogOpen}
-        onClose={handleDialogClose}
+        open={Boolean(selectedUser)}
+        onClose={() => setSelectedUser(null)}
         PaperProps={{
           sx: {
-            backgroundColor: "rgba(255, 255, 255, 0.9)",
-            backdropFilter: "blur(10px)",
             borderRadius: 3,
-            p: 2,
+            width: "100%",
+            maxWidth: 400,
+            p: 1,
           },
         }}
       >
-        <DialogTitle>Rol Değişikliği Onayı</DialogTitle>
+        <DialogTitle sx={{ pb: 2 }}>
+          <Typography variant="h6" sx={{ fontWeight: 600 }}>
+            Rol Değişikliği
+          </Typography>
+        </DialogTitle>
         <DialogContent>
-          <DialogContentText>
-            <strong>{selectedUser?.username}</strong> kullanıcısının rolünü{" "}
-            <strong>{newRole}</strong> olarak değiştirmek istediğinizden emin
-            misiniz?
-          </DialogContentText>
+          <Box sx={{ mb: 3 }}>
+            <Typography
+              variant="subtitle2"
+              sx={{ mb: 2, color: "text.secondary" }}
+            >
+              {selectedUser?.username} kullanıcısı için yeni rol seçin:
+            </Typography>
+            <Select
+              fullWidth
+              value={newRole || selectedUser?.role || ""}
+              onChange={(e) => setNewRole(e.target.value)}
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  borderRadius: 2,
+                },
+              }}
+            >
+              <MenuItem value="user">User</MenuItem>
+              <MenuItem value="editor">Editör</MenuItem>
+              <MenuItem value="admin">Admin</MenuItem>
+            </Select>
+          </Box>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={handleDialogClose} color="inherit">
+        <DialogActions sx={{ px: 3, pb: 3 }}>
+          <Button
+            onClick={() => setSelectedUser(null)}
+            sx={{
+              borderRadius: 2,
+              textTransform: "none",
+              px: 3,
+            }}
+          >
             İptal
           </Button>
           <Button
-            onClick={handleConfirmRoleChange}
             variant="contained"
-            color="primary"
+            onClick={handleConfirmRoleChange}
+            sx={{
+              borderRadius: 2,
+              textTransform: "none",
+              px: 3,
+            }}
           >
-            Evet, Değiştir
+            Değişikliği Kaydet
           </Button>
         </DialogActions>
       </Dialog>
@@ -281,7 +447,7 @@ const AdminUsersPage = () => {
           {snackbar.message}
         </Alert>
       </Snackbar>
-    </Box>
+    </Container>
   );
 };
 

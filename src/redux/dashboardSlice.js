@@ -4,13 +4,13 @@ import axios from "axios";
 const BASE = "https://materialblog-server-production.up.railway.app/api";
 
 /* ===========================
-   Dashboard Backend Endpoints
+   Backend Dashboard Endpoints
    =========================== */
 export const fetchDashboardStats = createAsyncThunk(
   "dashboard/fetchStats",
   async () => {
     const { data } = await axios.get(`${BASE}/dashboard`);
-    return data; // { postsCount, commentsCount, categoriesCount, ... }
+    return data; // { totalPosts, totalCategories, totalComments, ... }
   }
 );
 
@@ -78,7 +78,8 @@ const initialState = {
   gaOverview: null,
   gaTimeseries: null,
   gaTopPages: null,
-  loading: false,
+  loadingStats: false, // sadece dashboard stats için
+  loadingGa: false, // sadece GA için
   error: null,
 };
 
@@ -89,15 +90,15 @@ const dashboardSlice = createSlice({
   extraReducers: (b) => {
     /* ---- Dashboard Stats ---- */
     b.addCase(fetchDashboardStats.pending, (s) => {
-      s.loading = true;
+      s.loadingStats = true;
       s.error = null;
     });
     b.addCase(fetchDashboardStats.fulfilled, (s, { payload }) => {
-      s.loading = false;
+      s.loadingStats = false;
       s.stats = payload;
     });
     b.addCase(fetchDashboardStats.rejected, (s, a) => {
-      s.loading = false;
+      s.loadingStats = false;
       s.error = a.error?.message || "İstatistikler alınamadı";
     });
 
@@ -113,25 +114,39 @@ const dashboardSlice = createSlice({
 
     /* ---- GA Overview ---- */
     b.addCase(fetchGaOverview.pending, (s) => {
-      s.loading = true;
+      s.loadingGa = true;
     });
     b.addCase(fetchGaOverview.fulfilled, (s, { payload }) => {
-      s.loading = false;
+      s.loadingGa = false;
       s.gaOverview = payload;
     });
     b.addCase(fetchGaOverview.rejected, (s, a) => {
-      s.loading = false;
+      s.loadingGa = false;
       s.error = a.error?.message || "GA overview alınamadı";
     });
 
     /* ---- GA Timeseries ---- */
+    b.addCase(fetchGaTimeseries.pending, (s) => {
+      s.loadingGa = true;
+    });
     b.addCase(fetchGaTimeseries.fulfilled, (s, { payload }) => {
+      s.loadingGa = false;
       s.gaTimeseries = payload;
+    });
+    b.addCase(fetchGaTimeseries.rejected, (s) => {
+      s.loadingGa = false;
     });
 
     /* ---- GA Top Pages ---- */
+    b.addCase(fetchGaTopPages.pending, (s) => {
+      s.loadingGa = true;
+    });
     b.addCase(fetchGaTopPages.fulfilled, (s, { payload }) => {
+      s.loadingGa = false;
       s.gaTopPages = payload;
+    });
+    b.addCase(fetchGaTopPages.rejected, (s) => {
+      s.loadingGa = false;
     });
   },
 });
@@ -147,5 +162,7 @@ export const selectGaOverview = (s) => s.dashboard.gaOverview;
 export const selectGaTimeseries = (s) => s.dashboard.gaTimeseries;
 export const selectGaTopPages = (s) => s.dashboard.gaTopPages;
 
-export const selectDashboardLoading = (s) => s.dashboard.loading;
+export const selectDashboardLoading = (s) => s.dashboard.loadingStats;
+export const selectGaLoading = (s) => s.dashboard.loadingGa;
+
 export const selectDashboardError = (s) => s.dashboard.error;

@@ -17,10 +17,15 @@ import {
   TextField,
   Button,
   CircularProgress,
+  Container,
+  Chip,
+  Tooltip,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
+import { alpha } from "@mui/material/styles";
+import CategoryIcon from "@mui/icons-material/Category";
 
 // Redux
 import { useDispatch, useSelector } from "react-redux";
@@ -79,41 +84,98 @@ const AdminCategoriesPage = () => {
   };
 
   return (
-    <Box>
-      <Box
+    <Container maxWidth="lg" sx={{ py: 4 }}>
+      {/* Header Section */}
+      <Paper
+        elevation={0}
         sx={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          mb: 3,
+          p: 3,
+          mb: 4,
+          borderRadius: 3,
+          backgroundColor: (theme) =>
+            theme.palette.mode === "dark"
+              ? "rgba(255,255,255,0.04)"
+              : "rgba(255,255,255,0.95)",
+          backdropFilter: "blur(20px)",
+          border: "1px solid",
+          borderColor: "divider",
         }}
       >
-        <Typography
-          variant="h5"
-          sx={{ fontWeight: "bold", textShadow: "1px 1px 2px rgba(0,0,0,0.1)" }}
-        >
-          Kategoriler
-        </Typography>
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          onClick={() => {
-            setEditingCategory(null);
-            setCategoryInput("");
-            setOpenDialog(true);
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            flexWrap: "wrap",
+            gap: 2,
           }}
-          sx={{ borderRadius: 3 }}
         >
-          Kategori Ekle
-        </Button>
-      </Box>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+            <CategoryIcon
+              sx={{
+                fontSize: 32,
+                color: "primary.main",
+              }}
+            />
+            <Box>
+              <Typography
+                variant="h5"
+                sx={{ fontWeight: 600, color: "text.primary", mb: 0.5 }}
+              >
+                Kategoriler
+              </Typography>
+              <Chip
+                label={`${categories.length} kategori`}
+                size="small"
+                sx={{
+                  bgcolor: (theme) => alpha(theme.palette.primary.main, 0.1),
+                  color: "primary.main",
+                  fontWeight: 500,
+                  height: "24px",
+                }}
+              />
+            </Box>
+          </Box>
 
+          <Button
+            variant="contained"
+            size="small"
+            startIcon={<AddIcon />}
+            onClick={() => {
+              setEditingCategory(null);
+              setCategoryInput("");
+              setOpenDialog(true);
+            }}
+            sx={{
+              borderRadius: "8px",
+              px: 2,
+              py: 0.75,
+              bgcolor: "primary.main",
+              textTransform: "none",
+              fontSize: "0.875rem",
+              fontWeight: 500,
+              "&:hover": {
+                bgcolor: "primary.dark",
+              },
+            }}
+          >
+            Yeni Kategori
+          </Button>
+        </Box>
+      </Paper>
+
+      {/* Categories Table */}
       <Paper
+        elevation={0}
         sx={{
-          backgroundColor: "rgba(255, 255, 255, 0.7)",
-          backdropFilter: "blur(10px)",
           borderRadius: 3,
-          boxShadow: "0 8px 24px rgba(0, 0, 0, 0.1)",
+          backgroundColor: (theme) =>
+            theme.palette.mode === "dark"
+              ? "rgba(255,255,255,0.04)"
+              : "rgba(255,255,255,0.95)",
+          backdropFilter: "blur(20px)",
+          border: "1px solid",
+          borderColor: "divider",
           overflow: "hidden",
         }}
       >
@@ -123,12 +185,39 @@ const AdminCategoriesPage = () => {
           </Box>
         ) : (
           <TableContainer>
-            <Table size="small">
+            <Table>
               <TableHead>
-                <TableRow sx={{ backgroundColor: "#f9f9f9" }}>
-                  <TableCell>#</TableCell>
-                  <TableCell>Adı</TableCell>
-                  <TableCell align="right">İşlemler</TableCell>
+                <TableRow>
+                  <TableCell
+                    sx={{
+                      py: 2,
+                      px: 3,
+                      fontWeight: 600,
+                      width: "60px",
+                    }}
+                  >
+                    #
+                  </TableCell>
+                  <TableCell
+                    sx={{
+                      py: 2,
+                      px: 3,
+                      fontWeight: 600,
+                    }}
+                  >
+                    Kategori Adı
+                  </TableCell>
+                  <TableCell
+                    align="right"
+                    sx={{
+                      py: 2,
+                      px: 3,
+                      fontWeight: 600,
+                      width: "120px",
+                    }}
+                  >
+                    İşlemler
+                  </TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -137,37 +226,101 @@ const AdminCategoriesPage = () => {
                     key={category._id}
                     hover
                     sx={{
-                      transition: "all 0.2s ease-in-out",
                       "&:hover": {
-                        backgroundColor: "rgba(0, 0, 0, 0.04)",
+                        bgcolor: (theme) =>
+                          theme.palette.mode === "dark"
+                            ? "rgba(255,255,255,0.05)"
+                            : "rgba(0,0,0,0.02)",
                       },
                     }}
                   >
-                    <TableCell>{index + 1}</TableCell>
-                    <TableCell>{category.name}</TableCell>
-                    <TableCell align="right">
-                      <IconButton
-                        color="primary"
-                        onClick={() => openEditDialog(category)}
-                      >
-                        <EditIcon />
-                      </IconButton>
-                      <IconButton
-                        color="error"
-                        onClick={() => {
-                          setDeleteCategoryId(category._id);
-                          setConfirmDelete(true);
+                    <TableCell sx={{ py: 2, px: 3 }}>
+                      <Typography
+                        sx={{
+                          color: "text.secondary",
+                          fontWeight: 500,
+                          width: 24,
+                          height: 24,
+                          borderRadius: "6px",
+                          bgcolor: (theme) =>
+                            alpha(theme.palette.primary.main, 0.1),
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          fontSize: "0.875rem",
                         }}
                       >
-                        <DeleteIcon />
-                      </IconButton>
+                        {index + 1}
+                      </Typography>
+                    </TableCell>
+                    <TableCell sx={{ py: 2, px: 3 }}>
+                      <Typography sx={{ fontWeight: 500 }}>
+                        {category.name}
+                      </Typography>
+                    </TableCell>
+                    <TableCell align="right" sx={{ py: 2, px: 3 }}>
+                      <Box
+                        sx={{
+                          display: "flex",
+                          gap: 1,
+                          justifyContent: "flex-end",
+                        }}
+                      >
+                        <Tooltip title="Düzenle">
+                          <IconButton
+                            size="small"
+                            onClick={() => openEditDialog(category)}
+                            sx={{
+                              color: "primary.main",
+                              bgcolor: (theme) =>
+                                alpha(theme.palette.primary.main, 0.1),
+                              "&:hover": {
+                                bgcolor: (theme) =>
+                                  alpha(theme.palette.primary.main, 0.2),
+                              },
+                            }}
+                          >
+                            <EditIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip title="Sil">
+                          <IconButton
+                            size="small"
+                            onClick={() => {
+                              setDeleteCategoryId(category._id);
+                              setConfirmDelete(true);
+                            }}
+                            sx={{
+                              color: "error.main",
+                              bgcolor: (theme) =>
+                                alpha(theme.palette.error.main, 0.1),
+                              "&:hover": {
+                                bgcolor: (theme) =>
+                                  alpha(theme.palette.error.main, 0.2),
+                              },
+                            }}
+                          >
+                            <DeleteIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                      </Box>
                     </TableCell>
                   </TableRow>
                 ))}
                 {categories.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={3} align="center">
-                      Henüz kategori eklenmedi.
+                    <TableCell
+                      colSpan={3}
+                      sx={{
+                        textAlign: "center",
+                        py: 8,
+                        color: "text.secondary",
+                      }}
+                    >
+                      <CategoryIcon
+                        sx={{ fontSize: 48, color: "text.disabled", mb: 2 }}
+                      />
+                      <Typography>Henüz kategori eklenmedi.</Typography>
                     </TableCell>
                   </TableRow>
                 )}
@@ -177,41 +330,111 @@ const AdminCategoriesPage = () => {
         )}
       </Paper>
 
-      {/* Ekle / Düzenle Dialog */}
-      <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>
-        <DialogTitle>
-          {editingCategory ? "Kategoriyi Düzenle" : "Yeni Kategori"}
+      {/* Add/Edit Dialog */}
+      <Dialog
+        open={openDialog}
+        onClose={() => setOpenDialog(false)}
+        PaperProps={{
+          sx: {
+            borderRadius: 3,
+            width: "100%",
+            maxWidth: 400,
+          },
+        }}
+      >
+        <DialogTitle sx={{ pb: 2 }}>
+          <Typography variant="h6" sx={{ fontWeight: 600 }}>
+            {editingCategory ? "Kategoriyi Düzenle" : "Yeni Kategori"}
+          </Typography>
         </DialogTitle>
-        <DialogContent>
+        <DialogContent sx={{ pb: 1 }}>
           <TextField
             fullWidth
             label="Kategori Adı"
             value={categoryInput}
             onChange={(e) => setCategoryInput(e.target.value)}
-            sx={{ mt: 1 }}
+            sx={{
+              mt: 1,
+              "& .MuiOutlinedInput-root": {
+                borderRadius: 2,
+                bgcolor: (theme) => alpha(theme.palette.background.paper, 0.6),
+              },
+            }}
           />
         </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setOpenDialog(false)}>İptal</Button>
-          <Button onClick={handleSave} variant="contained">
-            Kaydet
+        <DialogActions sx={{ px: 3, pb: 3 }}>
+          <Button
+            onClick={() => setOpenDialog(false)}
+            sx={{
+              borderRadius: 2,
+              textTransform: "none",
+              px: 3,
+            }}
+          >
+            İptal
+          </Button>
+          <Button
+            onClick={handleSave}
+            variant="contained"
+            sx={{
+              borderRadius: 2,
+              textTransform: "none",
+              px: 3,
+            }}
+          >
+            {editingCategory ? "Güncelle" : "Ekle"}
           </Button>
         </DialogActions>
       </Dialog>
 
-      {/* Silme Onayı Dialog */}
-      <Dialog open={confirmDelete} onClose={() => setConfirmDelete(false)}>
-        <DialogTitle>
-          Bu kategoriyi silmek istediğinize emin misiniz?
+      {/* Delete Confirmation Dialog */}
+      <Dialog
+        open={confirmDelete}
+        onClose={() => setConfirmDelete(false)}
+        PaperProps={{
+          sx: {
+            borderRadius: 3,
+            width: "100%",
+            maxWidth: 400,
+          },
+        }}
+      >
+        <DialogTitle sx={{ pb: 2 }}>
+          <Typography variant="h6" sx={{ fontWeight: 600 }}>
+            Kategoriyi Sil
+          </Typography>
         </DialogTitle>
-        <DialogActions>
-          <Button onClick={() => setConfirmDelete(false)}>Vazgeç</Button>
-          <Button onClick={handleDelete} color="error" variant="contained">
+        <DialogContent>
+          <Typography>
+            Bu kategoriyi silmek istediğinize emin misiniz?
+          </Typography>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 3 }}>
+          <Button
+            onClick={() => setConfirmDelete(false)}
+            sx={{
+              borderRadius: 2,
+              textTransform: "none",
+              px: 3,
+            }}
+          >
+            Vazgeç
+          </Button>
+          <Button
+            onClick={handleDelete}
+            color="error"
+            variant="contained"
+            sx={{
+              borderRadius: 2,
+              textTransform: "none",
+              px: 3,
+            }}
+          >
             Sil
           </Button>
         </DialogActions>
       </Dialog>
-    </Box>
+    </Container>
   );
 };
 

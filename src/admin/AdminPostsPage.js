@@ -32,12 +32,32 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchPosts, deletePost } from "../redux/postSlice";
 import dayjs from "dayjs";
+import { alpha } from "@mui/material/styles";
+import FilterListIcon from "@mui/icons-material/FilterList";
+import VisibilityIcon from "@mui/icons-material/Visibility";
+import TuneIcon from "@mui/icons-material/Tune";
 
 const categoryColors = {
-  React: "primary",
-  JavaScript: "warning",
-  Tasarım: "secondary",
-  Galatasaray: "success",
+  React: {
+    light: "#E3F2FD",
+    main: "#2196F3",
+    text: "#1976D2",
+  },
+  JavaScript: {
+    light: "#FFF3E0",
+    main: "#FF9800",
+    text: "#F57C00",
+  },
+  Tasarım: {
+    light: "#FCE4EC",
+    main: "#E91E63",
+    text: "#C2185B",
+  },
+  Galatasaray: {
+    light: "#F3E5F5",
+    main: "#9C27B0",
+    text: "#7B1FA2",
+  },
 };
 
 const Transition = React.forwardRef(function Transition(props, ref) {
@@ -140,21 +160,82 @@ const PostsPage = () => {
   );
 
   return (
-    <Box sx={{ pt: 1 }}>
-      <Box
+    <Box sx={{ p: { xs: 2, md: 4 }, maxWidth: 1920, mx: "auto" }}>
+      {/* Header Section */}
+      <Paper
+        elevation={0}
         sx={{
-          mb: 3,
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          flexWrap: "wrap",
-          gap: 2,
+          p: 3,
+          mb: 4,
+          borderRadius: 4,
+          backgroundColor: (theme) =>
+            theme.palette.mode === "dark"
+              ? "rgba(255,255,255,0.04)"
+              : "rgba(255,255,255,0.95)",
+          backdropFilter: "blur(20px)",
+          border: "1px solid",
+          borderColor: "divider",
         }}
       >
-        <Typography variant="h5" fontWeight="bold">
-          Yazılar
-        </Typography>
+        {/* Title and New Post Button */}
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            flexWrap: "wrap",
+            gap: 2,
+            mb: 3,
+          }}
+        >
+          <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+            <Typography
+              variant="h5"
+              sx={{
+                fontWeight: 600,
+                color: "text.primary",
+              }}
+            >
+              Yazılar
+            </Typography>
+            <Chip
+              label={`${filtered.length} yazı`}
+              size="small"
+              sx={{
+                bgcolor: (theme) => alpha(theme.palette.primary.main, 0.1),
+                color: "primary.main",
+                fontWeight: 500,
+                height: "24px",
+              }}
+            />
+          </Box>
 
+          {(user?.role === "admin" || user?.role === "editor") && (
+            <Button
+              variant="contained"
+              size="small"
+              startIcon={<AddIcon />}
+              onClick={() => navigate("/admin/editor")}
+              sx={{
+                borderRadius: "8px",
+                px: 2,
+                py: 0.75,
+                bgcolor: "primary.main",
+                color: "primary.contrastText",
+                textTransform: "none",
+                fontSize: "0.875rem",
+                fontWeight: 500,
+                "&:hover": {
+                  bgcolor: "primary.dark",
+                },
+              }}
+            >
+              Yeni Yazı
+            </Button>
+          )}
+        </Box>
+
+        {/* Search and Filters */}
         <Box
           sx={{
             display: "flex",
@@ -165,7 +246,7 @@ const PostsPage = () => {
         >
           <TextField
             size="small"
-            placeholder="Ara..."
+            placeholder="Yazılarda ara..."
             value={searchTerm}
             onChange={(e) => {
               setSearchTerm(e.target.value);
@@ -174,106 +255,213 @@ const PostsPage = () => {
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
-                  <SearchIcon />
+                  <SearchIcon sx={{ color: "text.secondary" }} />
                 </InputAdornment>
               ),
             }}
-          />
-          <TextField
-            size="small"
-            select
-            value={selectedCategory}
-            onChange={(e) => {
-              setSelectedCategory(e.target.value);
-              setCurrentPage(1);
+            sx={{
+              flex: { xs: "1 1 100%", sm: "1 1 auto" },
+              maxWidth: { sm: 320 },
+              "& .MuiOutlinedInput-root": {
+                borderRadius: "12px",
+                bgcolor: (theme) => alpha(theme.palette.background.paper, 0.6),
+                "&:hover": {
+                  bgcolor: (theme) =>
+                    alpha(theme.palette.background.paper, 0.8),
+                },
+              },
             }}
-            sx={{ minWidth: 140 }}
-          >
-            <MenuItem value="">Tüm Kategoriler</MenuItem>
-            {Object.keys(categoryColors).map((cat) => (
-              <MenuItem key={cat} value={cat}>
-                {cat}
-              </MenuItem>
-            ))}
-          </TextField>
-          <TextField
-            size="small"
-            select
-            value={sortOption}
-            onChange={(e) => setSortOption(e.target.value)}
-            sx={{ minWidth: 150 }}
-          >
-            <MenuItem value="newest">En Yeni</MenuItem>
-            <MenuItem value="oldest">En Eski</MenuItem>
-            <MenuItem value="title-asc">Başlık A-Z</MenuItem>
-            <MenuItem value="title-desc">Başlık Z-A</MenuItem>
-          </TextField>
+          />
 
-          {(user?.role === "admin" || user?.role === "editor") && (
-            <Button
-              variant="contained"
-              startIcon={<AddIcon />}
-              onClick={() => navigate("/admin/editor")}
-              sx={{ borderRadius: 3 }}
+          <Box
+            sx={{
+              display: "flex",
+              gap: 2,
+              flex: { xs: "1 1 100%", sm: "0 1 auto" },
+              alignItems: "center",
+            }}
+          >
+            <TuneIcon sx={{ color: "text.secondary" }} />
+
+            <TextField
+              select
+              size="small"
+              value={selectedCategory}
+              onChange={(e) => {
+                setSelectedCategory(e.target.value);
+                setCurrentPage(1);
+              }}
+              sx={{
+                minWidth: 160,
+                "& .MuiOutlinedInput-root": {
+                  borderRadius: "12px",
+                  bgcolor: (theme) =>
+                    alpha(theme.palette.background.paper, 0.6),
+                },
+              }}
             >
-              Yeni Yazı
-            </Button>
-          )}
-        </Box>
-      </Box>
+              <MenuItem value="">Tüm Kategoriler</MenuItem>
+              {Object.entries(categoryColors).map(([cat, colors]) => (
+                <MenuItem key={cat} value={cat}>
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                    <Box
+                      sx={{
+                        width: 8,
+                        height: 8,
+                        borderRadius: "50%",
+                        bgcolor: colors.main,
+                      }}
+                    />
+                    <Typography>{cat}</Typography>
+                  </Box>
+                </MenuItem>
+              ))}
+            </TextField>
 
-      <Paper elevation={0} sx={{ p: 2, borderRadius: 3 }}>
+            <TextField
+              select
+              size="small"
+              value={sortOption}
+              onChange={(e) => setSortOption(e.target.value)}
+              sx={{
+                minWidth: 160,
+                "& .MuiOutlinedInput-root": {
+                  borderRadius: "12px",
+                  bgcolor: (theme) =>
+                    alpha(theme.palette.background.paper, 0.6),
+                },
+              }}
+            >
+              <MenuItem value="newest">En Yeni</MenuItem>
+              <MenuItem value="oldest">En Eski</MenuItem>
+              <MenuItem value="title-asc">Başlık A-Z</MenuItem>
+              <MenuItem value="title-desc">Başlık Z-A</MenuItem>
+            </TextField>
+          </Box>
+        </Box>
+      </Paper>
+
+      {/* Posts Table */}
+      <Paper
+        elevation={0}
+        sx={{
+          borderRadius: 4,
+          backgroundColor: (theme) =>
+            theme.palette.mode === "dark"
+              ? "rgba(255,255,255,0.04)"
+              : "rgba(255,255,255,0.95)",
+          backdropFilter: "blur(20px)",
+          border: "1px solid",
+          borderColor: "divider",
+          overflow: "hidden",
+        }}
+      >
         <Box sx={{ overflowX: "auto" }}>
-          <Table size="small">
+          <Table>
             <TableHead>
               <TableRow>
-                <TableCell sx={{ fontWeight: "bold" }}>ID</TableCell>
-                <TableCell sx={{ fontWeight: "bold" }}>Başlık</TableCell>
-                <TableCell sx={{ fontWeight: "bold" }}>Kategori</TableCell>
-                <TableCell sx={{ fontWeight: "bold" }}>Tarih</TableCell>
-                <TableCell align="right" sx={{ fontWeight: "bold" }}>
+                <TableCell sx={{ py: 2, px: 3, fontWeight: 600 }}>ID</TableCell>
+                <TableCell sx={{ py: 2, px: 3, fontWeight: 600 }}>
+                  Başlık
+                </TableCell>
+                <TableCell sx={{ py: 2, px: 3, fontWeight: 600 }}>
+                  Kategori
+                </TableCell>
+                <TableCell sx={{ py: 2, px: 3, fontWeight: 600 }}>
+                  Tarih
+                </TableCell>
+                <TableCell align="right" sx={{ py: 2, px: 3, fontWeight: 600 }}>
                   İşlemler
                 </TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {visiblePosts.map((post) => (
-                <TableRow key={post._id} hover>
-                  <TableCell>{post._id.slice(-6)}</TableCell>
-                  <TableCell>{post.title}</TableCell>
-                  <TableCell>
+                <TableRow
+                  key={post._id}
+                  hover
+                  sx={{
+                    "&:hover": {
+                      bgcolor: (theme) =>
+                        theme.palette.mode === "dark"
+                          ? "rgba(255,255,255,0.05)"
+                          : "rgba(0,0,0,0.02)",
+                    },
+                  }}
+                >
+                  <TableCell sx={{ py: 2, px: 3 }}>
+                    <Typography
+                      variant="mono"
+                      sx={{ color: "text.secondary", fontSize: "0.875rem" }}
+                    >
+                      {post._id.slice(-6)}
+                    </Typography>
+                  </TableCell>
+                  <TableCell sx={{ py: 2, px: 3 }}>
+                    <Typography sx={{ fontWeight: 500 }}>
+                      {post.title}
+                    </Typography>
+                  </TableCell>
+                  <TableCell sx={{ py: 2, px: 3 }}>
                     <Chip
                       label={post.category}
-                      color={categoryColors[post.category] || "default"}
                       size="small"
+                      sx={{
+                        bgcolor: categoryColors[post.category]?.light,
+                        color: categoryColors[post.category]?.text,
+                        fontWeight: 500,
+                        px: 1,
+                      }}
                     />
                   </TableCell>
-                  <TableCell>
+                  <TableCell sx={{ py: 2, px: 3, color: "text.secondary" }}>
                     {post.date && dayjs(post.date).isValid()
                       ? dayjs(post.date).format("DD.MM.YYYY")
                       : "Geçersiz"}
                   </TableCell>
-                  <TableCell align="right">
+                  <TableCell align="right" sx={{ py: 2, px: 3 }}>
                     {user?.role === "admin" && (
-                      <>
+                      <Box
+                        sx={{
+                          display: "flex",
+                          gap: 1,
+                          justifyContent: "flex-end",
+                        }}
+                      >
                         <IconButton
-                          color="primary"
                           size="small"
                           onClick={() => handleEdit(post)}
+                          sx={{
+                            color: "primary.main",
+                            bgcolor: (theme) =>
+                              alpha(theme.palette.primary.main, 0.1),
+                            "&:hover": {
+                              bgcolor: (theme) =>
+                                alpha(theme.palette.primary.main, 0.2),
+                            },
+                          }}
                         >
                           <EditIcon fontSize="small" />
                         </IconButton>
                         <IconButton
-                          color="error"
                           size="small"
                           onClick={() => {
                             setPostToDelete(post._id);
                             setConfirmDelete(true);
                           }}
+                          sx={{
+                            color: "error.main",
+                            bgcolor: (theme) =>
+                              alpha(theme.palette.error.main, 0.1),
+                            "&:hover": {
+                              bgcolor: (theme) =>
+                                alpha(theme.palette.error.main, 0.2),
+                            },
+                          }}
                         >
                           <DeleteIcon fontSize="small" />
                         </IconButton>
-                      </>
+                      </Box>
                     )}
                   </TableCell>
                 </TableRow>
@@ -283,14 +471,23 @@ const PostsPage = () => {
         </Box>
       </Paper>
 
+      {/* Pagination */}
       {totalPages > 1 && (
-        <Box mt={3} display="flex" justifyContent="center">
+        <Box mt={4} display="flex" justifyContent="center">
           <Pagination
             count={totalPages}
             page={currentPage}
             onChange={(e, value) => setCurrentPage(value)}
             color="primary"
             shape="rounded"
+            sx={{
+              "& .MuiPaginationItem-root": {
+                borderRadius: "12px",
+                "&.Mui-selected": {
+                  fontWeight: 600,
+                },
+              },
+            }}
           />
         </Box>
       )}
