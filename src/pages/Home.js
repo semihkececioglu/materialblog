@@ -38,7 +38,6 @@ const Home = () => {
   return (
     <Container maxWidth="lg" sx={{ mt: 4 }}>
       {/* Slider - kendi içinde loading skeleton'u var */}
-      <HomeSlider />
 
       <Box
         sx={{
