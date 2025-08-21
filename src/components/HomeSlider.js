@@ -7,7 +7,6 @@ import {
   Skeleton,
   useTheme,
   Tooltip,
-  CardMedia,
 } from "@mui/material";
 import { ArrowBackIos, ArrowForwardIos } from "@mui/icons-material";
 import axios from "axios";
@@ -41,32 +40,42 @@ const HomeSlider = () => {
       });
   }, []);
 
-  // Slider görseli için optimize edilmiş yeni bileşen
-  const OptimizedImage = ({ post, index }) => (
-    <CardMedia
-      component="img"
-      src={post.image || "/default.jpg"}
-      alt={post.title}
-      className="slider-img"
-      loading={index === 0 ? "eager" : "lazy"}
-      fetchpriority={index === 0 ? "high" : "auto"}
-      decoding="async"
-      sx={{
-        width: "100%",
-        height: "100%",
-        objectFit: "cover",
-        transition: "all 0.4s ease",
-        borderRadius: 3,
-        display: "block",
-      }}
-    />
-  );
+  // OptimizedImage bileşenini güncelleyelim
+  const OptimizedImage = ({ post, index }) => {
+    const imageUrl = post.image
+      ? `${post.image.replace(
+          "/upload/",
+          "/upload/w_800,f_auto,q_auto:good,c_fill/"
+        )}`
+      : "/default.jpg";
 
+    return (
+      <Box
+        component="img"
+        src={imageUrl}
+        alt={post.title}
+        loading={index === 0 ? "eager" : "lazy"}
+        fetchpriority={index === 0 ? "high" : "auto"}
+        width="800"
+        height="450"
+        decoding="async"
+        sx={{
+          width: "100%",
+          height: "100%",
+          objectFit: "cover",
+          transition: "transform 0.3s ease",
+          display: "block",
+        }}
+      />
+    );
+  };
+
+  // Settings'i güncelleyelim
   const settings = {
     dots: true,
     infinite: true,
     autoplay: true,
-    speed: 500, // Hızı azalttık
+    speed: 400,
     slidesToShow: 2,
     slidesToScroll: 1,
     arrows: false,
@@ -98,8 +107,8 @@ const HomeSlider = () => {
       />
     ),
     initialSlide: 0,
-    lazyLoad: "anticipated",
-    autoplaySpeed: 5000,
+    lazyLoad: null, // React-slick'in lazy load'unu kaldırıyoruz
+    autoplaySpeed: 6000,
     pauseOnHover: true,
   };
 
@@ -169,12 +178,10 @@ const HomeSlider = () => {
         px: 2,
         py: 4,
         mb: 6,
-        backgroundColor:
+        bgcolor:
           theme.palette.mode === "dark"
             ? "rgba(255,255,255,0.02)"
             : "rgba(255,255,255,0.4)",
-        backdropFilter: "blur(14px)",
-        boxShadow: "0 12px 24px rgba(0,0,0,0.1)",
       }}
     >
       {/* Arrows */}
@@ -226,16 +233,21 @@ const HomeSlider = () => {
           <Box
             key={post._id}
             onClick={() => navigate(`/post/${post.slug}`)}
-            sx={{ px: 1, cursor: "pointer" }}
+            sx={{
+              px: 1,
+              cursor: "pointer",
+              height: 240,
+              position: "relative",
+            }}
           >
             <Box
               sx={{
                 position: "relative",
-                height: 240,
+                height: "100%",
                 borderRadius: 3,
                 overflow: "hidden",
-                "&:hover .slider-img": {
-                  transform: "scale(1.05)", // blur kaldırıldı
+                "&:hover img": {
+                  transform: "scale(1.05)",
                 },
               }}
             >
@@ -243,15 +255,12 @@ const HomeSlider = () => {
               <Box
                 sx={{
                   position: "absolute",
-                  bottom: 16,
-                  left: 16,
-                  right: 16,
-                  bgcolor: "rgba(0, 0, 0, 0.75)", // Daha iyi kontrast
-                  backdropFilter: "blur(6px)",
-                  px: 2,
-                  py: 1.5,
-                  borderRadius: 2,
-                  boxShadow: "0 4px 12px rgba(0,0,0,0.2)",
+                  bottom: 0,
+                  left: 0,
+                  right: 0,
+                  p: 2,
+                  background:
+                    "linear-gradient(to top, rgba(0,0,0,0.8), rgba(0,0,0,0))",
                 }}
               >
                 <Typography
@@ -265,6 +274,7 @@ const HomeSlider = () => {
                     WebkitLineClamp: 2,
                     WebkitBoxOrient: "vertical",
                     lineHeight: 1.3,
+                    textShadow: "0 1px 2px rgba(0,0,0,0.3)",
                   }}
                 >
                   {post.title}
@@ -274,14 +284,6 @@ const HomeSlider = () => {
           </Box>
         ))}
       </Slider>
-
-      {/* Aktif dot rengi */}
-      <style>{`
-        .slick-dots li.slick-active div {
-          background-color: ${theme.palette.primary.main} !important;
-          transform: scale(1.3);
-        }
-      `}</style>
     </Box>
   );
 };
