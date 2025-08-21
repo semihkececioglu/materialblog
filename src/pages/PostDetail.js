@@ -7,9 +7,14 @@ import {
   Chip,
   useTheme,
   Paper,
+  Button,
+  Avatar,
+  alpha,
 } from "@mui/material";
 import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
 import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
+import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
+import AccessTimeIcon from "@mui/icons-material/AccessTime";
 
 import CommentSection from "../components/comment/CommentSection";
 import Sidebar from "../components/sidebar/Sidebar";
@@ -231,187 +236,480 @@ function PostDetail() {
         <Box sx={{ flex: 3 }}>
           <Paper
             id="post-paper"
-            elevation={3}
+            elevation={0}
             sx={{
-              p: 4,
-              borderRadius: 2,
-              bgcolor: theme.palette.mode === "dark" ? "grey.900" : "grey.50",
-              border: `1px solid ${
+              borderRadius: 3,
+              bgcolor: (theme) =>
                 theme.palette.mode === "dark"
-                  ? theme.palette.grey[800]
-                  : theme.palette.grey[300]
-              }`,
+                  ? "rgba(255,255,255,0.04)"
+                  : "rgba(255,255,255,0.95)",
+              backdropFilter: "blur(20px)",
+              border: "1px solid",
+              borderColor: "divider",
+              overflow: "hidden",
             }}
           >
-            <Chip
-              label={post.category || "Genel"}
-              color="primary"
-              size="small"
-              sx={{ mb: 1 }}
-            />
-            <Typography variant="h4" gutterBottom>
-              {post.title}
-            </Typography>
-
-            <AuthorInfo
-              name={author.name || author.username}
-              avatar={author.profileImage}
-              username={author.username}
-              date={formattedDate}
-              readingTime={readingTime}
-            />
-
-            {hero && (
+            {/* Hero Section with Overlay Content */}
+            <Box sx={{ position: "relative" }}>
+              {/* Background Image */}
               <Box
                 sx={{
-                  mb: 3,
-                  borderRadius: 2,
-                  overflow: "hidden",
-                  aspectRatio: "1200/630",
-                  maxHeight: 430,
-                  "& img": {
-                    width: "100%",
-                    height: "100%",
-                    objectFit: "cover",
-                    display: "block",
-                    borderRadius: 2,
-                    boxShadow: 3,
+                  position: "relative",
+                  width: "100%",
+                  height: { xs: "300px", sm: "400px", md: "500px" },
+                  "&::after": {
+                    content: '""',
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    background:
+                      "linear-gradient(to bottom, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.6) 100%)",
                   },
                 }}
               >
-                <img
-                  src={hero.src}
-                  srcSet={hero.srcSet}
-                  sizes={hero.sizes}
-                  alt={post.title}
-                  width={1200}
-                  height={630}
-                  fetchpriority="high"
-                  decoding="async"
-                />
-              </Box>
-            )}
-
-            <TableOfContents />
-
-            <Box
-              sx={{
-                mt: 3,
-                lineHeight: 1.8,
-                color: theme.palette.text.primary,
-                "& img": {
-                  maxWidth: "100%",
-                  height: "auto",
-                  borderRadius: 2,
-                  my: 2,
-                  boxShadow: 3,
-                },
-              }}
-              dangerouslySetInnerHTML={{ __html: optimizedHtml }}
-            />
-
-            <EmbeddedInteractionBar
-              visible={showEmbeddedBar}
-              postId={post._id}
-            />
-
-            {post.tags?.length > 0 && (
-              <Box sx={{ mt: 2, display: "flex", gap: 1, flexWrap: "wrap" }}>
-                {post.tags.map((tag, index) => (
-                  <Chip
-                    key={index}
-                    label={`#${tag}`}
-                    component="a"
-                    href={`/tag/${tag}`}
-                    clickable
-                    color="default"
-                    variant="outlined"
-                    sx={{
-                      textTransform: "lowercase",
-                      fontWeight: 500,
-                      fontSize: "0.75rem",
-                      "&:hover": {
-                        backgroundColor: "primary.light",
-                        color: "white",
-                      },
+                {hero ? (
+                  <img
+                    src={hero.src}
+                    srcSet={hero.srcSet}
+                    sizes={hero.sizes}
+                    alt={post.title}
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      objectFit: "cover",
+                      display: "block",
                     }}
                   />
-                ))}
+                ) : (
+                  <Box
+                    sx={{
+                      width: "100%",
+                      height: "100%",
+                      bgcolor: (theme) =>
+                        alpha(theme.palette.primary.main, 0.1),
+                    }}
+                  />
+                )}
               </Box>
-            )}
+
+              {/* Overlay Content */}
+              <Box
+                sx={{
+                  position: "absolute",
+                  bottom: 0,
+                  left: 0,
+                  right: 0,
+                  p: { xs: 2, sm: 3, md: 4 },
+                  color: "white",
+                }}
+              >
+                {/* Category */}
+                <Chip
+                  label={post.category || "Genel"}
+                  size="small"
+                  sx={{
+                    mb: 2,
+                    bgcolor: alpha("#fff", 0.2),
+                    color: "white",
+                    fontWeight: 500,
+                    backdropFilter: "blur(4px)",
+                    "&:hover": {
+                      bgcolor: alpha("#fff", 0.3),
+                    },
+                  }}
+                />
+
+                {/* Title */}
+                <Typography
+                  variant="h1"
+                  sx={{
+                    fontSize: { xs: "1.75rem", sm: "2rem", md: "2.5rem" },
+                    fontWeight: 700,
+                    lineHeight: 1.2,
+                    mb: 3,
+                    textShadow: "0 2px 4px rgba(0,0,0,0.3)",
+                  }}
+                >
+                  {post.title}
+                </Typography>
+
+                {/* Author Info */}
+                <Box
+                  sx={{
+                    display: "inline-flex", // Changed from flex to inline-flex
+                    alignItems: "center",
+                    gap: 2,
+                    p: 1.5,
+                    borderRadius: 2,
+                    bgcolor: alpha("#000", 0.3),
+                    backdropFilter: "blur(10px)",
+                    maxWidth: "100%", // Ensure it doesn't overflow on mobile
+                  }}
+                >
+                  <Avatar
+                    component={Link}
+                    to={`/profile/${author.username}`}
+                    src={author.profileImage}
+                    sx={{
+                      width: 40,
+                      height: 40,
+                      border: "2px solid",
+                      borderColor: "white",
+                      cursor: "pointer",
+                      transition: "transform 0.2s ease",
+                      "&:hover": {
+                        transform: "scale(1.05)",
+                      },
+                    }}
+                  >
+                    {author.username[0].toUpperCase()}
+                  </Avatar>
+                  <Box sx={{ minWidth: 0 }}>
+                    {" "}
+                    {/* Remove flex: 1 */}
+                    <Typography
+                      component={Link}
+                      to={`/profile/${author.username}`}
+                      sx={{
+                        fontWeight: 600,
+                        mb: 0.5,
+                        color: "white",
+                        textDecoration: "none",
+                        display: "block",
+                        "&:hover": {
+                          textDecoration: "underline",
+                        },
+                      }}
+                    >
+                      {author.name || author.username}
+                    </Typography>
+                    <Box
+                      sx={{
+                        display: "flex",
+                        gap: 1,
+                        flexWrap: "wrap",
+                      }}
+                    >
+                      <Chip
+                        icon={
+                          <CalendarTodayIcon
+                            sx={{
+                              fontSize: "1rem !important",
+                              color: "inherit !important",
+                            }}
+                          />
+                        }
+                        label={formattedDate}
+                        size="small"
+                        sx={{
+                          height: 24,
+                          bgcolor: alpha("#fff", 0.1),
+                          color: "white",
+                          fontSize: "0.75rem",
+                          "& .MuiChip-label": {
+                            px: 1,
+                          },
+                        }}
+                      />
+                      <Chip
+                        icon={
+                          <AccessTimeIcon
+                            sx={{
+                              fontSize: "1rem !important",
+                              color: "inherit !important",
+                            }}
+                          />
+                        }
+                        label={`${readingTime} dk`}
+                        size="small"
+                        sx={{
+                          height: 24,
+                          bgcolor: alpha("#fff", 0.1),
+                          color: "white",
+                          fontSize: "0.75rem",
+                          "& .MuiChip-label": {
+                            px: 1,
+                          },
+                        }}
+                      />
+                    </Box>
+                  </Box>
+                </Box>
+              </Box>
+            </Box>
+
+            {/* Content Section */}
+            <Box sx={{ p: { xs: 2, sm: 3, md: 4 } }}>
+              <TableOfContents />
+              <Box
+                sx={{
+                  typography: "body1",
+                  lineHeight: 1.8,
+                  color: "text.primary",
+                  "& img": {
+                    maxWidth: "100%",
+                    height: "auto",
+                    borderRadius: 2,
+                    my: 3,
+                  },
+                }}
+                dangerouslySetInnerHTML={{ __html: optimizedHtml }}
+              />
+
+              {/* Tags Section */}
+              {post.tags?.length > 0 && (
+                <Box
+                  sx={{
+                    mt: 4,
+                    pt: 3,
+                    borderTop: "1px solid",
+                    borderColor: "divider",
+                  }}
+                >
+                  <Box
+                    sx={{
+                      display: "flex",
+                      flexWrap: "wrap",
+                      gap: 1,
+                    }}
+                  >
+                    {post.tags.map((tag, index) => (
+                      <Chip
+                        key={index}
+                        label={`#${tag}`}
+                        component={Link}
+                        to={`/tag/${tag}`}
+                        clickable
+                        sx={{
+                          bgcolor: (theme) =>
+                            alpha(theme.palette.primary.main, 0.08),
+                          color: "primary.main",
+                          border: "none",
+                          textTransform: "lowercase",
+                          fontWeight: 500,
+                          "&:hover": {
+                            bgcolor: "primary.main",
+                            color: "white",
+                          },
+                        }}
+                      />
+                    ))}
+                  </Box>
+                </Box>
+              )}
+
+              <EmbeddedInteractionBar
+                visible={showEmbeddedBar}
+                postId={post._id}
+              />
+            </Box>
           </Paper>
 
-          {/* Prev/Next */}
+          {/* Enhanced Prev/Next Navigation */}
           <Box
             sx={{
               mt: 6,
-              display: "flex",
-              justifyContent: "space-between",
-              flexWrap: "wrap",
+              display: "grid",
+              gridTemplateColumns: { xs: "1fr", sm: "repeat(2, 1fr)" },
               gap: 2,
             }}
           >
             {prevPost && (
-              <Box
+              <Paper
                 component={Link}
                 to={`/post/${slugify(prevPost.title)}`}
+                elevation={0}
                 sx={{
-                  textDecoration: "none",
-                  color: "inherit",
-                  bgcolor: "action.hover",
-                  p: 2,
+                  p: 3,
                   borderRadius: 2,
-                  flex: "1 1 45%",
+                  bgcolor: (theme) =>
+                    theme.palette.mode === "dark"
+                      ? "rgba(255,255,255,0.04)"
+                      : "rgba(255,255,255,0.95)",
+                  backdropFilter: "blur(20px)",
+                  border: "1px solid",
+                  borderColor: "divider",
+                  textDecoration: "none",
+                  color: "text.primary",
                   display: "flex",
                   alignItems: "center",
-                  gap: 1,
-                  "&:hover": { bgcolor: "primary.light", color: "white" },
+                  gap: 2,
+                  transition: "all 0.2s ease",
+                  "&:hover": {
+                    borderColor: "primary.main",
+                    transform: "translateX(-4px)",
+                    "& .arrow-icon": {
+                      transform: "translateX(-4px)",
+                      color: "primary.main",
+                    },
+                  },
                 }}
               >
-                <ArrowBackIosNewIcon fontSize="small" />
-                {prevPost.title}
-              </Box>
+                <ArrowBackIosNewIcon
+                  className="arrow-icon"
+                  sx={{
+                    fontSize: 20,
+                    transition: "all 0.2s ease",
+                    color: "text.secondary",
+                  }}
+                />
+                <Box>
+                  <Typography
+                    variant="caption"
+                    sx={{
+                      color: "text.secondary",
+                      display: "block",
+                      mb: 0.5,
+                    }}
+                  >
+                    Önceki Yazı
+                  </Typography>
+                  <Typography
+                    sx={{
+                      fontWeight: 500,
+                      display: "-webkit-box",
+                      WebkitLineClamp: 2,
+                      WebkitBoxOrient: "vertical",
+                      overflow: "hidden",
+                      lineHeight: 1.3,
+                    }}
+                  >
+                    {prevPost.title}
+                  </Typography>
+                </Box>
+              </Paper>
             )}
+
             {nextPost && (
-              <Box
+              <Paper
                 component={Link}
                 to={`/post/${slugify(nextPost.title)}`}
+                elevation={0}
                 sx={{
-                  textDecoration: "none",
-                  color: "inherit",
-                  bgcolor: "action.hover",
-                  p: 2,
+                  p: 3,
                   borderRadius: 2,
-                  flex: "1 1 45%",
+                  bgcolor: (theme) =>
+                    theme.palette.mode === "dark"
+                      ? "rgba(255,255,255,0.04)"
+                      : "rgba(255,255,255,0.95)",
+                  backdropFilter: "blur(20px)",
+                  border: "1px solid",
+                  borderColor: "divider",
+                  textDecoration: "none",
+                  color: "text.primary",
                   display: "flex",
-                  justifyContent: "flex-end",
                   alignItems: "center",
-                  gap: 1,
-                  "&:hover": { bgcolor: "primary.light", color: "white" },
+                  gap: 2,
+                  transition: "all 0.2s ease",
+                  "&:hover": {
+                    borderColor: "primary.main",
+                    transform: "translateX(4px)",
+                    "& .arrow-icon": {
+                      transform: "translateX(4px)",
+                      color: "primary.main",
+                    },
+                  },
                 }}
               >
-                {nextPost.title}
-                <ArrowForwardIosIcon fontSize="small" />
-              </Box>
+                <Box sx={{ flex: 1, textAlign: "right" }}>
+                  <Typography
+                    variant="caption"
+                    sx={{
+                      color: "text.secondary",
+                      display: "block",
+                      mb: 0.5,
+                    }}
+                  >
+                    Sonraki Yazı
+                  </Typography>
+                  <Typography
+                    sx={{
+                      fontWeight: 500,
+                      display: "-webkit-box",
+                      WebkitLineClamp: 2,
+                      WebkitBoxOrient: "vertical",
+                      overflow: "hidden",
+                      lineHeight: 1.3,
+                    }}
+                  >
+                    {nextPost.title}
+                  </Typography>
+                </Box>
+                <ArrowForwardIosIcon
+                  className="arrow-icon"
+                  sx={{
+                    fontSize: 20,
+                    transition: "all 0.2s ease",
+                    color: "text.secondary",
+                  }}
+                />
+              </Paper>
             )}
           </Box>
 
-          {/* Related */}
+          {/* Related Posts */}
           {relatedPosts.length > 0 && (
             <Box id="recommendations" sx={{ mt: 6 }}>
-              <Typography variant="h6" gutterBottom>
-                Benzer Yazılar
-              </Typography>
-              <Box sx={{ display: "flex", flexWrap: "wrap", gap: 3 }}>
-                {relatedPosts.map((related) => (
+              <Paper
+                elevation={0}
+                sx={{
+                  p: { xs: 2, sm: 3 },
+                  borderRadius: 3,
+                  bgcolor: (theme) =>
+                    theme.palette.mode === "dark"
+                      ? "rgba(255,255,255,0.04)"
+                      : "rgba(255,255,255,0.95)",
+                  backdropFilter: "blur(20px)",
+                  border: "1px solid",
+                  borderColor: "divider",
+                }}
+              >
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 2,
+                    mb: 3,
+                  }}
+                >
                   <Box
-                    key={related._id}
-                    sx={{ flex: "1 1 calc(33.333% - 20px)", minWidth: "250px" }}
+                    sx={{
+                      width: 4,
+                      height: 24,
+                      borderRadius: 1,
+                      bgcolor: "primary.main",
+                    }}
+                  />
+                  <Typography
+                    variant="h5"
+                    sx={{
+                      fontWeight: 600,
+                      color: "text.primary",
+                      fontSize: { xs: "1.25rem", sm: "1.5rem" },
+                    }}
                   >
-                    <PostCard post={related} />
-                  </Box>
-                ))}
-              </Box>
+                    Benzer Yazılar
+                  </Typography>
+                </Box>
+
+                <Box
+                  sx={{
+                    display: "grid",
+                    gridTemplateColumns: {
+                      xs: "1fr",
+                      sm: "repeat(2, 1fr)",
+                      md: "repeat(3, 1fr)",
+                    },
+                    gap: 2,
+                  }}
+                >
+                  {relatedPosts.map((related) => (
+                    <PostCard key={related._id} post={related} />
+                  ))}
+                </Box>
+              </Paper>
             </Box>
           )}
 

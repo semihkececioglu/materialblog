@@ -21,6 +21,9 @@ import {
   deleteComment,
 } from "../../redux/commentSlice";
 import CommentItem from "./CommentItem";
+import { alpha } from "@mui/material/styles";
+import CommentIcon from "@mui/icons-material/Comment";
+import SortIcon from "@mui/icons-material/Sort";
 
 const CommentSection = ({ postId }) => {
   const dispatch = useDispatch();
@@ -123,38 +126,81 @@ const CommentSection = ({ postId }) => {
 
   return (
     <Box sx={{ mt: 4 }}>
-      <Box
+      {/* Header with Comment Count and Sort */}
+      <Paper
+        elevation={0}
         sx={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          mb: 2,
-          flexWrap: "wrap",
+          p: 2,
+          mb: 3,
+          borderRadius: 3,
+          bgcolor: (theme) =>
+            theme.palette.mode === "dark"
+              ? "rgba(255,255,255,0.04)"
+              : "rgba(255,255,255,0.95)",
+          backdropFilter: "blur(20px)",
+          border: "1px solid",
+          borderColor: "divider",
         }}
       >
-        <Typography
-          variant="h6"
-          sx={{ fontWeight: "bold", color: theme.palette.text.primary }}
-        >
-          Yorumlar
-        </Typography>
-
-        <Select
-          value={sortOrder}
-          onChange={(e) => setSortOrder(e.target.value)}
-          size="small"
+        <Box
           sx={{
-            bgcolor: theme.palette.mode === "dark" ? "grey.900" : "grey.100",
-            borderRadius: 1,
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            flexWrap: "wrap",
+            gap: 2,
           }}
         >
-          <MenuItem value="newest">En Yeni</MenuItem>
-          <MenuItem value="oldest">En Eski</MenuItem>
-          <MenuItem value="mostLiked">En Çok Beğenilenler</MenuItem>
-        </Select>
-      </Box>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+            <Box
+              sx={{
+                p: 1,
+                borderRadius: 2,
+                bgcolor: (theme) => alpha(theme.palette.primary.main, 0.1),
+              }}
+            >
+              <CommentIcon sx={{ fontSize: 24, color: "primary.main" }} />
+            </Box>
+            <Box>
+              <Typography
+                variant="h6"
+                sx={{ fontWeight: 600, lineHeight: 1.2 }}
+              >
+                Yorumlar
+              </Typography>
+              <Typography
+                variant="caption"
+                sx={{ color: "text.secondary" }}
+              >{`${flatComments.length} yorum`}</Typography>
+            </Box>
+          </Box>
 
-      <List>
+          <Select
+            value={sortOrder}
+            onChange={(e) => setSortOrder(e.target.value)}
+            size="small"
+            startAdornment={
+              <SortIcon sx={{ ml: 1, mr: 0.5, color: "text.secondary" }} />
+            }
+            sx={{
+              minWidth: 180,
+              "& .MuiSelect-select": {
+                py: 1,
+                pl: 1,
+              },
+              borderRadius: 2,
+              bgcolor: (theme) => alpha(theme.palette.background.paper, 0.6),
+            }}
+          >
+            <MenuItem value="newest">En Yeni</MenuItem>
+            <MenuItem value="oldest">En Eski</MenuItem>
+            <MenuItem value="mostLiked">En Çok Beğenilenler</MenuItem>
+          </Select>
+        </Box>
+      </Paper>
+
+      {/* Comments List */}
+      <List sx={{ py: 0 }}>
         {sortedComments.map((comment) => (
           <CommentItem
             key={comment._id}
@@ -168,48 +214,84 @@ const CommentSection = ({ postId }) => {
         ))}
       </List>
 
-      <Divider sx={{ my: 3 }} />
-
+      {/* Login Prompt or Comment Form */}
       {!user ? (
-        <Box sx={{ mt: 2, textAlign: "center" }}>
-          <Typography variant="body2" color="text.secondary">
-            Yorum yapabilmek için{" "}
-            <Link to="/login" style={{ color: theme.palette.primary.main }}>
-              giriş yapmalısınız.
-            </Link>
-          </Typography>
-        </Box>
-      ) : (
         <Paper
-          elevation={3}
+          elevation={0}
           sx={{
-            p: 4,
-            mt: 4,
-            borderRadius: 2,
-            bgcolor: theme.palette.mode === "dark" ? "grey.900" : "grey.50",
-            border: `1px solid ${
-              theme.palette.mode === "dark"
-                ? theme.palette.grey[800]
-                : theme.palette.grey[300]
-            }`,
+            p: 3,
+            mt: 3,
+            textAlign: "center",
+            borderRadius: 3,
+            bgcolor: (theme) => alpha(theme.palette.background.paper, 0.6),
+            backdropFilter: "blur(20px)",
+            border: "1px solid",
+            borderColor: "divider",
           }}
         >
-          <Typography variant="subtitle1" gutterBottom>
-            Yeni Yorum Yaz
+          <Typography sx={{ mb: 2, color: "text.secondary" }}>
+            Yorum yapabilmek için giriş yapmalısınız
+          </Typography>
+          <Button
+            component={Link}
+            to="/login"
+            variant="contained"
+            sx={{
+              borderRadius: 2,
+              textTransform: "none",
+              px: 3,
+            }}
+          >
+            Giriş Yap
+          </Button>
+        </Paper>
+      ) : (
+        <Paper
+          elevation={0}
+          sx={{
+            p: 3,
+            mt: 3,
+            borderRadius: 3,
+            bgcolor: (theme) =>
+              theme.palette.mode === "dark"
+                ? "rgba(255,255,255,0.04)"
+                : "rgba(255,255,255,0.95)",
+            backdropFilter: "blur(20px)",
+            border: "1px solid",
+            borderColor: "divider",
+          }}
+        >
+          <Typography variant="subtitle1" sx={{ fontWeight: 500, mb: 2 }}>
+            Yorum Yaz
           </Typography>
           <form onSubmit={handleSubmit}>
             <TextField
-              label="Yorum yazın"
-              fullWidth
-              value={text}
-              onChange={(e) => setText(e.target.value)}
               multiline
               rows={3}
-              size="small"
+              fullWidth
+              placeholder="Düşüncelerinizi paylaşın..."
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  borderRadius: 2,
+                  bgcolor: (theme) =>
+                    alpha(theme.palette.background.paper, 0.6),
+                },
+              }}
             />
-            <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
-              <Button type="submit" variant="contained" sx={{ mt: 2 }}>
-                Gönder
+            <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 2 }}>
+              <Button
+                type="submit"
+                variant="contained"
+                disabled={!text.trim()}
+                sx={{
+                  borderRadius: 2,
+                  textTransform: "none",
+                  px: 3,
+                }}
+              >
+                Yorumu Gönder
               </Button>
             </Box>
           </form>
@@ -222,7 +304,14 @@ const CommentSection = ({ postId }) => {
         onClose={() => setSnackbar({ open: false, message: "" })}
         anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
       >
-        <Alert severity="success" variant="filled">
+        <Alert
+          severity="success"
+          variant="filled"
+          sx={{
+            borderRadius: 2,
+            alignItems: "center",
+          }}
+        >
           {snackbar.message}
         </Alert>
       </Snackbar>

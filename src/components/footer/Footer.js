@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import FooterAbout from "../footer/FooterAbout";
 import FooterLinks from "../footer/FooterLinks";
 import FooterSubscribe from "../footer/FooterSubscribe";
+import { Link } from "react-router-dom";
 
 const Footer = () => {
   const theme = useTheme();

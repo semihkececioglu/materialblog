@@ -7,6 +7,7 @@ import {
   Divider,
   List,
   ListItem,
+  Paper,
 } from "@mui/material";
 import {
   Twitter,
@@ -16,43 +17,44 @@ import {
   GitHub,
 } from "@mui/icons-material";
 import SportsEsportsIcon from "@mui/icons-material/SportsEsports";
+import { alpha } from "@mui/material/styles";
 
 const socialLinks = [
   {
     name: "Twitter",
-    icon: <Twitter fontSize="large" />,
+    icon: <Twitter />,
     color: "#1DA1F2",
     link: "https://twitter.com/",
   },
   {
-    name: "Facebook",
-    icon: <Facebook fontSize="large" />,
-    color: "#1877F2",
-    link: "https://facebook.com/",
+    name: "GitHub",
+    icon: <GitHub />,
+    color: "#24292e",
+    link: "https://github.com/semihkececioglu",
   },
   {
     name: "Instagram",
-    icon: <Instagram fontSize="large" />,
+    icon: <Instagram />,
     color: "#E1306C",
     link: "https://instagram.com/",
   },
   {
     name: "Twitch",
-    icon: <SportsEsportsIcon fontSize="large" />,
+    icon: <SportsEsportsIcon />,
     color: "#9146FF",
     link: "https://twitch.tv/",
   },
   {
-    name: "Whatsapp",
-    icon: <WhatsApp fontSize="large" />,
-    color: "#25D366",
-    link: "https://wa.me/",
+    name: "Facebook",
+    icon: <Facebook />,
+    color: "#1877F2",
+    link: "https://facebook.com/",
   },
   {
-    name: "Github",
-    icon: <GitHub fontSize="large" />,
-    color: "#24292e",
-    link: "https://github.com/semihkececioglu",
+    name: "WhatsApp",
+    icon: <WhatsApp />,
+    color: "#25D366",
+    link: "https://wa.me/",
   },
 ];
 
@@ -60,92 +62,116 @@ const SocialMediaBox = () => {
   const theme = useTheme();
 
   return (
-    <Box
+    <Paper
+      elevation={0}
       sx={{
-        borderRadius: 3,
         p: 2,
-        mt: 4,
-        background:
+        mt: 3,
+        borderRadius: 2,
+        bgcolor:
           theme.palette.mode === "dark"
-            ? "linear-gradient(135deg, rgba(50,50,60,0.6), rgba(10,10,20,0.4))"
-            : "linear-gradient(135deg, rgba(255,255,255,0.8), rgba(245,245,245,0.6))",
+            ? alpha(theme.palette.background.paper, 0.4)
+            : alpha(theme.palette.background.paper, 0.8),
         backdropFilter: "blur(12px)",
-        WebkitBackdropFilter: "blur(12px)",
-        border: "1px solid rgba(255,255,255,0.2)",
-        boxShadow: "0 0 15px rgba(248,28,229,0.25)",
+        border: "1px solid",
+        borderColor: "divider",
       }}
     >
-      <Typography
-        variant="h6"
-        fontWeight={700}
-        sx={{ display: "flex", alignItems: "center", mb: 2 }}
-      >
-        Takip Et!
-      </Typography>
-      <Divider sx={{ my: 1 }} />
-
-      {/* 📌 List yapısı */}
-      <List
+      <Box
         sx={{
           display: "flex",
-          flexWrap: "wrap",
-          justifyContent: "space-between",
-          p: 0,
+          alignItems: "center",
+          gap: 1,
+          mb: 2,
+        }}
+      >
+        <Box
+          sx={{
+            width: 3,
+            height: 16,
+            borderRadius: 0.5,
+            bgcolor: "primary.main",
+          }}
+        />
+        <Typography
+          variant="subtitle1"
+          sx={{
+            fontWeight: 600,
+            color: "text.primary",
+          }}
+        >
+          Sosyal Medya
+        </Typography>
+      </Box>
+
+      <Box
+        sx={{
+          display: "grid",
+          gridTemplateColumns: "repeat(3, 1fr)",
+          gap: 1,
         }}
       >
         {socialLinks.map((item) => (
-          <ListItem
+          <Tooltip
             key={item.name}
-            component="li"
-            sx={{
-              width: "32%",
-              m: "0.5%",
-              height: 100,
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-              borderRadius: 2,
-              textDecoration: "none",
-              bgcolor: "rgba(255,255,255,0.08)",
-              border: `1px solid rgba(255,255,255,0.1)`,
-              color: theme.palette.mode === "dark" ? "#ccc" : "#333",
-              transition: "all 0.35s ease",
-              listStyle: "none", // 🔑 default bullet kaldır
-              "&:hover": {
-                transform: "scale(1.05)",
-                bgcolor: item.color,
-                color: "#fff",
-                boxShadow: `0 0 12px ${item.color}`,
-                svg: { color: "#fff" },
-              },
-            }}
+            title={`${item.name}'da takip et`}
+            arrow
+            placement="top"
           >
-            <Tooltip title={`Beni ${item.name} üzerinden takip et`} arrow>
+            <Paper
+              component="a"
+              href={item.link}
+              target="_blank"
+              rel="noopener noreferrer"
+              elevation={0}
+              sx={{
+                aspectRatio: "1/1", // Ensures square boxes
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 0.5,
+                borderRadius: 1.5,
+                bgcolor: alpha(item.color, 0.1),
+                border: "1px solid",
+                borderColor: alpha(item.color, 0.2),
+                color: "text.primary",
+                textDecoration: "none",
+                transition: "all 0.2s ease",
+                "&:hover": {
+                  transform: "translateY(-2px)",
+                  bgcolor: alpha(item.color, 0.15),
+                  borderColor: alpha(item.color, 0.3),
+                  "& .icon": {
+                    color: item.color,
+                    transform: "scale(1.1)",
+                  },
+                },
+              }}
+            >
               <Box
-                component="a"
-                href={item.link}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label={item.name}
+                className="icon"
                 sx={{
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                  textDecoration: "none",
-                  color: "inherit",
+                  color: alpha(item.color, 0.8),
+                  transition: "all 0.2s ease",
                 }}
               >
-                <Box sx={{ mb: 1, color: item.color }}>{item.icon}</Box>
-                <Typography variant="body2" fontWeight={500}>
-                  {item.name}
-                </Typography>
+                {React.cloneElement(item.icon, { sx: { fontSize: 20 } })}
               </Box>
-            </Tooltip>
-          </ListItem>
+              <Typography
+                variant="caption"
+                sx={{
+                  fontWeight: 500,
+                  fontSize: "0.7rem",
+                }}
+              >
+                {item.name}
+              </Typography>
+            </Paper>
+          </Tooltip>
         ))}
-      </List>
-    </Box>
+      </Box>
+    </Paper>
   );
 };
 

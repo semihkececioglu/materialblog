@@ -1,6 +1,7 @@
 import React from "react";
 import { Box, Typography, IconButton, Tooltip } from "@mui/material";
 import { Twitter, Facebook, Instagram } from "@mui/icons-material";
+import { alpha } from "@mui/material/styles";
 
 const FooterAbout = () => (
   <Box item xs={12} sm={6} md={3}>
