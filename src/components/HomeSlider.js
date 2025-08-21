@@ -7,6 +7,7 @@ import {
   Skeleton,
   useTheme,
   Tooltip,
+  CardMedia,
 } from "@mui/material";
 import { ArrowBackIos, ArrowForwardIos } from "@mui/icons-material";
 import axios from "axios";
@@ -40,11 +41,32 @@ const HomeSlider = () => {
       });
   }, []);
 
+  // Slider görseli için optimize edilmiş yeni bileşen
+  const OptimizedImage = ({ post, index }) => (
+    <CardMedia
+      component="img"
+      src={post.image || "/default.jpg"}
+      alt={post.title}
+      className="slider-img"
+      loading={index === 0 ? "eager" : "lazy"}
+      fetchpriority={index === 0 ? "high" : "auto"}
+      decoding="async"
+      sx={{
+        width: "100%",
+        height: "100%",
+        objectFit: "cover",
+        transition: "all 0.4s ease",
+        borderRadius: 3,
+        display: "block",
+      }}
+    />
+  );
+
   const settings = {
     dots: true,
     infinite: true,
     autoplay: true,
-    speed: 600,
+    speed: 500, // Hızı azalttık
     slidesToShow: 2,
     slidesToScroll: 1,
     arrows: false,
@@ -75,6 +97,10 @@ const HomeSlider = () => {
         }}
       />
     ),
+    initialSlide: 0,
+    lazyLoad: "anticipated",
+    autoplaySpeed: 5000,
+    pauseOnHover: true,
   };
 
   // 📌 Loading Skeleton
@@ -135,6 +161,7 @@ const HomeSlider = () => {
   // 📌 Slider render
   return (
     <Box
+      component="section" // Semantic HTML için
       sx={{
         position: "relative",
         borderRadius: 4,
@@ -208,47 +235,37 @@ const HomeSlider = () => {
                 borderRadius: 3,
                 overflow: "hidden",
                 "&:hover .slider-img": {
-                  filter: "blur(4px)",
-                  transform: "scale(1.05)",
+                  transform: "scale(1.05)", // blur kaldırıldı
                 },
               }}
             >
-              <Box
-                component="img"
-                src={post.image || "/default.jpg"}
-                alt={post.title}
-                className="slider-img"
-                loading={index === 0 ? "eager" : "lazy"} // ✅ İlk görsel hemen yüklenir
-                fetchpriority={index === 0 ? "high" : "auto"} // ✅ İlk görsele yüksek öncelik
-                decoding="async"
-                sx={{
-                  width: "100%",
-                  height: "100%",
-                  objectFit: "cover",
-                  transition: "all 0.4s ease",
-                  borderRadius: 3,
-                  display: "block",
-                }}
-              />
+              <OptimizedImage post={post} index={index} />
               <Box
                 sx={{
                   position: "absolute",
                   bottom: 16,
                   left: 16,
                   right: 16,
-                  bgcolor: "rgba(255, 255, 255, 0.08)",
+                  bgcolor: "rgba(0, 0, 0, 0.75)", // Daha iyi kontrast
                   backdropFilter: "blur(6px)",
                   px: 2,
-                  py: 1,
+                  py: 1.5,
                   borderRadius: 2,
                   boxShadow: "0 4px 12px rgba(0,0,0,0.2)",
                 }}
               >
                 <Typography
-                  variant="subtitle2"
-                  fontWeight={600}
-                  color="#fff"
-                  noWrap
+                  variant="subtitle1"
+                  sx={{
+                    fontWeight: 600,
+                    color: "#fff",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    display: "-webkit-box",
+                    WebkitLineClamp: 2,
+                    WebkitBoxOrient: "vertical",
+                    lineHeight: 1.3,
+                  }}
                 >
                   {post.title}
                 </Typography>
