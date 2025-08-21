@@ -1,5 +1,11 @@
 import React, { useEffect } from "react";
-import { Box, Pagination, Container } from "@mui/material";
+import {
+  Box,
+  Pagination,
+  Container,
+  useMediaQuery,
+  useTheme,
+} from "@mui/material";
 import { useParams, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 
@@ -16,12 +22,18 @@ const Home = () => {
   const { pageNumber } = useParams();
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const theme = useTheme();
 
   const page = parseInt(pageNumber) || 1;
 
   const { posts, totalPages, loading, error } = useSelector(
     (state) => state.posts
   );
+
+  // ✅ Mobil / tablet / desktop için skeleton sayısını ayarlıyoruz
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  const isTablet = useMediaQuery(theme.breakpoints.between("sm", "md"));
+  const skeletonCount = isMobile ? 2 : isTablet ? 4 : POSTS_PER_PAGE;
 
   useEffect(() => {
     dispatch(fetchPosts({ page, limit: POSTS_PER_PAGE }));
@@ -51,19 +63,22 @@ const Home = () => {
         <Box sx={{ flex: 3 }}>
           {loading ? (
             <>
-              <Box sx={{ display: "flex", flexWrap: "wrap", gap: 3 }}>
-                {Array.from({ length: POSTS_PER_PAGE }).map((_, i) => (
-                  <Box
-                    key={i}
-                    sx={{
-                      flex: "1 1 calc(33.333% - 20px)",
-                      minWidth: "250px",
-                    }}
-                  >
-                    <PostCardSkeleton />
-                  </Box>
+              <Box
+                sx={{
+                  display: "grid",
+                  gridTemplateColumns: {
+                    xs: "1fr", // mobil tek sütun
+                    sm: "1fr 1fr", // tablet 2 sütun
+                    md: "1fr 1fr 1fr", // desktop 3 sütun
+                  },
+                  gap: 3,
+                }}
+              >
+                {Array.from({ length: skeletonCount }).map((_, i) => (
+                  <PostCardSkeleton key={i} />
                 ))}
               </Box>
+
               {/* Sayfalama yer tutucu */}
               <Box sx={{ mt: 4, height: 40 }} />
             </>
@@ -73,17 +88,19 @@ const Home = () => {
             </Box>
           ) : (
             <>
-              <Box sx={{ display: "flex", flexWrap: "wrap", gap: 3 }}>
+              <Box
+                sx={{
+                  display: "grid",
+                  gridTemplateColumns: {
+                    xs: "1fr",
+                    sm: "1fr 1fr",
+                    md: "1fr 1fr 1fr",
+                  },
+                  gap: 3,
+                }}
+              >
                 {posts.map((post) => (
-                  <Box
-                    key={post._id}
-                    sx={{
-                      flex: "1 1 calc(33.333% - 20px)",
-                      minWidth: "250px",
-                    }}
-                  >
-                    <PostCard post={post} />
-                  </Box>
+                  <PostCard key={post._id} post={post} />
                 ))}
               </Box>
 
