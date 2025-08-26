@@ -30,12 +30,13 @@ import AdminUsersPage from "./admin/AdminUsersPage";
 import NotFound from "./pages/NotFound";
 import RoleBasedAdminRedirect from "./auth/RoleBasedAdminRedirect";
 import "./firebase";
-import MetaPixel from "./common/MetaPixel";
 
 // Redux
 import { Provider, useDispatch, useSelector } from "react-redux";
 import store from "./redux/store";
 import { login } from "./redux/userSlice";
+
+import MetaPixel from "./components/common/MetaPixel";
 
 const AuthLoader = ({ children }) => {
   const dispatch = useDispatch();
