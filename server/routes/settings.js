@@ -8,19 +8,25 @@ router.get("/", async (req, res) => {
     const settings = await Setting.getSingleton();
     res.json(settings);
   } catch (err) {
+    console.error("Settings get error:", err);
     res.status(500).json({ message: "Ayarlar alınamadı" });
   }
 });
 
-// GET /api/settings/public → sadece public alanlar //
+// GET /api/settings/public → sadece public alanlar
 router.get("/public", async (req, res) => {
   try {
     const settings = await Setting.getSingleton();
     res.json({
       siteTitle: settings.siteTitle,
       siteDescription: settings.siteDescription,
+
+      // ✅ Meta Pixel alanlarını da döndür
+      metaPixelEnabled: settings.metaPixelEnabled,
+      metaPixelId: settings.metaPixelId,
     });
   } catch (err) {
+    console.error("Settings public error:", err);
     res.status(500).json({ message: "Public ayarlar alınamadı" });
   }
 });
@@ -29,14 +35,20 @@ router.get("/public", async (req, res) => {
 router.put("/", async (req, res) => {
   try {
     let settings = await Setting.getSingleton();
-    const { siteTitle, siteDescription } = req.body;
+    const { siteTitle, siteDescription, metaPixelEnabled, metaPixelId } =
+      req.body;
 
-    settings.siteTitle = siteTitle;
-    settings.siteDescription = siteDescription;
+    if (siteTitle !== undefined) settings.siteTitle = siteTitle;
+    if (siteDescription !== undefined)
+      settings.siteDescription = siteDescription;
+    if (metaPixelEnabled !== undefined)
+      settings.metaPixelEnabled = metaPixelEnabled;
+    if (metaPixelId !== undefined) settings.metaPixelId = metaPixelId;
 
     await settings.save();
     res.json(settings);
   } catch (err) {
+    console.error("Settings update error:", err);
     res.status(500).json({ message: "Ayarlar güncellenemedi" });
   }
 });
