@@ -12,7 +12,7 @@ router.get("/", async (req, res) => {
   }
 });
 
-// GET /api/settings/public → sadece public alanlar
+// GET /api/settings/public → sadece public alanlar //
 router.get("/public", async (req, res) => {
   try {
     const settings = await Setting.getSingleton();

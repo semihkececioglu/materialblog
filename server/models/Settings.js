@@ -29,6 +29,8 @@ router.get("/public", async (req, res) => {
   }
 });
 
+//
+
 // PUT /api/settings → güncelle
 router.put("/", async (req, res) => {
   try {
