@@ -44,6 +44,14 @@ const Login = () => {
 
       dispatch(login({ user, token }));
 
+      // ✅ Meta Pixel Event (Login)
+      if (window.fbq) {
+        window.fbq("trackCustom", "Login", {
+          userId: user._id,
+          username: user.username,
+        });
+      }
+
       setSnackbarOpen(true);
 
       setTimeout(() => {
