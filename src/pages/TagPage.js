@@ -11,7 +11,6 @@ import {
   Paper,
 } from "@mui/material";
 import PostCard from "../components/PostCard";
-import PageTransitionWrapper from "../components/common/PageTransitionWrapper";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchPosts } from "../redux/postSlice";
 
@@ -77,107 +76,105 @@ function TagPosts() {
     tagDescriptions[tagKey] || "Bu etikete ait açıklama henüz eklenmedi.";
 
   return (
-    <PageTransitionWrapper>
-      <Container maxWidth="lg" sx={{ mt: 4 }}>
-        {/* Etiket Bilgi Kutusu */}
+    <Container maxWidth="lg" sx={{ mt: 4 }}>
+      {/* Etiket Bilgi Kutusu */}
+      <Paper
+        elevation={0}
+        sx={{
+          p: 3,
+          borderRadius: 3,
+          backgroundColor:
+            theme.palette.mode === "dark"
+              ? "rgba(255,255,255,0.04)"
+              : "rgba(0,0,0,0.03)",
+          backdropFilter: "blur(8px)",
+          mb: 4,
+        }}
+      >
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
+          <Typography variant="h5" fontWeight="bold">
+            Etiket:
+          </Typography>
+          <Chip
+            label={`#${tagLabel}`}
+            sx={{
+              bgcolor: chipColor,
+              color: "white",
+              fontWeight: "bold",
+              fontSize: "1rem",
+            }}
+          />
+        </Box>
+
+        <Typography variant="body1" color="text.secondary" gutterBottom>
+          {description}
+        </Typography>
+
+        <Typography variant="caption" color="text.disabled">
+          Toplam {posts.length} yazı bulundu.
+        </Typography>
+      </Paper>
+
+      {/* İçerik */}
+      {loading ? (
+        <Box sx={{ display: "flex", justifyContent: "center", mt: 8 }}>
+          <CircularProgress />
+        </Box>
+      ) : posts.length === 0 ? (
         <Paper
-          elevation={0}
+          elevation={3}
           sx={{
-            p: 3,
-            borderRadius: 3,
-            backgroundColor:
+            mt: 6,
+            p: 4,
+            textAlign: "center",
+            borderRadius: 2,
+            bgcolor:
               theme.palette.mode === "dark"
-                ? "rgba(255,255,255,0.04)"
-                : "rgba(0,0,0,0.03)",
-            backdropFilter: "blur(8px)",
-            mb: 4,
+                ? "grey.900"
+                : theme.palette.grey[50],
+            border: `1px solid ${
+              theme.palette.mode === "dark"
+                ? theme.palette.grey[800]
+                : theme.palette.grey[300]
+            }`,
           }}
         >
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
-            <Typography variant="h5" fontWeight="bold">
-              Etiket:
-            </Typography>
-            <Chip
-              label={`#${tagLabel}`}
-              sx={{
-                bgcolor: chipColor,
-                color: "white",
-                fontWeight: "bold",
-                fontSize: "1rem",
-              }}
-            />
-          </Box>
-
-          <Typography variant="body1" color="text.secondary" gutterBottom>
-            {description}
+          <Typography variant="h6" gutterBottom>
+            Bu etikete ait yazı bulunamadı!
           </Typography>
-
-          <Typography variant="caption" color="text.disabled">
-            Toplam {posts.length} yazı bulundu.
+          <Typography variant="body2" color="text.secondary">
+            Aradığınız etiket henüz herhangi bir yazıya eklenmemiş olabilir.
           </Typography>
         </Paper>
-
-        {/* İçerik */}
-        {loading ? (
-          <Box sx={{ display: "flex", justifyContent: "center", mt: 8 }}>
-            <CircularProgress />
-          </Box>
-        ) : posts.length === 0 ? (
-          <Paper
-            elevation={3}
-            sx={{
-              mt: 6,
-              p: 4,
-              textAlign: "center",
-              borderRadius: 2,
-              bgcolor:
-                theme.palette.mode === "dark"
-                  ? "grey.900"
-                  : theme.palette.grey[50],
-              border: `1px solid ${
-                theme.palette.mode === "dark"
-                  ? theme.palette.grey[800]
-                  : theme.palette.grey[300]
-              }`,
-            }}
-          >
-            <Typography variant="h6" gutterBottom>
-              Bu etikete ait yazı bulunamadı!
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Aradığınız etiket henüz herhangi bir yazıya eklenmemiş olabilir.
-            </Typography>
-          </Paper>
-        ) : (
-          <>
-            <Box sx={{ display: "flex", flexWrap: "wrap", gap: 3, mt: 3 }}>
-              {posts.map((post) => (
-                <Box
-                  key={post._id}
-                  sx={{
-                    flex: "1 1 calc(33.333% - 20px)",
-                    minWidth: "250px",
-                  }}
-                >
-                  <PostCard post={post} />
-                </Box>
-              ))}
-            </Box>
-
-            {totalPages > 1 && (
-              <Box sx={{ display: "flex", justifyContent: "center", mt: 5 }}>
-                <Pagination
-                  count={totalPages}
-                  page={page}
-                  onChange={handlePageChange}
-                  color="primary"
-                />
+      ) : (
+        <>
+          <Box sx={{ display: "flex", flexWrap: "wrap", gap: 3, mt: 3 }}>
+            {posts.map((post) => (
+              <Box
+                key={post._id}
+                sx={{
+                  flex: "1 1 calc(33.333% - 20px)",
+                  minWidth: "250px",
+                }}
+              >
+                <PostCard post={post} />
               </Box>
-            )}
-          </>
-        )}
-      </Container>
-    </PageTransitionWrapper>
+            ))}
+          </Box>
+
+          {totalPages > 1 && (
+            <Box sx={{ display: "flex", justifyContent: "center", mt: 5 }}>
+              <Pagination
+                count={totalPages}
+                page={page}
+                onChange={handlePageChange}
+                color="primary"
+              />
+            </Box>
+          )}
+        </>
+      )}
+    </Container>
   );
 }
 

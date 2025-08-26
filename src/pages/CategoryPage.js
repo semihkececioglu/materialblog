@@ -10,7 +10,6 @@ import {
   CircularProgress,
   Paper,
 } from "@mui/material";
-import PageTransitionWrapper from "../components/common/PageTransitionWrapper";
 
 // Redux
 import { useDispatch, useSelector } from "react-redux";
@@ -72,72 +71,70 @@ function CategoryPage() {
   };
 
   return (
-    <PageTransitionWrapper>
-      <Container sx={{ mt: 4 }}>
-        {/* Kategori Bilgi Kutusu */}
-        <Paper
-          elevation={0}
-          sx={{
-            p: 3,
-            borderRadius: 3,
-            backgroundColor:
-              theme.palette.mode === "dark"
-                ? "rgba(255,255,255,0.04)"
-                : "rgba(0,0,0,0.03)",
-            backdropFilter: "blur(8px)",
-            mb: 4,
-          }}
-        >
-          <Typography variant="h4" fontWeight="bold" gutterBottom>
-            {formattedCategoryName} Kategorisi
-          </Typography>
+    <Container sx={{ mt: 4 }}>
+      {/* Kategori Bilgi Kutusu */}
+      <Paper
+        elevation={0}
+        sx={{
+          p: 3,
+          borderRadius: 3,
+          backgroundColor:
+            theme.palette.mode === "dark"
+              ? "rgba(255,255,255,0.04)"
+              : "rgba(0,0,0,0.03)",
+          backdropFilter: "blur(8px)",
+          mb: 4,
+        }}
+      >
+        <Typography variant="h4" fontWeight="bold" gutterBottom>
+          {formattedCategoryName} Kategorisi
+        </Typography>
 
-          <Typography variant="body1" color="text.secondary" gutterBottom>
-            {getCategoryDescription(kategoriAdi)}
-          </Typography>
+        <Typography variant="body1" color="text.secondary" gutterBottom>
+          {getCategoryDescription(kategoriAdi)}
+        </Typography>
 
-          <Typography variant="caption" color="text.disabled">
-            Toplam {posts.length} yazı bulundu.
-          </Typography>
-        </Paper>
+        <Typography variant="caption" color="text.disabled">
+          Toplam {posts.length} yazı bulundu.
+        </Typography>
+      </Paper>
 
-        {/* Yükleniyor */}
-        {loading ? (
-          <Box sx={{ display: "flex", justifyContent: "center", mt: 8 }}>
-            <CircularProgress />
-          </Box>
-        ) : (
-          <>
-            {/* Yazılar Listesi */}
-            <Box sx={{ display: "flex", flexWrap: "wrap", gap: 3, mt: 3 }}>
-              {posts.map((post) => (
-                <Box
-                  key={post._id}
-                  sx={{
-                    flex: "1 1 calc(33.333% - 20px)",
-                    minWidth: "250px",
-                  }}
-                >
-                  <PostCard post={post} />
-                </Box>
-              ))}
-            </Box>
-
-            {/* Sayfalama */}
-            {totalPages > 1 && (
-              <Box sx={{ display: "flex", justifyContent: "center", mt: 5 }}>
-                <Pagination
-                  count={totalPages}
-                  page={page}
-                  onChange={handlePageChange}
-                  color="primary"
-                />
+      {/* Yükleniyor */}
+      {loading ? (
+        <Box sx={{ display: "flex", justifyContent: "center", mt: 8 }}>
+          <CircularProgress />
+        </Box>
+      ) : (
+        <>
+          {/* Yazılar Listesi */}
+          <Box sx={{ display: "flex", flexWrap: "wrap", gap: 3, mt: 3 }}>
+            {posts.map((post) => (
+              <Box
+                key={post._id}
+                sx={{
+                  flex: "1 1 calc(33.333% - 20px)",
+                  minWidth: "250px",
+                }}
+              >
+                <PostCard post={post} />
               </Box>
-            )}
-          </>
-        )}
-      </Container>
-    </PageTransitionWrapper>
+            ))}
+          </Box>
+
+          {/* Sayfalama */}
+          {totalPages > 1 && (
+            <Box sx={{ display: "flex", justifyContent: "center", mt: 5 }}>
+              <Pagination
+                count={totalPages}
+                page={page}
+                onChange={handlePageChange}
+                color="primary"
+              />
+            </Box>
+          )}
+        </>
+      )}
+    </Container>
   );
 }
 
