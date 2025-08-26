@@ -7,11 +7,13 @@ const BASE =
 /* =====================
    Thunks
    ===================== */
+// Tüm ayarları getir
 export const fetchSettings = createAsyncThunk("settings/fetch", async () => {
   const { data } = await axios.get(BASE);
   return data;
 });
 
+// Ayarları güncelle (artık metaPixelId & metaPixelEnabled de dahil)
 export const updateSettings = createAsyncThunk(
   "settings/update",
   async (settings) => {

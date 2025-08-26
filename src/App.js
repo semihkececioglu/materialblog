@@ -36,6 +36,9 @@ import { Provider, useDispatch, useSelector } from "react-redux";
 import store from "./redux/store";
 import { login } from "./redux/userSlice";
 
+// ✅ MetaPixel bileşenini import et
+import MetaPixel from "./components/common/MetaPixel";
+
 const AuthLoader = ({ children }) => {
   const dispatch = useDispatch();
 
@@ -74,6 +77,9 @@ function App() {
         <CssBaseline />
         <Router>
           <AuthLoader>
+            {/* ✅ Meta Pixel tüm rotalarda çalışsın */}
+            <MetaPixel />
+
             <Routes>
               {/* Genel Kullanıcı Rotaları */}
               <Route

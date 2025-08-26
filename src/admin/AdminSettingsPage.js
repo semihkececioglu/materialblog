@@ -13,6 +13,8 @@ import {
   IconButton,
   Tooltip,
   Divider,
+  Switch,
+  FormControlLabel,
 } from "@mui/material";
 import { alpha } from "@mui/material/styles";
 import SettingsIcon from "@mui/icons-material/Settings";
@@ -20,6 +22,7 @@ import SaveIcon from "@mui/icons-material/Save";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import TitleIcon from "@mui/icons-material/Title";
 import DescriptionIcon from "@mui/icons-material/Description";
+import CodeIcon from "@mui/icons-material/Code"; // Pixel ikonu için
 import { useDispatch, useSelector } from "react-redux";
 import {
   fetchSettings,
@@ -41,6 +44,8 @@ const AdminSettingsPage = () => {
   const [form, setForm] = useState({
     siteTitle: "",
     siteDescription: "",
+    metaPixelId: "",
+    metaPixelEnabled: false,
   });
 
   useEffect(() => {
@@ -52,15 +57,17 @@ const AdminSettingsPage = () => {
       setForm({
         siteTitle: settings.siteTitle || "",
         siteDescription: settings.siteDescription || "",
+        metaPixelId: settings.metaPixelId || "",
+        metaPixelEnabled: settings.metaPixelEnabled || false,
       });
     }
   }, [settings]);
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
+    const { name, value, type, checked } = e.target;
     setForm((prev) => ({
       ...prev,
-      [name]: value,
+      [name]: type === "checkbox" ? checked : value,
     }));
   };
 
@@ -132,6 +139,7 @@ const AdminSettingsPage = () => {
       >
         <Box sx={{ p: 3 }}>
           <form onSubmit={handleSubmit}>
+            {/* Site Title */}
             <Box sx={{ mb: 4 }}>
               <Box
                 sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}
@@ -140,17 +148,6 @@ const AdminSettingsPage = () => {
                 <Typography variant="subtitle1" sx={{ fontWeight: 500 }}>
                   Site Başlığı
                 </Typography>
-                <Tooltip
-                  title="Sitenizin ana başlığı. Tarayıcı sekmesinde ve arama sonuçlarında görünür."
-                  arrow
-                  placement="top"
-                >
-                  <IconButton size="small">
-                    <InfoOutlinedIcon
-                      sx={{ fontSize: 18, color: "text.secondary" }}
-                    />
-                  </IconButton>
-                </Tooltip>
               </Box>
               <TextField
                 fullWidth
@@ -170,6 +167,7 @@ const AdminSettingsPage = () => {
 
             <Divider sx={{ my: 3 }} />
 
+            {/* Site Description */}
             <Box sx={{ mb: 4 }}>
               <Box
                 sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}
@@ -178,17 +176,6 @@ const AdminSettingsPage = () => {
                 <Typography variant="subtitle1" sx={{ fontWeight: 500 }}>
                   Site Açıklaması
                 </Typography>
-                <Tooltip
-                  title="Sitenizin kısa açıklaması. Arama motorları için önemlidir."
-                  arrow
-                  placement="top"
-                >
-                  <IconButton size="small">
-                    <InfoOutlinedIcon
-                      sx={{ fontSize: 18, color: "text.secondary" }}
-                    />
-                  </IconButton>
-                </Tooltip>
               </Box>
               <TextField
                 fullWidth
@@ -208,6 +195,62 @@ const AdminSettingsPage = () => {
               />
             </Box>
 
+            <Divider sx={{ my: 3 }} />
+
+            {/* Meta Pixel */}
+            <Box sx={{ mb: 4 }}>
+              <Box
+                sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}
+              >
+                <CodeIcon sx={{ color: "primary.main" }} />
+                <Typography variant="subtitle1" sx={{ fontWeight: 500 }}>
+                  Meta Pixel
+                </Typography>
+                <Tooltip
+                  title="Facebook / Meta Pixel izleme kodu için ID. Admin panelden açıp kapatabilirsiniz."
+                  arrow
+                  placement="top"
+                >
+                  <IconButton size="small">
+                    <InfoOutlinedIcon
+                      sx={{ fontSize: 18, color: "text.secondary" }}
+                    />
+                  </IconButton>
+                </Tooltip>
+              </Box>
+              <TextField
+                fullWidth
+                name="metaPixelId"
+                value={form.metaPixelId}
+                onChange={handleChange}
+                placeholder="Örn: 2138030663390234"
+                sx={{
+                  mb: 2,
+                  "& .MuiOutlinedInput-root": {
+                    borderRadius: 2,
+                    bgcolor: (theme) =>
+                      alpha(theme.palette.background.paper, 0.6),
+                  },
+                }}
+              />
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={form.metaPixelEnabled}
+                    onChange={(e) =>
+                      setForm((prev) => ({
+                        ...prev,
+                        metaPixelEnabled: e.target.checked,
+                      }))
+                    }
+                    name="metaPixelEnabled"
+                  />
+                }
+                label="Meta Pixel'i Aktif Et"
+              />
+            </Box>
+
+            {/* Submit */}
             <Box
               sx={{
                 display: "flex",
