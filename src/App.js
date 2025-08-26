@@ -35,7 +35,9 @@ import "./firebase";
 import { Provider, useDispatch, useSelector } from "react-redux";
 import store from "./redux/store";
 import { login } from "./redux/userSlice";
+import { fetchSettings } from "./redux/settingsSlice";
 
+// Meta Pixel
 import MetaPixel from "./components/common/MetaPixel";
 
 const AuthLoader = ({ children }) => {
@@ -58,6 +60,9 @@ const AuthLoader = ({ children }) => {
         console.error("Local user parse hatası:", error);
       }
     }
+
+    // ✅ App yüklenince ayarları çek
+    dispatch(fetchSettings());
   }, [dispatch]);
 
   return children;

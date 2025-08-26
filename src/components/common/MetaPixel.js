@@ -8,6 +8,14 @@ const MetaPixel = () => {
   const location = useLocation();
 
   useEffect(() => {
+    console.log("Settings from Redux:", settings);
+
+    if (settings?.metaPixelEnabled && settings?.metaPixelId) {
+      console.log("Meta Pixel aktif. ID:", settings.metaPixelId);
+    }
+  }, [settings]);
+
+  useEffect(() => {
     if (settings?.metaPixelEnabled && settings?.metaPixelId) {
       // Eğer daha önce fbq yüklenmemişse, scripti ekle
       if (!window.fbq) {
