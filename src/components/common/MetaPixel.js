@@ -30,9 +30,7 @@ const MetaPixel = () => {
           s.parentNode.insertBefore(t, s);
         })(window, document, "script");
 
-        if (window.fbq) {
-          window.fbq("init", settings.metaPixelId);
-        }
+        window.fbq("init", settings.metaPixelId); // sadece ilk seferde init
       }
 
       // Route değişiminde PageView tetikle
