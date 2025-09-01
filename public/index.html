@@ -12,7 +12,7 @@
     <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
     <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
 
-    <!-- Kritk domain preconnect -->
+    <!-- 🔗 Performans için kritik domain preconnect -->
     <link rel="preconnect" href="https://materialblog.vercel.app" crossorigin />
     <link rel="dns-prefetch" href="https://materialblog.vercel.app" />
     <link rel="preconnect" href="https://res.cloudinary.com" crossorigin />
@@ -20,52 +20,22 @@
 
     <title>MUI Blog</title>
 
-    <!-- ✅ SELF-HOST FONT PRELOAD (bloklamaz) -->
+    <!-- ✅ SELF-HOST FONT PRELOAD (sadece kritik 400) -->
     <link
       rel="preload"
       as="font"
       type="font/woff2"
       crossorigin
-      href="%PUBLIC_URL%/fonts/inter-latin-ext-400.woff2"
-    />
-    <link
-      rel="preload"
-      as="font"
-      type="font/woff2"
-      crossorigin
-      href="%PUBLIC_URL%/fonts/inter-latin-ext-600.woff2"
-    />
-    <link
-      rel="preload"
-      as="font"
-      type="font/woff2"
-      crossorigin
-      href="%PUBLIC_URL%/fonts/inter-latin-ext-700.woff2"
+      href="/fonts/inter-v19-latin-ext-regular.woff2"
     />
 
-    <!-- ✅ FONT FACE tanımları için küçük bir CSS (async yüklenir) -->
-    <link
-      rel="preload"
-      as="style"
-      href="%PUBLIC_URL%/fonts/fonts.css"
-      onload="this.onload=null;this.rel='stylesheet'"
-    />
-    <noscript
-      ><link rel="stylesheet" href="%PUBLIC_URL%/fonts/fonts.css"
-    /></noscript>
+    <!-- ✅ Font Face tanımları -->
+    <link rel="stylesheet" href="/fonts/fonts.css" />
 
-    <!-- ✅ Main CSS non‑blocking -->
-    <link
-      rel="preload"
-      href="%PUBLIC_URL%/static/css/main.css"
-      as="style"
-      onload="this.onload=null;this.rel='stylesheet'"
-    />
-    <noscript
-      ><link rel="stylesheet" href="%PUBLIC_URL%/static/css/main.css"
-    /></noscript>
+    <!-- ✅ Main CSS -->
+    <link rel="stylesheet" href="%PUBLIC_URL%/static/css/main.css" />
 
-    <!-- İlk görseli preload et -->
+    <!-- İlk kritik görsel preload -->
     <link
       rel="preload"
       as="image"
@@ -73,7 +43,7 @@
       fetchpriority="high"
     />
 
-    <!-- 🧩 Kritik, minik inline CSS: fallback font + layout flash’ını azaltır -->
+    <!-- 🧩 Kritik inline CSS: fallback font -->
     <style>
       :root {
         --ff: Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial,
