@@ -12,7 +12,7 @@ const featuredPosts = [
     id: 1,
     title: "MUI Blog Mobil App Yayınlandı!",
     image:
-      "https://static0.anpoimages.com/wordpress/wp-content/uploads/2022/06/what-is-google-play-hero.jpg",
+      "https://play-lh.googleusercontent.com/020GnyVJKboBRDyZ9Oe4pfigwkm8Mq1_SO0br0Lk6-eQhiRHXeJ5dFH6-JI3DQSx3QkGpOYKTmZu=w1296-h2160-rw",
     link: "https://play.google.com/",
     isExternal: true,
   },
