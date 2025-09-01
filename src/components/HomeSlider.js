@@ -213,8 +213,11 @@ const HomeSlider = () => {
 
       {loaded && instanceRef.current && (
         <>
+          {/* Önceki buton */}
           <IconButton
             onClick={() => instanceRef.current?.prev()}
+            aria-label="Önceki slayt"
+            title="Önceki slayt"
             sx={{
               position: "absolute",
               left: { xs: 8, md: 16 },
@@ -234,8 +237,11 @@ const HomeSlider = () => {
             <NavigateBeforeIcon sx={{ fontSize: { xs: 24, md: 28 } }} />
           </IconButton>
 
+          {/* Sonraki buton */}
           <IconButton
             onClick={() => instanceRef.current?.next()}
+            aria-label="Sonraki slayt"
+            title="Sonraki slayt"
             sx={{
               position: "absolute",
               right: { xs: 8, md: 16 },
@@ -255,6 +261,7 @@ const HomeSlider = () => {
             <NavigateNextIcon sx={{ fontSize: { xs: 24, md: 28 } }} />
           </IconButton>
 
+          {/* Noktalar */}
           <Box
             sx={{
               display: "flex",
@@ -266,6 +273,8 @@ const HomeSlider = () => {
             {featuredPosts.map((_, idx) => (
               <Box
                 key={idx}
+                role="button"
+                aria-label={`${idx + 1}. slayta git`}
                 onClick={() => instanceRef.current?.moveToIdx(idx)}
                 sx={{
                   width: currentSlide === idx ? 24 : 8,
