@@ -155,7 +155,7 @@ const PostCard = ({ post }) => {
 
         {/* Başlık */}
         <Typography
-          variant="h5"
+          variant="h2"
           fontWeight={600}
           gutterBottom
           sx={{ fontSize: "1rem", lineHeight: 1.4 }}

@@ -15,9 +15,10 @@ const FooterAbout = () => (
     {/* Brand Section */}
     <Box>
       <Typography
-        variant="h6"
+        variant="h3"
         sx={{
           fontWeight: 700,
+          fontSize: "1.5rem",
           background: "linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)",
           backgroundClip: "text",
           WebkitBackgroundClip: "text",
