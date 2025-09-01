@@ -2,7 +2,6 @@ import React from "react";
 import { Box, Typography, Paper, useTheme, Chip } from "@mui/material";
 import { Link } from "react-router-dom";
 import { alpha } from "@mui/material/styles";
-import TagIcon from "@mui/icons-material/Tag";
 import slugify from "../../utils/slugify";
 
 const tags = [
@@ -27,20 +26,14 @@ const SidebarTags = () => {
         bgcolor: (theme) =>
           theme.palette.mode === "dark"
             ? alpha(theme.palette.background.paper, 0.4)
-            : alpha(theme.palette.background.paper, 0.8),
+            : alpha(theme.palette.background.paper, 0.85),
         backdropFilter: "blur(12px)",
         border: "1px solid",
         borderColor: "divider",
       }}
     >
-      <Box
-        sx={{
-          display: "flex",
-          alignItems: "center",
-          gap: 1,
-          mb: 2,
-        }}
-      >
+      {/* Başlık */}
+      <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
         <Box
           sx={{
             width: 3,
@@ -50,23 +43,20 @@ const SidebarTags = () => {
           }}
         />
         <Typography
-          variant="subtitle1"
+          component="h2"
+          variant="h6"
           sx={{
-            fontWeight: 600,
+            fontWeight: 700,
             color: "text.primary",
+            fontSize: "1rem",
           }}
         >
           Etiketler
         </Typography>
       </Box>
 
-      <Box
-        sx={{
-          display: "flex",
-          flexWrap: "wrap",
-          gap: 1,
-        }}
-      >
+      {/* Etiketler */}
+      <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
         {tags.map((tag, index) => (
           <Chip
             key={index}
@@ -76,7 +66,8 @@ const SidebarTags = () => {
                   component="span"
                   sx={{
                     fontSize: "0.75rem",
-                    fontWeight: 500,
+                    fontWeight: 600,
+                    color: "#fff", // sabit beyaz yazı
                   }}
                 >
                   {tag.label}
@@ -85,8 +76,8 @@ const SidebarTags = () => {
                   component="span"
                   sx={{
                     fontSize: "0.7rem",
-                    opacity: 0.7,
                     fontWeight: 400,
+                    color: "rgba(255,255,255,0.85)", // beyazın yumuşatılmış tonu
                   }}
                 >
                   {tag.count}
@@ -98,19 +89,30 @@ const SidebarTags = () => {
             clickable
             size="small"
             sx={{
-              height: 24,
+              height: 26,
               borderRadius: 1.5,
-              bgcolor: alpha(tag.color, 0.1),
-              color:
+              px: 0.6,
+              bgcolor:
                 theme.palette.mode === "dark"
-                  ? alpha(tag.color, 0.9)
-                  : alpha(tag.color, 0.7),
+                  ? alpha(tag.color, 0.4) // dark mode için daha açık
+                  : alpha(tag.color, 0.6), // light mode için daha koyu
+              color: "#fff",
               border: "1px solid",
-              borderColor: alpha(tag.color, 0.2),
+              borderColor:
+                theme.palette.mode === "dark"
+                  ? alpha(tag.color, 0.55)
+                  : alpha(tag.color, 0.7),
+              fontWeight: 500,
               transition: "all 0.2s ease",
               "&:hover": {
-                bgcolor: alpha(tag.color, 0.15),
-                borderColor: alpha(tag.color, 0.3),
+                bgcolor:
+                  theme.palette.mode === "dark"
+                    ? alpha(tag.color, 0.55)
+                    : alpha(tag.color, 0.75),
+                borderColor:
+                  theme.palette.mode === "dark"
+                    ? alpha(tag.color, 0.7)
+                    : alpha(tag.color, 0.9),
                 transform: "translateY(-1px)",
               },
             }}
