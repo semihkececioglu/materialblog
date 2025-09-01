@@ -94,10 +94,11 @@ const SocialMediaBox = () => {
           }}
         />
         <Typography
-          variant="subtitle1"
+          variant="h3"
           sx={{
             fontWeight: 600,
             color: "text.primary",
+            fontSize: "1rem",
           }}
         >
           Sosyal Medya

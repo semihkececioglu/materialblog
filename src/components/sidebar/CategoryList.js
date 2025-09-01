@@ -79,10 +79,11 @@ const CategoryList = () => {
           }}
         />
         <Typography
-          variant="subtitle1" // Changed from h6
+          variant="h3"
           sx={{
             fontWeight: 600,
             color: "text.primary",
+            fontSize: "1rem",
           }}
         >
           Kategoriler

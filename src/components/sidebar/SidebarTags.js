@@ -44,9 +44,9 @@ const SidebarTags = () => {
         />
         <Typography
           component="h2"
-          variant="h6"
+          variant="h3"
           sx={{
-            fontWeight: 700,
+            fontWeight: 600,
             color: "text.primary",
             fontSize: "1rem",
           }}

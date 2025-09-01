@@ -58,7 +58,7 @@ const FooterLinks = () => {
       {linkGroups.map((group, groupIndex) => (
         <Box key={group.title}>
           <Typography
-            variant="h6"
+            variant="h3"
             sx={{
               mb: 2,
               fontWeight: 600,

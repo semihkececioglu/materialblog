@@ -56,13 +56,14 @@ const FooterSubscribe = () => {
             }}
           />
           <Typography
-            variant="h6"
+            variant="h3"
             sx={{
               fontWeight: 600,
               background: "linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)",
               backgroundClip: "text",
               WebkitBackgroundClip: "text",
               WebkitTextFillColor: "transparent",
+              fontSize: "1.25rem",
             }}
           >
             Newsletter
