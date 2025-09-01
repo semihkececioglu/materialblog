@@ -32,17 +32,6 @@
     <!-- ✅ Font Face tanımları -->
     <link rel="stylesheet" href="/fonts/fonts.css" />
 
-    <!-- ✅ Main CSS (preload + onload trick) -->
-    <link
-      rel="preload"
-      href="%PUBLIC_URL%/static/css/main.css"
-      as="style"
-      onload="this.onload=null;this.rel='stylesheet'"
-    />
-    <noscript>
-      <link rel="stylesheet" href="%PUBLIC_URL%/static/css/main.css" />
-    </noscript>
-
     <!-- İlk kritik görsel preload -->
     <link
       rel="preload"
