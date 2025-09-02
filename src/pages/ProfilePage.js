@@ -8,12 +8,20 @@ import {
   CircularProgress,
   Tabs,
   Tab,
+  Chip,
+  Skeleton,
+  Divider,
+  Badge,
+  Button,
+  Fade,
 } from "@mui/material";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import FavoriteIcon from "@mui/icons-material/Favorite";
 import BookmarkIcon from "@mui/icons-material/Bookmark";
 import ArticleIcon from "@mui/icons-material/Article";
+import EditIcon from "@mui/icons-material/Edit";
+import PersonIcon from "@mui/icons-material/Person";
 import { useSelector } from "react-redux";
 
 const stringToColor = (name) => {
@@ -31,6 +39,7 @@ const TabPanel = ({ value, index, children }) => {
 const ProfilePage = () => {
   const { username } = useParams();
   const user = useSelector((state) => state.user.currentUser);
+  const navigate = useNavigate();
   const theme = useTheme();
 
   const [userData, setUserData] = useState(null);
@@ -91,179 +100,530 @@ const ProfilePage = () => {
     fetchData();
   }, [username, isOwnProfile]);
 
-  const listItemStyle = {
-    mb: 1.5,
+  const postItemStyle = {
+    mb: 2,
+    p: 2,
+    borderRadius: 2,
+    backgroundColor:
+      theme.palette.mode === "dark"
+        ? "rgba(255,255,255,0.03)"
+        : "rgba(0,0,0,0.02)",
+    border: `1px solid ${
+      theme.palette.mode === "dark"
+        ? "rgba(255,255,255,0.08)"
+        : "rgba(0,0,0,0.06)"
+    }`,
+    transition: "all 0.2s ease",
+    "&:hover": {
+      backgroundColor:
+        theme.palette.mode === "dark"
+          ? "rgba(255,255,255,0.05)"
+          : "rgba(0,0,0,0.04)",
+      transform: "translateY(-1px)",
+      boxShadow: theme.shadows[2],
+    },
     "& a": {
       textDecoration: "none",
-      fontWeight: 500,
-      fontSize: "1rem",
-      color: theme.palette.mode === "dark" ? "#90caf9" : "#1976d2",
-      position: "relative",
-      transition: "color 0.2s ease",
-      "&::after": {
-        content: '""',
-        position: "absolute",
-        left: 0,
-        bottom: -2,
-        height: "2px",
-        width: "100%",
-        backgroundColor: theme.palette.primary.main,
-        opacity: 0.2,
-        transition: "opacity 0.2s ease",
-      },
+      color: "inherit",
       "&:hover": {
         color: theme.palette.primary.main,
-        "&::after": {
-          opacity: 1,
-        },
-      },
-      "&:visited": {
-        color: theme.palette.mode === "dark" ? "#ce93d8" : "#6a1b9a",
       },
     },
   };
 
-  if (loading)
+  if (loading) {
     return (
-      <Box sx={{ p: 4, textAlign: "center" }}>
-        <CircularProgress />
+      <Box sx={{ p: 4, mt: { xs: 1, md: 2 }, minHeight: "100vh" }}>
+        <Box sx={{ maxWidth: 600, mx: "auto" }}>
+          {/* Header Skeleton */}
+          <Box sx={{ textAlign: "center", mb: 4 }}>
+            <Skeleton
+              variant="text"
+              width={300}
+              height={40}
+              sx={{ mx: "auto", mb: 1 }}
+            />
+            <Skeleton
+              variant="text"
+              width={200}
+              height={24}
+              sx={{ mx: "auto" }}
+            />
+          </Box>
+
+          <Card
+            elevation={0}
+            sx={{
+              p: 4,
+              borderRadius: 4,
+              background:
+                theme.palette.mode === "dark"
+                  ? "linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02))"
+                  : "linear-gradient(135deg, rgba(0,0,0,0.02), rgba(0,0,0,0.01))",
+              border: "1px solid",
+              borderColor:
+                theme.palette.mode === "dark"
+                  ? "rgba(255,255,255,0.1)"
+                  : "rgba(0,0,0,0.08)",
+              position: "relative",
+              overflow: "hidden",
+              "&::before": {
+                content: '""',
+                position: "absolute",
+                top: 0,
+                left: 0,
+                right: 0,
+                height: "4px",
+                background: `linear-gradient(90deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
+              },
+            }}
+          >
+            {/* Avatar Section Skeleton */}
+            <Box
+              sx={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                mb: 4,
+              }}
+            >
+              <Skeleton
+                variant="circular"
+                width={100}
+                height={100}
+                sx={{ mb: 3 }}
+              />
+              <Skeleton
+                variant="rounded"
+                width={120}
+                height={36}
+                sx={{ mb: 2 }}
+              />
+              <Skeleton variant="rounded" width={100} height={40} />
+            </Box>
+
+            <Skeleton
+              variant="rounded"
+              width="100%"
+              height={100}
+              sx={{ mb: 4 }}
+            />
+            <Skeleton
+              variant="rounded"
+              width="100%"
+              height={48}
+              sx={{ mb: 2 }}
+            />
+
+            {[1, 2, 3].map((i) => (
+              <Skeleton
+                key={i}
+                variant="rounded"
+                width="100%"
+                height={60}
+                sx={{ mb: 2 }}
+              />
+            ))}
+          </Card>
+        </Box>
       </Box>
     );
+  }
 
   if (!userData)
     return (
-      <Box sx={{ p: 4 }}>
-        <Typography>Kullanıcı bulunamadı.</Typography>
+      <Box sx={{ p: 4, textAlign: "center" }}>
+        <Typography variant="h6" color="text.secondary">
+          Kullanıcı bulunamadı.
+        </Typography>
       </Box>
     );
 
   return (
-    <Box sx={{ p: 4, maxWidth: 700, mx: "auto" }}>
-      <Card
-        elevation={6}
-        sx={{
-          p: 3,
-          borderRadius: 4,
-          background:
-            theme.palette.mode === "dark"
-              ? "linear-gradient(135deg, rgba(80,80,80,0.3), rgba(40,40,40,0.2))"
-              : "linear-gradient(135deg, rgba(255,255,255,0.6), rgba(230,230,250,0.4))",
-          backdropFilter: "blur(18px)",
-          border: "1px solid rgba(255,255,255,0.2)",
-        }}
-      >
-        {/* Kullanıcı Bilgileri */}
-        <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 2 }}>
-          <Avatar
-            src={userData.profileImage || ""}
+    <Box sx={{ p: 4, mt: { xs: 1, md: 2 }, minHeight: "100vh" }}>
+      <Box sx={{ maxWidth: 600, mx: "auto" }}>
+        {/* Header */}
+        <Box sx={{ textAlign: "center", mb: 4 }}>
+          <Typography
+            variant="h4"
+            fontWeight={700}
             sx={{
-              width: 64,
-              height: 64,
-              bgcolor: userData.profileImage
-                ? "transparent"
-                : stringToColor(userData.username),
-              color: "white",
-              fontWeight: 600,
+              mb: 1,
+              background: `linear-gradient(45deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
+              backgroundClip: "text",
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent",
             }}
           >
-            {!userData.profileImage &&
-              userData.username.charAt(0).toUpperCase()}
-          </Avatar>
-          <Box>
-            <Typography variant="h6" fontWeight={600}>
-              {userData.firstName} {userData.lastName}
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              @{userData.username}
-            </Typography>
-          </Box>
+            {userData.firstName} {userData.lastName}
+          </Typography>
+          <Typography variant="body1" color="text.secondary">
+            Kullanıcı Profili
+          </Typography>
         </Box>
 
-        {/* Biyografi */}
-        {userData.bio && (
-          <Typography
-            variant="body2"
+        {/* Main Card */}
+        <Card
+          elevation={0}
+          sx={{
+            p: 4,
+            borderRadius: 4,
+            background:
+              theme.palette.mode === "dark"
+                ? "linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02))"
+                : "linear-gradient(135deg, rgba(0,0,0,0.02), rgba(0,0,0,0.01))",
+            border: "1px solid",
+            borderColor:
+              theme.palette.mode === "dark"
+                ? "rgba(255,255,255,0.1)"
+                : "rgba(0,0,0,0.08)",
+            position: "relative",
+            overflow: "hidden",
+            "&::before": {
+              content: '""',
+              position: "absolute",
+              top: 0,
+              left: 0,
+              right: 0,
+              height: "4px",
+              background: `linear-gradient(90deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
+            },
+          }}
+        >
+          {/* Avatar Section */}
+          <Box sx={{ textAlign: "center", mb: 4 }}>
+            <Fade in={!loading}>
+              <Box
+                sx={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                }}
+              >
+                <Box
+                  sx={{ position: "relative", display: "inline-block", mb: 3 }}
+                >
+                  <Avatar
+                    src={userData.profileImage || ""}
+                    sx={{
+                      width: 100,
+                      height: 100,
+                      bgcolor: userData.profileImage
+                        ? "transparent"
+                        : stringToColor(userData.username),
+                      color: "white",
+                      fontWeight: 700,
+                      fontSize: "2.5rem",
+                      boxShadow: theme.shadows[8],
+                      border: "4px solid",
+                      borderColor: "background.paper",
+                      transition: "all 0.3s ease",
+                      "&:hover": {
+                        transform: "scale(1.05)",
+                      },
+                    }}
+                  >
+                    {!userData.profileImage &&
+                      userData.username.charAt(0).toUpperCase()}
+                  </Avatar>
+                </Box>
+
+                <Chip
+                  icon={<PersonIcon sx={{ fontSize: 18 }} />}
+                  label={`@${userData.username}`}
+                  variant="filled"
+                  sx={{
+                    fontWeight: 700,
+                    fontSize: "0.9rem",
+                    px: 2,
+                    py: 0.5,
+                    height: 36,
+                    mb: 2,
+                    background: `linear-gradient(45deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
+                    color: "white",
+                    borderRadius: 3,
+                    boxShadow: theme.shadows[3],
+                    transition: "all 0.2s ease",
+                    "&:hover": {
+                      transform: "translateY(-1px)",
+                      boxShadow: theme.shadows[6],
+                    },
+                    "& .MuiChip-icon": {
+                      color: "white",
+                      fontSize: 18,
+                    },
+                  }}
+                />
+
+                {/* Edit Button for Own Profile */}
+                {isOwnProfile && (
+                  <Button
+                    variant="outlined"
+                    startIcon={<EditIcon />}
+                    onClick={() => navigate(`/profile/${username}/edit`)}
+                    sx={{
+                      borderRadius: 3,
+                      fontWeight: 600,
+                      textTransform: "none",
+                      transition: "all 0.2s ease",
+                      "&:hover": {
+                        transform: "translateY(-1px)",
+                        boxShadow: theme.shadows[4],
+                      },
+                    }}
+                  >
+                    Profili Düzenle
+                  </Button>
+                )}
+              </Box>
+            </Fade>
+          </Box>
+
+          {/* Biyografi */}
+          {userData.bio && (
+            <Card
+              elevation={2}
+              sx={{
+                p: 2.5,
+                mb: 4,
+                borderRadius: 3,
+                backgroundColor:
+                  theme.palette.mode === "dark"
+                    ? "rgba(255,255,255,0.05)"
+                    : "rgba(0,0,0,0.02)",
+                border: `1px solid ${
+                  theme.palette.mode === "dark"
+                    ? "rgba(255,255,255,0.1)"
+                    : "rgba(0,0,0,0.08)"
+                }`,
+              }}
+            >
+              <Typography
+                variant="body1"
+                sx={{
+                  whiteSpace: "pre-line",
+                  color: theme.palette.text.primary,
+                  lineHeight: 1.6,
+                  fontStyle: "italic",
+                  textAlign: "center",
+                }}
+              >
+                "{userData.bio}"
+              </Typography>
+            </Card>
+          )}
+
+          <Divider sx={{ mb: 4 }} />
+
+          {/* Tabs with Badges */}
+          <Tabs
+            value={tab}
+            onChange={(e, newVal) => setTab(newVal)}
+            variant="fullWidth"
             sx={{
-              whiteSpace: "pre-line",
-              color: theme.palette.text.secondary,
               mb: 2,
+              "& .MuiTab-root": {
+                fontWeight: 600,
+                textTransform: "none",
+                borderRadius: 2,
+                mx: 0.5,
+                transition: "all 0.3s ease",
+                "&.Mui-selected": {
+                  background: `linear-gradient(135deg, ${theme.palette.primary.main}15, ${theme.palette.secondary.main}15)`,
+                  color: theme.palette.primary.main,
+                },
+              },
             }}
           >
-            {userData.bio}
-          </Typography>
-        )}
+            <Tab
+              icon={
+                <Badge
+                  badgeContent={userPosts.length}
+                  sx={{
+                    "& .MuiBadge-badge": {
+                      backgroundColor: "#2196f3",
+                      color: "white",
+                      fontSize: "0.7rem",
+                      fontWeight: 600,
+                    },
+                  }}
+                >
+                  <ArticleIcon sx={{ color: "#2196f3" }} />
+                </Badge>
+              }
+              label="Yazılar"
+            />
+            <Tab
+              icon={
+                <Badge
+                  badgeContent={isOwnProfile ? likedPosts.length : 0}
+                  sx={{
+                    "& .MuiBadge-badge": {
+                      backgroundColor: "#f44336",
+                      color: "white",
+                      fontSize: "0.7rem",
+                      fontWeight: 600,
+                    },
+                  }}
+                >
+                  <FavoriteIcon sx={{ color: "#f44336" }} />
+                </Badge>
+              }
+              label="Beğenilen"
+              disabled={!isOwnProfile}
+            />
+            <Tab
+              icon={
+                <Badge
+                  badgeContent={isOwnProfile ? savedPosts.length : 0}
+                  sx={{
+                    "& .MuiBadge-badge": {
+                      backgroundColor: "#ff9800",
+                      color: "white",
+                      fontSize: "0.7rem",
+                      fontWeight: 600,
+                    },
+                  }}
+                >
+                  <BookmarkIcon sx={{ color: "#ff9800" }} />
+                </Badge>
+              }
+              label="Kaydedilen"
+              disabled={!isOwnProfile}
+            />
+          </Tabs>
 
-        {/* Tabs */}
-        <Tabs
-          value={tab}
-          onChange={(e, newVal) => setTab(newVal)}
-          variant="fullWidth"
-          sx={{ mb: 2 }}
-        >
-          <Tab icon={<ArticleIcon />} label="Yazılar" />
-          <Tab
-            icon={<FavoriteIcon />}
-            label="Beğenilen"
-            disabled={!isOwnProfile}
-          />
-          <Tab
-            icon={<BookmarkIcon />}
-            label="Kaydedilen"
-            disabled={!isOwnProfile}
-          />
-        </Tabs>
+          {/* Tab Panels */}
+          <TabPanel value={tab} index={0}>
+            {userPosts.length === 0 ? (
+              <Box sx={{ textAlign: "center", py: 4 }}>
+                <ArticleIcon
+                  sx={{ fontSize: 48, color: "text.secondary", mb: 2 }}
+                />
+                <Typography variant="body1" color="text.secondary">
+                  Henüz yazı paylaşılmamış.
+                </Typography>
+              </Box>
+            ) : (
+              <Box>
+                {userPosts.map((post, index) => (
+                  <Box key={post._id} sx={postItemStyle}>
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                      <Box
+                        sx={{
+                          minWidth: 32,
+                          height: 32,
+                          borderRadius: 2,
+                          backgroundColor: "#2196f3",
+                          color: "white",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          fontWeight: 700,
+                          fontSize: "0.875rem",
+                        }}
+                      >
+                        {index + 1}
+                      </Box>
+                      <Link to={`/post/${post.slug}`} style={{ flex: 1 }}>
+                        <Typography variant="body1" fontWeight={500}>
+                          {post.title}
+                        </Typography>
+                      </Link>
+                    </Box>
+                  </Box>
+                ))}
+              </Box>
+            )}
+          </TabPanel>
 
-        {/* Sekme: Paylaşılan Yazılar */}
-        <TabPanel value={tab} index={0}>
-          {userPosts.length === 0 ? (
-            <Typography variant="body2" color="text.secondary">
-              Henüz yazı paylaşılmamış.
-            </Typography>
-          ) : (
-            <Box component="ol" sx={{ pl: 3 }}>
-              {userPosts.map((post) => (
-                <Box component="li" key={post._id} sx={listItemStyle}>
-                  <Link to={`/post/${post.slug}`}>{post.title}</Link>
-                </Box>
-              ))}
-            </Box>
-          )}
-        </TabPanel>
+          <TabPanel value={tab} index={1}>
+            {likedPosts.length === 0 ? (
+              <Box sx={{ textAlign: "center", py: 4 }}>
+                <FavoriteIcon
+                  sx={{ fontSize: 48, color: "text.secondary", mb: 2 }}
+                />
+                <Typography variant="body1" color="text.secondary">
+                  Henüz beğendiğiniz bir yazı yok.
+                </Typography>
+              </Box>
+            ) : (
+              <Box>
+                {likedPosts.map((post, index) => (
+                  <Box key={post._id} sx={postItemStyle}>
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                      <Box
+                        sx={{
+                          minWidth: 32,
+                          height: 32,
+                          borderRadius: 2,
+                          backgroundColor: "#f44336",
+                          color: "white",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          fontWeight: 700,
+                          fontSize: "0.875rem",
+                        }}
+                      >
+                        {index + 1}
+                      </Box>
+                      <Link to={`/post/${post.slug}`} style={{ flex: 1 }}>
+                        <Typography variant="body1" fontWeight={500}>
+                          {post.title}
+                        </Typography>
+                      </Link>
+                    </Box>
+                  </Box>
+                ))}
+              </Box>
+            )}
+          </TabPanel>
 
-        {/* Sekme: Beğenilen Yazılar */}
-        <TabPanel value={tab} index={1}>
-          {likedPosts.length === 0 ? (
-            <Typography variant="body2" color="text.secondary">
-              Henüz beğendiğiniz bir yazı yok.
-            </Typography>
-          ) : (
-            <Box component="ol" sx={{ pl: 3 }}>
-              {likedPosts.map((post) => (
-                <Box component="li" key={post._id} sx={listItemStyle}>
-                  <Link to={`/post/${post.slug}`}>{post.title}</Link>
-                </Box>
-              ))}
-            </Box>
-          )}
-        </TabPanel>
-
-        {/* Sekme: Kaydedilen Yazılar */}
-        <TabPanel value={tab} index={2}>
-          {savedPosts.length === 0 ? (
-            <Typography variant="body2" color="text.secondary">
-              Henüz kaydettiğiniz bir yazı yok.
-            </Typography>
-          ) : (
-            <Box component="ol" sx={{ pl: 3 }}>
-              {savedPosts.map((post) => (
-                <Box component="li" key={post._id} sx={listItemStyle}>
-                  <Link to={`/post/${post.slug}`}>{post.title}</Link>
-                </Box>
-              ))}
-            </Box>
-          )}
-        </TabPanel>
-      </Card>
+          <TabPanel value={tab} index={2}>
+            {savedPosts.length === 0 ? (
+              <Box sx={{ textAlign: "center", py: 4 }}>
+                <BookmarkIcon
+                  sx={{ fontSize: 48, color: "text.secondary", mb: 2 }}
+                />
+                <Typography variant="body1" color="text.secondary">
+                  Henüz kaydettiğiniz bir yazı yok.
+                </Typography>
+              </Box>
+            ) : (
+              <Box>
+                {savedPosts.map((post, index) => (
+                  <Box key={post._id} sx={postItemStyle}>
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                      <Box
+                        sx={{
+                          minWidth: 32,
+                          height: 32,
+                          borderRadius: 2,
+                          backgroundColor: "#ff9800",
+                          color: "white",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          fontWeight: 700,
+                          fontSize: "0.875rem",
+                        }}
+                      >
+                        {index + 1}
+                      </Box>
+                      <Link to={`/post/${post.slug}`} style={{ flex: 1 }}>
+                        <Typography variant="body1" fontWeight={500}>
+                          {post.title}
+                        </Typography>
+                      </Link>
+                    </Box>
+                  </Box>
+                ))}
+              </Box>
+            )}
+          </TabPanel>
+        </Card>
+      </Box>
     </Box>
   );
 };

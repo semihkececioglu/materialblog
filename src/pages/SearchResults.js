@@ -5,12 +5,14 @@ import {
   Typography,
   useTheme,
   Pagination,
-  Grow,
   Container,
-  CircularProgress,
+  Skeleton,
+  Paper,
+  Alert,
 } from "@mui/material";
+import SearchIcon from "@mui/icons-material/Search";
+import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import PostCard from "../components/PostCard";
-import Sidebar from "../components/sidebar/Sidebar";
 
 // Redux
 import { useDispatch, useSelector } from "react-redux";
@@ -21,6 +23,38 @@ import {
 } from "../redux/searchSlice";
 
 const POSTS_PER_PAGE = 6;
+
+const SearchSkeletonCard = () => {
+  return (
+    <Paper
+      elevation={0}
+      sx={{
+        p: 2,
+        borderRadius: 3,
+        height: 350,
+        flex: "1 1 30%",
+        minWidth: 220,
+        maxWidth: 370,
+        border: "1px solid",
+        borderColor: "rgba(255,255,255,0.08)",
+        background: "rgba(255,255,255,0.02)",
+      }}
+    >
+      <Skeleton
+        variant="rectangular"
+        height={180}
+        sx={{ borderRadius: 2, mb: 2 }}
+      />
+      <Skeleton variant="text" height={28} sx={{ mb: 1 }} />
+      <Skeleton variant="text" height={20} width="80%" sx={{ mb: 2 }} />
+      <Box sx={{ display: "flex", gap: 1, mb: 2 }}>
+        <Skeleton variant="rounded" width={60} height={20} />
+        <Skeleton variant="rounded" width={80} height={20} />
+      </Box>
+      <Skeleton variant="text" height={16} width="60%" />
+    </Paper>
+  );
+};
 
 const SearchResults = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -55,78 +89,194 @@ const SearchResults = () => {
   }, [searchTerm, page]);
 
   return (
-    <Container maxWidth="lg" sx={{ mt: 4 }}>
-      <Box
+    <Container maxWidth="lg" sx={{ py: 4 }}>
+      {/* Header */}
+      <Paper
+        elevation={0}
         sx={{
-          display: "flex",
-          gap: 4,
-          flexDirection: { xs: "column", md: "row" },
+          p: 4,
+          borderRadius: 4,
+          mb: 4,
+          background:
+            theme.palette.mode === "dark"
+              ? "linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02))"
+              : "linear-gradient(135deg, rgba(0,0,0,0.02), rgba(0,0,0,0.01))",
+          border: "1px solid",
+          borderColor:
+            theme.palette.mode === "dark"
+              ? "rgba(255,255,255,0.1)"
+              : "rgba(0,0,0,0.08)",
+          position: "relative",
+          overflow: "hidden",
+          "&::before": {
+            content: '""',
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            height: "4px",
+            background: `linear-gradient(90deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
+          },
         }}
       >
-        <Box sx={{ flex: 3 }}>
-          <Typography variant="h5" gutterBottom>
-            "{searchTerm}" için sonuçlar
-          </Typography>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+          <Box
+            sx={{
+              width: 48,
+              height: 48,
+              borderRadius: 2,
+              background: `linear-gradient(45deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: "white",
+            }}
+          >
+            <SearchIcon />
+          </Box>
+          <Box>
+            <Typography variant="h4" fontWeight={700}>
+              Arama Sonuçları
+            </Typography>
+            <Typography variant="body1" color="text.secondary">
+              "{searchTerm}" için bulunan sonuçlar
+            </Typography>
+          </Box>
+        </Box>
+      </Paper>
 
-          {loading ? (
-            <Box sx={{ mt: 6, textAlign: "center" }}>
-              <CircularProgress />
+      {/* Content */}
+      {loading ? (
+        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 3 }}>
+          {[1, 2, 3, 4, 5, 6].map((item) => (
+            <SearchSkeletonCard key={item} />
+          ))}
+        </Box>
+      ) : results.length === 0 ? (
+        <Paper
+          elevation={0}
+          sx={{
+            p: 6,
+            textAlign: "center",
+            borderRadius: 4,
+            background:
+              theme.palette.mode === "dark"
+                ? "rgba(255,255,255,0.02)"
+                : "rgba(0,0,0,0.01)",
+            border: "1px solid",
+            borderColor:
+              theme.palette.mode === "dark"
+                ? "rgba(255,255,255,0.08)"
+                : "rgba(0,0,0,0.05)",
+          }}
+        >
+          <ErrorOutlineIcon
+            sx={{
+              fontSize: 80,
+              color: "text.secondary",
+              mb: 2,
+              opacity: 0.6,
+            }}
+          />
+          <Typography variant="h5" fontWeight={600} sx={{ mb: 1 }}>
+            Sonuç bulunamadı
+          </Typography>
+          <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
+            "{searchTerm}" arama teriminiz için hiçbir yazı bulunamadı.
+          </Typography>
+          <Alert
+            severity="info"
+            sx={{
+              maxWidth: 500,
+              mx: "auto",
+              borderRadius: 3,
+              textAlign: "left",
+              "& .MuiAlert-icon": {
+                fontSize: "1.5rem",
+              },
+            }}
+          >
+            <Typography variant="body2" fontWeight={500} sx={{ mb: 1 }}>
+              <strong>Öneriler:</strong>
+            </Typography>
+            <Box component="ul" sx={{ pl: 2, m: 0 }}>
+              <Typography component="li" variant="body2" sx={{ mb: 0.5 }}>
+                Farklı kelimeler deneyebilirsiniz
+              </Typography>
+              <Typography component="li" variant="body2" sx={{ mb: 0.5 }}>
+                Yazım hatası olup olmadığını kontrol edin
+              </Typography>
+              <Typography component="li" variant="body2">
+                Daha genel terimler kullanmayı deneyin
+              </Typography>
             </Box>
-          ) : results.length === 0 ? (
-            <Grow in>
+          </Alert>
+        </Paper>
+      ) : (
+        <Box>
+          {/* Posts Grid */}
+          <Box sx={{ display: "flex", flexWrap: "wrap", gap: 3, mb: 5 }}>
+            {results.map((post) => (
               <Box
+                key={post._id}
                 sx={{
-                  mt: 4,
-                  p: 4,
-                  textAlign: "center",
-                  bgcolor:
-                    theme.palette.mode === "dark" ? "grey.900" : "grey.100",
-                  borderRadius: 2,
+                  flex: "1 1 30%",
+                  minWidth: 220,
+                  maxWidth: 370,
                 }}
               >
-                <Typography variant="h6" gutterBottom>
-                  Üzgünüz, hiçbir sonuç bulunamadı.
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Farklı bir anahtar kelime deneyebilirsiniz.
-                </Typography>
+                <PostCard post={post} />
               </Box>
-            </Grow>
-          ) : (
-            <Box>
-              <Box sx={{ display: "flex", flexWrap: "wrap", gap: 3 }}>
-                {results.map((post) => (
-                  <Grow in key={post._id} timeout={500}>
-                    <Box
-                      sx={{
-                        flex: "1 1 30%",
-                        minWidth: 220,
-                        maxWidth: 370,
-                      }}
-                    >
-                      <PostCard post={post} />
-                    </Box>
-                  </Grow>
-                ))}
-              </Box>
-              {totalPages > 1 && (
-                <Box sx={{ mt: 4, display: "flex", justifyContent: "center" }}>
-                  <Pagination
-                    count={totalPages}
-                    page={page}
-                    onChange={handlePageChange}
-                    color="primary"
-                  />
-                </Box>
-              )}
+            ))}
+          </Box>
+
+          {/* Modern Black Rounded Pagination */}
+          {totalPages > 1 && (
+            <Box sx={{ display: "flex", justifyContent: "center", mt: 6 }}>
+              <Pagination
+                count={totalPages}
+                page={page}
+                onChange={handlePageChange}
+                size="large"
+                sx={{
+                  "& .MuiPaginationItem-root": {
+                    fontWeight: 600,
+                    borderRadius: "50%",
+                    width: 48,
+                    height: 48,
+                    backgroundColor:
+                      theme.palette.mode === "dark"
+                        ? "rgba(255,255,255,0.1)"
+                        : "rgba(0,0,0,0.08)",
+                    color: theme.palette.text.primary,
+                    border: "none",
+                    transition: "all 0.2s ease",
+                    "&.Mui-selected": {
+                      backgroundColor: "#000000",
+                      color: "white",
+                      "&:hover": {
+                        backgroundColor: "#333333",
+                      },
+                    },
+                    "&:hover": {
+                      backgroundColor:
+                        theme.palette.mode === "dark"
+                          ? "rgba(255,255,255,0.15)"
+                          : "rgba(0,0,0,0.12)",
+                    },
+                    "&.MuiPaginationItem-ellipsis": {
+                      backgroundColor: "transparent",
+                      "&:hover": {
+                        backgroundColor: "transparent",
+                      },
+                    },
+                  },
+                }}
+              />
             </Box>
           )}
         </Box>
-
-        <Box sx={{ flex: 1 }}>
-          <Sidebar />
-        </Box>
-      </Box>
+      )}
     </Container>
   );
 };

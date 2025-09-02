@@ -85,7 +85,6 @@ const RightMenu = ({
         </>
       )}
 
-      {/* 🔍 Arama butonu */}
       <Tooltip title="Ara">
         <IconButton
           aria-label="Ara"
@@ -96,7 +95,6 @@ const RightMenu = ({
         </IconButton>
       </Tooltip>
 
-      {/* 🌙 Tema butonu */}
       <Tooltip title="Tema Değiştir">
         <IconButton
           aria-label="Tema değiştir"
@@ -109,7 +107,6 @@ const RightMenu = ({
 
       {user && (
         <>
-          {/* 👤 Profil butonu */}
           <Tooltip title="Profil Menüsü">
             <IconButton
               aria-label="Profil menüsünü aç"
@@ -139,6 +136,7 @@ const RightMenu = ({
             open={Boolean(profileAnchorEl)}
             onClose={() => setProfileAnchorEl(null)}
             TransitionComponent={Fade}
+            disableScrollLock={true}
           >
             <MenuItem onClick={() => handleProfileNavigate("")}>
               Profili Görüntüle

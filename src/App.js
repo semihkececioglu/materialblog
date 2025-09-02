@@ -30,7 +30,8 @@ import AdminUsersPage from "./admin/AdminUsersPage";
 import NotFound from "./pages/NotFound";
 import RoleBasedAdminRedirect from "./auth/RoleBasedAdminRedirect";
 import "./firebase";
-
+import AboutPage from "./pages/AboutPage";
+import ContactPage from "./pages/ContactPage";
 // Redux
 import { Provider, useDispatch, useSelector } from "react-redux";
 import store from "./redux/store";
@@ -98,6 +99,8 @@ function App() {
                 }
               >
                 <Route path="/" element={<Home />} />
+                <Route path="/about" element={<AboutPage />} />
+                <Route path="/contact" element={<ContactPage />} />
                 <Route path="/post/:slug" element={<PostDetail />} />
                 <Route
                   path="/category/:kategoriAdi"

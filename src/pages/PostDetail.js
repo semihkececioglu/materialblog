@@ -10,11 +10,14 @@ import {
   Button,
   Avatar,
   alpha,
+  IconButton,
+  Tooltip,
 } from "@mui/material";
 import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
 import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
 import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
+import ShareIcon from "@mui/icons-material/Share";
 
 import CommentSection from "../components/comment/CommentSection";
 import Sidebar from "../components/sidebar/Sidebar";
@@ -24,6 +27,7 @@ import FloatingInteractionBar from "../components/postDetail/interactionBar/Floa
 import EmbeddedInteractionBar from "../components/postDetail/interactionBar/EmbeddedInteractionBar";
 import ScrollProgressBar from "../components/postDetail/ScrollProgressBar";
 import TableOfContents from "../components/postDetail/TableOfContents";
+import ShareDialog from "../components/ShareDialog";
 import slugify from "../utils/slugify";
 import SidebarSkeleton from "../components/skeletons/SidebarSkeleton";
 import PostDetailSkeleton from "../components/skeletons/PostDetailSkeleton";
@@ -117,6 +121,7 @@ function PostDetail() {
   const allPosts = useSelector((state) => state.posts.posts);
 
   const [showEmbeddedBar, setShowEmbeddedBar] = useState(false);
+  const [shareDialogOpen, setShareDialogOpen] = useState(false);
 
   useEffect(() => {
     dispatch(fetchPostBySlug(slug));
@@ -294,6 +299,38 @@ function PostDetail() {
                 )}
               </Box>
 
+              {/* Share Button */}
+              <Box
+                sx={{
+                  position: "absolute",
+                  top: { xs: 16, sm: 24 },
+                  right: { xs: 16, sm: 24 },
+                }}
+              >
+                <Tooltip title="Paylaş" placement="left">
+                  <IconButton
+                    onClick={() => setShareDialogOpen(true)}
+                    sx={{
+                      width: 48,
+                      height: 48,
+                      backgroundColor: alpha("#000", 0.4),
+                      backdropFilter: "blur(10px)",
+                      color: "white",
+                      border: "1px solid",
+                      borderColor: alpha("#fff", 0.2),
+                      transition: "all 0.3s ease",
+                      "&:hover": {
+                        backgroundColor: alpha("#000", 0.6),
+                        transform: "scale(1.1)",
+                        borderColor: alpha("#fff", 0.4),
+                      },
+                    }}
+                  >
+                    <ShareIcon />
+                  </IconButton>
+                </Tooltip>
+              </Box>
+
               {/* Overlay Content */}
               <Box
                 sx={{
@@ -338,14 +375,14 @@ function PostDetail() {
                 {/* Author Info */}
                 <Box
                   sx={{
-                    display: "inline-flex", // Changed from flex to inline-flex
+                    display: "inline-flex",
                     alignItems: "center",
                     gap: 2,
                     p: 1.5,
                     borderRadius: 2,
                     bgcolor: alpha("#000", 0.3),
                     backdropFilter: "blur(10px)",
-                    maxWidth: "100%", // Ensure it doesn't overflow on mobile
+                    maxWidth: "100%",
                   }}
                 >
                   <Avatar
@@ -367,8 +404,6 @@ function PostDetail() {
                     {author.username[0].toUpperCase()}
                   </Avatar>
                   <Box sx={{ minWidth: 0 }}>
-                    {" "}
-                    {/* Remove flex: 1 */}
                     <Typography
                       component={Link}
                       to={`/profile/${author.username}`}
@@ -724,6 +759,13 @@ function PostDetail() {
       </Box>
 
       <FloatingInteractionBar visible={!showEmbeddedBar} postId={post._id} />
+
+      {/* Share Dialog */}
+      <ShareDialog
+        open={shareDialogOpen}
+        onClose={() => setShareDialogOpen(false)}
+        post={post}
+      />
     </Container>
   );
 }

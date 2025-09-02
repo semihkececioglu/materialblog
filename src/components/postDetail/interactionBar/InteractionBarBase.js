@@ -3,14 +3,11 @@ import {
   Box,
   IconButton,
   Tooltip,
-  Typography,
   Divider,
   Snackbar,
   Alert,
-  Popover,
-  List,
-  ListItem,
-  ListItemText,
+  Badge,
+  useTheme,
 } from "@mui/material";
 import {
   Favorite,
@@ -20,11 +17,7 @@ import {
   ChatBubbleOutline,
   Share,
   KeyboardArrowUp,
-  ContentCopy,
 } from "@mui/icons-material";
-import WhatsAppIcon from "@mui/icons-material/WhatsApp";
-import TelegramIcon from "@mui/icons-material/Telegram";
-import XIcon from "@mui/icons-material/X";
 
 import { useSelector, useDispatch } from "react-redux";
 import {
@@ -34,19 +27,34 @@ import {
   fetchInteractionData,
 } from "../../../redux/interactionSlice";
 
+import ShareDialog from "../../ShareDialog";
 import axios from "axios";
 
 const InteractionBarBase = ({ position = "fixed", visible = true, postId }) => {
   const dispatch = useDispatch();
+  const theme = useTheme();
   const user = useSelector((state) => state.user.currentUser);
+  const post = useSelector((state) => state.posts.selectedPost); // Post verisini al
   const liked = useSelector((state) => state.interaction.liked);
   const saved = useSelector((state) => state.interaction.saved);
   const likeCount = useSelector((state) => state.interaction.likeCount);
   const commentCount = useSelector((state) => state.interaction.commentCount);
 
   const [snackbar, setSnackbar] = useState({ open: false, message: "" });
-  const [anchorEl, setAnchorEl] = useState(null);
+  const [shareDialogOpen, setShareDialogOpen] = useState(false);
   const prevUserIdRef = useRef(null);
+
+  // Post bilgisini ShareDialog için hazırla - Redux store'dan gerçek veriyi al
+  const currentPost = {
+    _id: postId,
+    title:
+      post?.title || document.title.replace(" - MUI Blog", "") || "Blog Yazısı",
+    image: post?.image || null,
+    category: post?.category || null,
+    tags: post?.tags || [],
+    content: post?.content || "",
+    user: post?.user || null,
+  };
 
   // İlk yüklemede tüm interaction verilerini getir
   useEffect(() => {
@@ -127,187 +135,276 @@ const InteractionBarBase = ({ position = "fixed", visible = true, postId }) => {
     if (form) form.scrollIntoView({ behavior: "smooth" });
   };
 
-  const handleShareClick = (e) => setAnchorEl(e.currentTarget);
-  const handleShareClose = () => setAnchorEl(null);
-  const handleCopyLink = () => {
-    navigator.clipboard.writeText(window.location.href);
-    setSnackbar({ open: true, message: "Bağlantı kopyalandı" });
-    handleShareClose();
+  const handleShareClick = () => {
+    setShareDialogOpen(true);
   };
 
   return (
-    <Box
-      sx={{
-        position: position === "fixed" ? "fixed" : "static",
-        bottom: position === "fixed" ? 16 : undefined,
-        left: position === "fixed" ? "50%" : undefined,
-        transform: position === "fixed" ? "translateX(-50%)" : undefined,
-        display: "flex",
-        justifyContent: position === "static" ? "center" : undefined,
-        opacity: visible ? 1 : 0,
-        pointerEvents: visible ? "auto" : "none",
-        transition: "opacity 0.4s ease",
-        zIndex: 1300,
-        mt: position === "static" ? 4 : 0,
-      }}
-    >
+    <>
       <Box
         sx={{
+          position: position === "fixed" ? "fixed" : "static",
+          bottom: position === "fixed" ? 20 : undefined,
+          left: position === "fixed" ? "50%" : undefined,
+          transform: position === "fixed" ? "translateX(-50%)" : undefined,
           display: "flex",
-          alignItems: "center",
-          bgcolor: "background.paper",
-          boxShadow: 3,
-          borderRadius: 999,
-          px: 2,
-          py: 1,
-          gap: 1,
+          justifyContent: position === "static" ? "center" : undefined,
+          opacity: visible ? 1 : 0,
+          pointerEvents: visible ? "auto" : "none",
+          transition: "all 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
+          zIndex: 1300,
+          mt: position === "static" ? 4 : 0,
         }}
       >
-        <Tooltip title="Beğen">
-          <IconButton onClick={handleLike} size="small">
-            {liked ? (
-              <Favorite fontSize="small" color="error" />
-            ) : (
-              <FavoriteBorder fontSize="small" />
-            )}
-          </IconButton>
-        </Tooltip>
-        <Typography fontSize="0.75rem">{likeCount}</Typography>
-
-        <Divider orientation="vertical" flexItem />
-
-        <Tooltip title="Yorumlara Git">
-          <IconButton onClick={handleScrollToComments} size="small">
-            <ChatBubbleOutline fontSize="small" />
-          </IconButton>
-        </Tooltip>
-        <Typography fontSize="0.75rem">{commentCount}</Typography>
-
-        <Divider orientation="vertical" flexItem />
-
-        <Tooltip title={saved ? "Kaydedildi" : "Kaydet"}>
-          <IconButton onClick={handleSave} size="small">
-            {saved ? (
-              <Bookmark fontSize="small" color="primary" />
-            ) : (
-              <BookmarkBorder fontSize="small" />
-            )}
-          </IconButton>
-        </Tooltip>
-
-        <Divider orientation="vertical" flexItem />
-
-        <Tooltip title="Paylaş">
-          <IconButton onClick={handleShareClick} size="small">
-            <Share fontSize="small" />
-          </IconButton>
-        </Tooltip>
-
-        <Popover
-          open={Boolean(anchorEl)}
-          anchorEl={anchorEl}
-          onClose={handleShareClose}
-          anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
-          PaperProps={{
-            sx: {
-              bgcolor: "rgba(255, 255, 255, 0.25)",
-              backdropFilter: "blur(12px)",
-              WebkitBackdropFilter: "blur(12px)",
-              borderRadius: "16px",
-              boxShadow: "0 8px 32px rgba(0,0,0,0.2)",
-              p: 1,
-              minWidth: 220,
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            // Glassmorphism Background
+            background:
+              theme.palette.mode === "dark"
+                ? "rgba(30, 30, 30, 0.7)"
+                : "rgba(255, 255, 255, 0.7)",
+            backdropFilter: "blur(20px)",
+            WebkitBackdropFilter: "blur(20px)", // Safari support
+            borderRadius: 999,
+            border: "1px solid",
+            borderColor:
+              theme.palette.mode === "dark"
+                ? "rgba(255, 255, 255, 0.1)"
+                : "rgba(0, 0, 0, 0.08)",
+            // Enhanced shadows for depth
+            boxShadow:
+              theme.palette.mode === "dark"
+                ? "0 8px 32px rgba(0, 0, 0, 0.4), 0 2px 16px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1)"
+                : "0 8px 32px rgba(0, 0, 0, 0.12), 0 2px 16px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.8)",
+            px: 2.5,
+            py: 1.5,
+            gap: 1,
+            // Hover effect
+            transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+            "&:hover": {
+              transform: "translateY(-2px)",
+              boxShadow:
+                theme.palette.mode === "dark"
+                  ? "0 12px 48px rgba(0, 0, 0, 0.5), 0 4px 24px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.15)"
+                  : "0 12px 48px rgba(0, 0, 0, 0.15), 0 4px 24px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 1)",
+              borderColor:
+                theme.palette.mode === "dark"
+                  ? "rgba(255, 255, 255, 0.15)"
+                  : "rgba(0, 0, 0, 0.12)",
             },
           }}
         >
-          <List dense disablePadding>
-            <ListItem
-              button
-              onClick={handleCopyLink}
+          {/* Like Button with Badge */}
+          <Tooltip title="Beğen" placement="top">
+            <Badge
+              badgeContent={likeCount > 0 ? likeCount : null}
+              color="error"
               sx={{
-                color: "text.primary",
-                "&:hover": {
-                  bgcolor: "rgba(255,255,255,0.1)",
+                "& .MuiBadge-badge": {
+                  fontSize: "0.6rem",
+                  height: 16,
+                  minWidth: 16,
+                  fontWeight: 600,
                 },
               }}
             >
-              <ContentCopy fontSize="small" sx={{ mr: 1 }} />
-              <ListItemText primary="Bağlantıyı Kopyala" />
-            </ListItem>
+              <IconButton
+                onClick={handleLike}
+                size="small"
+                sx={{
+                  transition: "all 0.2s ease",
+                  "&:hover": {
+                    backgroundColor:
+                      theme.palette.mode === "dark"
+                        ? "rgba(255, 255, 255, 0.1)"
+                        : "rgba(0, 0, 0, 0.06)",
+                    transform: "scale(1.1)",
+                  },
+                }}
+              >
+                {liked ? (
+                  <Favorite fontSize="small" color="error" />
+                ) : (
+                  <FavoriteBorder fontSize="small" />
+                )}
+              </IconButton>
+            </Badge>
+          </Tooltip>
 
-            <ListItem
-              button
-              component="a"
-              href={`https://x.com/share?url=${window.location.href}`}
-              target="_blank"
-              rel="noopener noreferrer"
+          <Divider
+            orientation="vertical"
+            flexItem
+            sx={{
+              borderColor:
+                theme.palette.mode === "dark"
+                  ? "rgba(255, 255, 255, 0.1)"
+                  : "rgba(0, 0, 0, 0.1)",
+              mx: 0.5,
+            }}
+          />
+
+          {/* Comment Button with Badge */}
+          <Tooltip title="Yorumlara Git" placement="top">
+            <Badge
+              badgeContent={commentCount > 0 ? commentCount : null}
+              color="primary"
               sx={{
-                color: "#1DA1F2",
-                "&:hover": {
-                  bgcolor: "rgba(29,161,242,0.1)",
+                "& .MuiBadge-badge": {
+                  fontSize: "0.6rem",
+                  height: 16,
+                  minWidth: 16,
+                  fontWeight: 600,
                 },
               }}
             >
-              <XIcon fontSize="small" sx={{ mr: 1 }} />
-              <ListItemText primary="X ile Paylaş" />
-            </ListItem>
+              <IconButton
+                onClick={handleScrollToComments}
+                size="small"
+                sx={{
+                  transition: "all 0.2s ease",
+                  "&:hover": {
+                    backgroundColor:
+                      theme.palette.mode === "dark"
+                        ? "rgba(255, 255, 255, 0.1)"
+                        : "rgba(0, 0, 0, 0.06)",
+                    transform: "scale(1.1)",
+                  },
+                }}
+              >
+                <ChatBubbleOutline fontSize="small" />
+              </IconButton>
+            </Badge>
+          </Tooltip>
 
-            <ListItem
-              button
-              component="a"
-              href={`https://wa.me/?text=${window.location.href}`}
-              target="_blank"
-              rel="noopener noreferrer"
+          <Divider
+            orientation="vertical"
+            flexItem
+            sx={{
+              borderColor:
+                theme.palette.mode === "dark"
+                  ? "rgba(255, 255, 255, 0.1)"
+                  : "rgba(0, 0, 0, 0.1)",
+              mx: 0.5,
+            }}
+          />
+
+          {/* Save Button */}
+          <Tooltip title={saved ? "Kaydedildi" : "Kaydet"} placement="top">
+            <IconButton
+              onClick={handleSave}
+              size="small"
               sx={{
-                color: "#25D366",
+                transition: "all 0.2s ease",
                 "&:hover": {
-                  bgcolor: "rgba(37,211,102,0.1)",
+                  backgroundColor:
+                    theme.palette.mode === "dark"
+                      ? "rgba(255, 255, 255, 0.1)"
+                      : "rgba(0, 0, 0, 0.06)",
+                  transform: "scale(1.1)",
                 },
               }}
             >
-              <WhatsAppIcon fontSize="small" sx={{ mr: 1 }} />
-              <ListItemText primary="WhatsApp ile Paylaş" />
-            </ListItem>
+              {saved ? (
+                <Bookmark fontSize="small" color="primary" />
+              ) : (
+                <BookmarkBorder fontSize="small" />
+              )}
+            </IconButton>
+          </Tooltip>
 
-            <ListItem
-              button
-              component="a"
-              href={`https://t.me/share/url?url=${window.location.href}`}
-              target="_blank"
-              rel="noopener noreferrer"
+          <Divider
+            orientation="vertical"
+            flexItem
+            sx={{
+              borderColor:
+                theme.palette.mode === "dark"
+                  ? "rgba(255, 255, 255, 0.1)"
+                  : "rgba(0, 0, 0, 0.1)",
+              mx: 0.5,
+            }}
+          />
+
+          {/* Share Button */}
+          <Tooltip title="Paylaş" placement="top">
+            <IconButton
+              onClick={handleShareClick}
+              size="small"
               sx={{
-                color: "#229ED9",
+                transition: "all 0.2s ease",
                 "&:hover": {
-                  bgcolor: "rgba(34,158,217,0.1)",
+                  backgroundColor:
+                    theme.palette.mode === "dark"
+                      ? "rgba(255, 255, 255, 0.1)"
+                      : "rgba(0, 0, 0, 0.06)",
+                  transform: "scale(1.1)",
                 },
               }}
             >
-              <TelegramIcon fontSize="small" sx={{ mr: 1 }} />
-              <ListItemText primary="Telegram ile Paylaş" />
-            </ListItem>
-          </List>
-        </Popover>
+              <Share fontSize="small" />
+            </IconButton>
+          </Tooltip>
 
-        <Divider orientation="vertical" flexItem />
+          <Divider
+            orientation="vertical"
+            flexItem
+            sx={{
+              borderColor:
+                theme.palette.mode === "dark"
+                  ? "rgba(255, 255, 255, 0.1)"
+                  : "rgba(0, 0, 0, 0.1)",
+              mx: 0.5,
+            }}
+          />
 
-        <Tooltip title="Yukarı Çık">
-          <IconButton onClick={handleScrollTop} size="small">
-            <KeyboardArrowUp fontSize="small" />
-          </IconButton>
-        </Tooltip>
+          {/* Scroll Top Button */}
+          <Tooltip title="Yukarı Çık" placement="top">
+            <IconButton
+              onClick={handleScrollTop}
+              size="small"
+              sx={{
+                transition: "all 0.2s ease",
+                "&:hover": {
+                  backgroundColor:
+                    theme.palette.mode === "dark"
+                      ? "rgba(255, 255, 255, 0.1)"
+                      : "rgba(0, 0, 0, 0.06)",
+                  transform: "scale(1.1)",
+                },
+              }}
+            >
+              <KeyboardArrowUp fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        </Box>
+
+        <Snackbar
+          open={snackbar.open}
+          autoHideDuration={3000}
+          onClose={() => setSnackbar({ open: false, message: "" })}
+          anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+        >
+          <Alert
+            severity="info"
+            variant="filled"
+            sx={{
+              borderRadius: 3,
+              boxShadow: "0 8px 32px rgba(0, 0, 0, 0.2)",
+            }}
+          >
+            {snackbar.message}
+          </Alert>
+        </Snackbar>
       </Box>
 
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={3000}
-        onClose={() => setSnackbar({ open: false, message: "" })}
-        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
-      >
-        <Alert severity="info" variant="filled">
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
-    </Box>
+      {/* Share Dialog */}
+      <ShareDialog
+        open={shareDialogOpen}
+        onClose={() => setShareDialogOpen(false)}
+        post={currentPost}
+      />
+    </>
   );
 };
 

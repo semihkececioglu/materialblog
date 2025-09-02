@@ -45,12 +45,55 @@ const LeftMenu = ({
         sx={{
           textDecoration: "none",
           color: "inherit",
-          fontWeight: 600,
-          fontFamily: "inherit",
+          fontWeight: 700,
+          fontFamily: "'Inter', 'Roboto', sans-serif",
+          fontSize: { xs: "1.2rem", md: "1.4rem" },
+          letterSpacing: "-0.5px",
+          position: "relative",
+          "&:hover": {
+            color: "primary.main",
+            transform: "translateY(-1px)",
+          },
+          transition: "all 0.2s ease-in-out",
+          "&::after": {
+            content: '""',
+            position: "absolute",
+            width: "0%",
+            height: "2px",
+            bottom: "-2px",
+            left: "50%",
+            backgroundColor: "primary.main",
+            transition: "all 0.3s ease-in-out",
+            transform: "translateX(-50%)",
+          },
+          "&:hover::after": {
+            width: "100%",
+          },
         }}
-        aria-label="Material Blog ana sayfa"
+        aria-label="MUI Blog ana sayfa"
       >
-        Material Blog
+        <Box
+          component="span"
+          sx={{
+            background: "linear-gradient(135deg, #1976d2, #42a5f5)",
+            backgroundClip: "text",
+            WebkitBackgroundClip: "text",
+            WebkitTextFillColor: "transparent",
+            fontWeight: 800,
+          }}
+        >
+          MUI
+        </Box>
+        <Box
+          component="span"
+          sx={{
+            color: "text.primary",
+            fontWeight: 600,
+            ml: 0.5,
+          }}
+        >
+          BLOG
+        </Box>
       </Typography>
 
       {!isMobile && (
@@ -63,6 +106,26 @@ const LeftMenu = ({
             aria-label="Ana sayfaya git"
           >
             Ana Sayfa
+          </Button>
+
+          <Button
+            component={Link}
+            to="/about"
+            onClick={() => window.scrollTo(0, 0)}
+            sx={{ color: "inherit", textTransform: "none" }}
+            aria-label="Hakkımızda sayfasına git"
+          >
+            Hakkımızda
+          </Button>
+
+          <Button
+            component={Link}
+            to="/contact"
+            onClick={() => window.scrollTo(0, 0)}
+            sx={{ color: "inherit", textTransform: "none" }}
+            aria-label="İletişim sayfasına git"
+          >
+            İletişim
           </Button>
 
           <Button
@@ -84,6 +147,7 @@ const LeftMenu = ({
             onClose={() => setAnchorEl(null)}
             TransitionComponent={Fade}
             MenuListProps={{ "aria-labelledby": menuButtonId, role: "menu" }}
+            disableScrollLock={true}
           >
             {categories.map((cat) => (
               <MenuItem

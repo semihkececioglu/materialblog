@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { Box, Pagination, Container } from "@mui/material";
+import { Box, Pagination, Container, useTheme } from "@mui/material";
 import { useParams, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 
@@ -16,6 +16,7 @@ const Home = () => {
   const { pageNumber } = useParams();
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const theme = useTheme();
 
   const page = parseInt(pageNumber) || 1;
 
@@ -88,12 +89,46 @@ const Home = () => {
               </Box>
 
               {totalPages > 1 && (
-                <Box sx={{ mt: 4, display: "flex", justifyContent: "center" }}>
+                <Box sx={{ display: "flex", justifyContent: "center", mt: 6 }}>
                   <Pagination
                     count={totalPages}
                     page={page}
                     onChange={handleChange}
-                    color="primary"
+                    size="large"
+                    sx={{
+                      "& .MuiPaginationItem-root": {
+                        fontWeight: 600,
+                        borderRadius: "50%",
+                        width: 48,
+                        height: 48,
+                        backgroundColor:
+                          theme.palette.mode === "dark"
+                            ? "rgba(255,255,255,0.1)"
+                            : "rgba(0,0,0,0.08)",
+                        color: theme.palette.text.primary,
+                        border: "none",
+                        transition: "all 0.2s ease",
+                        "&.Mui-selected": {
+                          backgroundColor: "#000000",
+                          color: "white",
+                          "&:hover": {
+                            backgroundColor: "#333333",
+                          },
+                        },
+                        "&:hover": {
+                          backgroundColor:
+                            theme.palette.mode === "dark"
+                              ? "rgba(255,255,255,0.15)"
+                              : "rgba(0,0,0,0.12)",
+                        },
+                        "&.MuiPaginationItem-ellipsis": {
+                          backgroundColor: "transparent",
+                          "&:hover": {
+                            backgroundColor: "transparent",
+                          },
+                        },
+                      },
+                    }}
                   />
                 </Box>
               )}

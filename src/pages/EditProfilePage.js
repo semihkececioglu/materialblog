@@ -10,8 +10,19 @@ import {
   CircularProgress,
   IconButton,
   Skeleton,
+  Card,
+  Fade,
+  LinearProgress,
+  Alert,
+  Chip,
+  Divider,
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
+import PhotoCameraIcon from "@mui/icons-material/PhotoCamera";
+import PersonIcon from "@mui/icons-material/Person";
+import InfoIcon from "@mui/icons-material/Info";
+import SaveIcon from "@mui/icons-material/Save";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import { useSelector } from "react-redux";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -54,10 +65,24 @@ const EditProfilePage = () => {
   const [bio, setBio] = useState("");
   const [profileImage, setProfileImage] = useState("");
   const [uploading, setUploading] = useState(false);
-  const [open, setOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [success, setSuccess] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [hasChanges, setHasChanges] = useState(false);
 
   const containerRef = useRef(null);
+
+  // Değişiklikleri takip et
+  useEffect(() => {
+    if (!isLoading && user) {
+      const hasAnyChanges =
+        firstName !== user.firstName ||
+        lastName !== user.lastName ||
+        bio !== (user.bio || "") ||
+        profileImage !== (user.profileImage || "");
+      setHasChanges(hasAnyChanges);
+    }
+  }, [firstName, lastName, bio, profileImage, user, isLoading]);
 
   useEffect(() => {
     if (!user || user.username !== username) return;
@@ -83,218 +108,415 @@ const EditProfilePage = () => {
 
   if (!user || user.username !== username) {
     return (
-      <Box sx={{ p: 4 }}>
-        <Typography>Bu sayfayı düzenleme yetkiniz yok.</Typography>
+      <Box sx={{ p: 4, textAlign: "center" }}>
+        <Alert severity="error" sx={{ maxWidth: 400, mx: "auto" }}>
+          Bu sayfayı düzenleme yetkiniz yok.
+        </Alert>
       </Box>
     );
   }
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setSaving(true);
     try {
       await axios.put(
         `https://materialblog-server-production.up.railway.app/api/users/${username}`,
         { firstName, lastName, bio, profileImage }
       );
-      setOpen(true);
+      setSuccess(true);
+      setHasChanges(false);
       setTimeout(() => {
-        setOpen(false);
         navigate(`/profile/${username}`);
-      }, 1500);
+      }, 2000);
     } catch (err) {
       console.error("Güncelleme hatası:", err);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleImageUpload = async (file) => {
+    if (!file) return;
+    setUploading(true);
+    try {
+      const imageUrl = await uploadImageToCloudinary(file);
+      setProfileImage(imageUrl);
+    } catch (err) {
+      console.error("Yükleme hatası:", err);
+    } finally {
+      setUploading(false);
     }
   };
 
   return (
-    <Box sx={{ p: 4, mt: { xs: 1, md: 2 } }}>
-      <Box
-        ref={containerRef}
-        sx={{
-          p: 4,
-          maxWidth: 500,
-          mx: "auto",
-          borderRadius: 4,
-          backdropFilter: "blur(20px)",
-          backgroundColor:
-            theme.palette.mode === "dark"
-              ? "rgba(255,255,255,0.04)"
-              : "rgba(255,255,255,0.6)",
-          border: "1px solid rgba(255,255,255,0.2)",
-          boxShadow: 10,
-          position: "relative",
-        }}
-      >
-        <Typography
-          variant="h5"
-          fontWeight={600}
-          gutterBottom
-          sx={{ textAlign: "center", mb: 3 }}
-        >
-          Profili Düzenle
-        </Typography>
-
-        {/* Avatar ve kullanıcı adı */}
-        <Box
-          sx={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            gap: 1,
-            mb: 3,
-            position: "relative",
-          }}
-        >
-          {isLoading ? (
-            <Skeleton variant="circular" width={72} height={72} />
-          ) : (
-            <Box sx={{ position: "relative" }}>
-              <Avatar
-                src={profileImage || ""}
-                sx={{
-                  width: 72,
-                  height: 72,
-                  bgcolor: profileImage
-                    ? "transparent"
-                    : stringToColor(user.username),
-                  color: "white",
-                  fontWeight: 600,
-                  fontSize: 28,
-                }}
-              >
-                {!profileImage && user.username.charAt(0).toUpperCase()}
-              </Avatar>
-
-              <Box
-                sx={{
-                  position: "absolute",
-                  bottom: -4,
-                  right: -4,
-                  bgcolor: "background.paper",
-                  borderRadius: "50%",
-                  boxShadow: 2,
-                }}
-              >
-                <IconButton
-                  component="label"
-                  size="small"
-                  disabled={uploading}
-                  sx={{ p: 0.5 }}
-                >
-                  <EditIcon fontSize="small" />
-                  <input
-                    type="file"
-                    hidden
-                    accept="image/*"
-                    onChange={async (e) => {
-                      const file = e.target.files[0];
-                      if (!file) return;
-                      setUploading(true);
-                      try {
-                        const imageUrl = await uploadImageToCloudinary(file);
-                        setProfileImage(imageUrl);
-                      } catch (err) {
-                        console.error("Yükleme hatası:", err);
-                      } finally {
-                        setUploading(false);
-                      }
-                    }}
-                  />
-                </IconButton>
-              </Box>
-            </Box>
-          )}
-
-          {isLoading ? (
-            <Skeleton width={100} height={24} />
-          ) : (
-            <Typography variant="subtitle1" color="text.secondary">
-              @{user.username}
-            </Typography>
-          )}
-          {uploading && <CircularProgress size={20} sx={{ mt: 1 }} />}
+    <Box sx={{ p: 4, mt: { xs: 1, md: 2 }, minHeight: "100vh" }}>
+      <Box sx={{ maxWidth: 600, mx: "auto" }}>
+        {/* Header */}
+        <Box sx={{ textAlign: "center", mb: 4 }}>
+          <Typography
+            variant="h4"
+            fontWeight={700}
+            sx={{
+              mb: 1,
+              background: `linear-gradient(45deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
+              backgroundClip: "text",
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+            }}
+          >
+            Profili Düzenle
+          </Typography>
+          <Typography variant="body1" color="text.secondary">
+            Profil bilgilerinizi güncelleyin
+          </Typography>
         </Box>
 
-        {/* Form alanı */}
-        {isLoading ? (
-          <>
-            <Skeleton height={56} sx={{ mb: 2 }} />
-            <Skeleton height={56} sx={{ mb: 2 }} />
-            <Skeleton height={96} sx={{ mb: 3 }} />
-            <Skeleton height={45} width="100%" />
-          </>
-        ) : (
-          <form onSubmit={handleSubmit}>
-            <TextField
-              fullWidth
-              label="Ad"
-              variant="outlined"
-              value={firstName}
-              onChange={(e) => setFirstName(e.target.value)}
-              sx={{ mb: 2 }}
-            />
-            <TextField
-              fullWidth
-              label="Soyad"
-              variant="outlined"
-              value={lastName}
-              onChange={(e) => setLastName(e.target.value)}
-              sx={{ mb: 2 }}
-            />
-
-            <TextField
-              fullWidth
-              label="Biyografi (max 300 karakter)"
-              variant="outlined"
-              multiline
-              rows={4}
-              value={bio}
-              onChange={(e) => {
-                if (e.target.value.length <= 300) {
-                  setBio(e.target.value);
-                }
-              }}
-              helperText={`${bio.length}/300`}
-              sx={{ mb: 3 }}
-            />
-
-            <Button
-              type="submit"
-              variant="contained"
-              fullWidth
-              sx={{ fontWeight: 600, py: 1, borderRadius: 2 }}
-            >
-              Kaydet
-            </Button>
-          </form>
-        )}
-      </Box>
-
-      {/* Snackbar */}
-      <Box sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
-        <Snackbar
-          open={open}
-          autoHideDuration={3000}
-          message="Profil başarıyla güncellendi"
-          anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
-          ContentProps={{
-            sx: {
-              bgcolor:
-                theme.palette.mode === "dark"
-                  ? "rgba(255,255,255,0.1)"
-                  : "rgba(0,0,0,0.04)",
-              color: theme.palette.text.primary,
-              backdropFilter: "blur(6px)",
-              borderRadius: 2,
-              px: 3,
-              py: 1.5,
-              boxShadow: 3,
-              border: "1px solid rgba(255, 255, 255, 0.2)",
-              textAlign: "center",
+        {/* Main Card */}
+        <Card
+          elevation={0}
+          sx={{
+            p: 4,
+            borderRadius: 4,
+            background:
+              theme.palette.mode === "dark"
+                ? "linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02))"
+                : "linear-gradient(135deg, rgba(0,0,0,0.02), rgba(0,0,0,0.01))",
+            border: "1px solid",
+            borderColor:
+              theme.palette.mode === "dark"
+                ? "rgba(255,255,255,0.1)"
+                : "rgba(0,0,0,0.08)",
+            position: "relative",
+            overflow: "hidden",
+            "&::before": {
+              content: '""',
+              position: "absolute",
+              top: 0,
+              left: 0,
+              right: 0,
+              height: "4px",
+              background: `linear-gradient(90deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
             },
           }}
-          container={containerRef.current}
-        />
+        >
+          {/* Progress Bar */}
+          {(uploading || saving) && (
+            <LinearProgress
+              sx={{
+                position: "absolute",
+                top: 4,
+                left: 0,
+                right: 0,
+                borderRadius: 0,
+              }}
+            />
+          )}
+
+          {/* Avatar Section */}
+          <Box sx={{ textAlign: "center", mb: 4 }}>
+            {isLoading ? (
+              <Box
+                sx={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                }}
+              >
+                <Skeleton
+                  variant="circular"
+                  width={100}
+                  height={100}
+                  sx={{ mb: 2 }}
+                />
+                <Skeleton variant="rounded" width={120} height={32} />
+              </Box>
+            ) : (
+              <Fade in={!isLoading}>
+                <Box
+                  sx={{
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                  }}
+                >
+                  <Box
+                    sx={{
+                      position: "relative",
+                      display: "inline-block",
+                      mb: 3,
+                    }}
+                  >
+                    <Avatar
+                      src={profileImage || ""}
+                      sx={{
+                        width: 100,
+                        height: 100,
+                        bgcolor: profileImage
+                          ? "transparent"
+                          : stringToColor(user.username),
+                        color: "white",
+                        fontWeight: 700,
+                        fontSize: "2.5rem",
+                        boxShadow: theme.shadows[8],
+                        border: "4px solid",
+                        borderColor: "background.paper",
+                        transition: "all 0.3s ease",
+                        "&:hover": {
+                          transform: "scale(1.05)",
+                        },
+                      }}
+                    >
+                      {!profileImage && user.username.charAt(0).toUpperCase()}
+                    </Avatar>
+
+                    {/* Upload Button */}
+                    <IconButton
+                      component="label"
+                      disabled={uploading}
+                      sx={{
+                        position: "absolute",
+                        bottom: -8,
+                        right: -8,
+                        bgcolor: theme.palette.primary.main,
+                        color: "white",
+                        width: 40,
+                        height: 40,
+                        boxShadow: theme.shadows[4],
+                        "&:hover": {
+                          bgcolor: theme.palette.primary.dark,
+                          transform: "scale(1.1)",
+                        },
+                        transition: "all 0.2s ease",
+                      }}
+                    >
+                      {uploading ? (
+                        <CircularProgress size={20} color="inherit" />
+                      ) : (
+                        <PhotoCameraIcon fontSize="small" />
+                      )}
+                      <input
+                        type="file"
+                        hidden
+                        accept="image/*"
+                        onChange={(e) => handleImageUpload(e.target.files[0])}
+                      />
+                    </IconButton>
+                  </Box>
+
+                  <Chip
+                    icon={<PersonIcon sx={{ fontSize: 18 }} />}
+                    label={`@${user.username}`}
+                    variant="filled"
+                    sx={{
+                      fontWeight: 700,
+                      fontSize: "0.9rem",
+                      px: 2,
+                      py: 0.5,
+                      height: 36,
+                      background: `linear-gradient(45deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
+                      color: "white",
+                      borderRadius: 3,
+                      boxShadow: theme.shadows[3],
+                      transition: "all 0.2s ease",
+                      "&:hover": {
+                        transform: "translateY(-1px)",
+                        boxShadow: theme.shadows[6],
+                      },
+                      "& .MuiChip-icon": {
+                        color: "white",
+                        fontSize: 18,
+                      },
+                    }}
+                  />
+                </Box>
+              </Fade>
+            )}
+          </Box>
+
+          <Divider sx={{ mb: 4 }} />
+
+          {/* Form */}
+          {isLoading ? (
+            <Box>
+              <Skeleton height={80} sx={{ mb: 3, borderRadius: 2 }} />
+              <Skeleton height={80} sx={{ mb: 3, borderRadius: 2 }} />
+              <Skeleton height={140} sx={{ mb: 3, borderRadius: 2 }} />
+              <Skeleton height={60} sx={{ borderRadius: 2 }} />
+            </Box>
+          ) : (
+            <Fade in={!isLoading}>
+              <form onSubmit={handleSubmit}>
+                <Box sx={{ display: "flex", gap: 2, mb: 3 }}>
+                  <TextField
+                    fullWidth
+                    label="Ad"
+                    variant="outlined"
+                    value={firstName}
+                    onChange={(e) => setFirstName(e.target.value)}
+                    sx={{
+                      "& .MuiOutlinedInput-root": {
+                        borderRadius: 3,
+                        transition: "all 0.2s ease",
+                        "&:hover": {
+                          transform: "translateY(-1px)",
+                        },
+                        "&.Mui-focused": {
+                          transform: "translateY(-1px)",
+                          boxShadow: theme.shadows[4],
+                        },
+                      },
+                    }}
+                  />
+                  <TextField
+                    fullWidth
+                    label="Soyad"
+                    variant="outlined"
+                    value={lastName}
+                    onChange={(e) => setLastName(e.target.value)}
+                    sx={{
+                      "& .MuiOutlinedInput-root": {
+                        borderRadius: 3,
+                        transition: "all 0.2s ease",
+                        "&:hover": {
+                          transform: "translateY(-1px)",
+                        },
+                        "&.Mui-focused": {
+                          transform: "translateY(-1px)",
+                          boxShadow: theme.shadows[4],
+                        },
+                      },
+                    }}
+                  />
+                </Box>
+
+                <TextField
+                  fullWidth
+                  label="Biyografi"
+                  variant="outlined"
+                  multiline
+                  rows={4}
+                  value={bio}
+                  onChange={(e) => {
+                    if (e.target.value.length <= 300) {
+                      setBio(e.target.value);
+                    }
+                  }}
+                  helperText={
+                    <Box
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 1,
+                        mt: 1,
+                      }}
+                    >
+                      <InfoIcon
+                        sx={{ fontSize: 16, color: "text.secondary" }}
+                      />
+                      <Typography variant="caption" color="text.secondary">
+                        {bio.length}/300 karakter
+                      </Typography>
+                    </Box>
+                  }
+                  sx={{
+                    mb: 4,
+                    "& .MuiOutlinedInput-root": {
+                      borderRadius: 3,
+                      transition: "all 0.2s ease",
+                      "&:hover": {
+                        transform: "translateY(-1px)",
+                      },
+                      "&.Mui-focused": {
+                        transform: "translateY(-1px)",
+                        boxShadow: theme.shadows[4],
+                      },
+                    },
+                  }}
+                />
+
+                <Button
+                  type="submit"
+                  variant="contained"
+                  fullWidth
+                  disabled={saving || !hasChanges}
+                  startIcon={
+                    saving ? (
+                      <CircularProgress size={20} color="inherit" />
+                    ) : success ? (
+                      <CheckCircleIcon />
+                    ) : (
+                      <SaveIcon />
+                    )
+                  }
+                  sx={{
+                    py: 1.5,
+                    borderRadius: 3,
+                    fontWeight: 700,
+                    fontSize: "1.1rem",
+                    textTransform: "none",
+                    background: success
+                      ? `linear-gradient(45deg, #4caf50, #66bb6a)`
+                      : `linear-gradient(45deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
+                    transition: "all 0.3s ease",
+                    "&:hover": {
+                      transform: "translateY(-2px)",
+                      boxShadow: theme.shadows[8],
+                    },
+                    "&:disabled": {
+                      background: theme.palette.action.disabled,
+                      color: theme.palette.action.disabled,
+                    },
+                  }}
+                >
+                  {saving
+                    ? "Kaydediliyor..."
+                    : success
+                    ? "Başarıyla Kaydedildi!"
+                    : hasChanges
+                    ? "Kaydet"
+                    : "Kaydet"}
+                </Button>
+
+                {hasChanges && (
+                  <Fade in={hasChanges}>
+                    <Alert
+                      severity="info"
+                      sx={{
+                        mt: 2,
+                        borderRadius: 2,
+                        backgroundColor:
+                          theme.palette.mode === "dark"
+                            ? "rgba(33, 150, 243, 0.1)"
+                            : "rgba(33, 150, 243, 0.05)",
+                      }}
+                    >
+                      Kaydedilmemiş değişiklikleriniz var
+                    </Alert>
+                  </Fade>
+                )}
+              </form>
+            </Fade>
+          )}
+        </Card>
+
+        {/* Success Snackbar */}
+        <Snackbar
+          open={success}
+          autoHideDuration={4000}
+          anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+        >
+          <Alert
+            severity="success"
+            variant="filled"
+            sx={{
+              borderRadius: 3,
+              fontWeight: 600,
+            }}
+          >
+            Profil başarıyla güncellendi! Yönlendiriliyorsunuz...
+          </Alert>
+        </Snackbar>
       </Box>
     </Box>
   );
