@@ -5,7 +5,6 @@ import { alpha } from "@mui/material/styles";
 import { useNavigate } from "react-router-dom";
 import NavigateNextIcon from "@mui/icons-material/NavigateNext";
 import NavigateBeforeIcon from "@mui/icons-material/NavigateBefore";
-import "keen-slider/keen-slider.min.css";
 
 const featuredPosts = [
   {
@@ -81,6 +80,22 @@ const HomeSlider = () => {
   const [loaded, setLoaded] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [imagesLoaded, setImagesLoaded] = useState(0);
+  const [cssLoaded, setCssLoaded] = useState(false);
+
+  // CSS'i lazy load et
+  useEffect(() => {
+    const loadKeenSliderCSS = async () => {
+      try {
+        await import("keen-slider/keen-slider.min.css");
+        setCssLoaded(true);
+      } catch (error) {
+        console.error("Keen Slider CSS yüklenemedi:", error);
+        setCssLoaded(true); // Hata durumunda da devam et
+      }
+    };
+
+    loadKeenSliderCSS();
+  }, []);
 
   const [sliderRef, instanceRef] = useKeenSlider({
     initial: 0,
@@ -97,6 +112,9 @@ const HomeSlider = () => {
 
   useEffect(() => {
     const loadImages = async () => {
+      // CSS yüklenene kadar bekle
+      if (!cssLoaded) return;
+
       const imagePromises = featuredPosts.map((post) => {
         return new Promise((resolve) => {
           const img = new Image();
@@ -104,7 +122,7 @@ const HomeSlider = () => {
             setImagesLoaded((prev) => prev + 1);
             resolve();
           };
-          img.onerror = () => resolve(); // Hata durumunda da devam et
+          img.onerror = () => resolve();
           img.src = post.image;
         });
       });
@@ -119,7 +137,7 @@ const HomeSlider = () => {
       setImagesLoaded(0);
       setIsLoading(true);
     };
-  }, []);
+  }, [cssLoaded]);
 
   const handleSlideClick = (post) => {
     if (post.isExternal) {
@@ -129,7 +147,7 @@ const HomeSlider = () => {
     }
   };
 
-  if (isLoading) {
+  if (isLoading || !cssLoaded) {
     return <SliderSkeleton />;
   }
 
