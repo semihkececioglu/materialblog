@@ -300,10 +300,10 @@ const PostEditorPage = () => {
     severity: "success",
   });
 
-  // 🔽 Quill modules
+  // Quill modules
   const [quillModules, setQuillModules] = useState(null);
 
-  // ✅ Quill CSS'i global olarak yükle
+  // Quill CSS'i global olarak yükle
   useLazyCss(() => import("react-quill/dist/quill.snow.css"));
 
   // Form validation
@@ -428,7 +428,7 @@ const PostEditorPage = () => {
     return () => dispatch(clearSelectedPost());
   }, [id, dispatch]);
 
-  // ✅ Quill + imageResize dinamik import
+  // Quill + imageResize dinamik import
   useEffect(() => {
     let mounted = true;
 
