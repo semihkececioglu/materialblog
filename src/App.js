@@ -62,7 +62,7 @@ const AuthLoader = ({ children }) => {
       }
     }
 
-    // ✅ App yüklenince ayarları çek
+    // App yüklenince ayarları çek
     dispatch(fetchSettings());
   }, [dispatch]);
 
@@ -82,7 +82,7 @@ function App() {
         <CssBaseline />
         <Router>
           <AuthLoader>
-            {/* ✅ Meta Pixel tüm rotalarda çalışsın */}
+            {/* Meta Pixel tüm rotalarda çalışsın */}
             <MetaPixel />
 
             <Routes>

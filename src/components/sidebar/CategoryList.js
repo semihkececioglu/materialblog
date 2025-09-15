@@ -21,10 +21,10 @@ const categories = [
     name: "React",
     icon: <CodeIcon />,
     color: "#61dafb",
-    count: 12, // Add post counts for each category
+    count: 12,
   },
   {
-    name: "JavaScript",
+    name: "Javascript",
     icon: <JavascriptIcon />,
     color: "#f7df1e",
     count: 8,
@@ -50,9 +50,9 @@ const CategoryList = () => {
     <Paper
       elevation={0}
       sx={{
-        p: 2, // Reduced from p: 3
+        p: 2,
         mt: 3,
-        borderRadius: 2, // Reduced from 3
+        borderRadius: 2,
         bgcolor: (theme) =>
           theme.palette.mode === "dark"
             ? alpha(theme.palette.background.paper, 0.4)
@@ -67,13 +67,13 @@ const CategoryList = () => {
           display: "flex",
           alignItems: "center",
           gap: 1,
-          mb: 2, // Reduced from mb: 3
+          mb: 2,
         }}
       >
         <Box
           sx={{
-            width: 3, // Reduced from 4
-            height: 16, // Reduced from 20
+            width: 3,
+            height: 16,
             borderRadius: 0.5,
             bgcolor: "primary.main",
           }}
@@ -91,20 +91,16 @@ const CategoryList = () => {
       </Box>
 
       <List sx={{ mx: -0.5 }}>
-        {" "}
-        {/* Reduced from -1 */}
         {categories.map((category, index) => (
           <ListItem key={index} disablePadding sx={{ mb: 0.75 }}>
-            {" "}
-            {/* Reduced from mb: 1 */}
             <Paper
               component={Link}
               to={`/category/${category.name.toLowerCase()}`}
               elevation={0}
               sx={{
                 width: "100%",
-                p: 1.5, // Reduced from p: 2
-                borderRadius: 1.5, // Reduced from 2
+                p: 1.5,
+                borderRadius: 1.5,
                 display: "flex",
                 alignItems: "center",
                 gap: 1,
@@ -123,8 +119,8 @@ const CategoryList = () => {
             >
               <Box
                 sx={{
-                  width: 32, // Reduced from 40
-                  height: 32, // Reduced from 40
+                  width: 32,
+                  height: 32,
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
@@ -134,15 +130,14 @@ const CategoryList = () => {
                 }}
               >
                 {React.cloneElement(category.icon, { sx: { fontSize: 18 } })}{" "}
-                {/* Reduced icon size */}
               </Box>
 
               <Box sx={{ flex: 1, minWidth: 0 }}>
                 <Typography
                   sx={{
                     fontWeight: 600,
-                    mb: 0.25, // Reduced from 0.5
-                    fontSize: "0.875rem", // Added smaller font size
+                    mb: 0.25,
+                    fontSize: "0.875rem",
                   }}
                 >
                   {category.name}
@@ -151,7 +146,7 @@ const CategoryList = () => {
                   variant="caption"
                   sx={{
                     color: "text.secondary",
-                    fontSize: "0.75rem", // Added smaller font size
+                    fontSize: "0.75rem",
                   }}
                 >
                   {category.count} yazı

@@ -34,7 +34,7 @@ const AboutPage = () => {
           textAlign="center"
         >
           <Avatar
-            src="https://live.staticflickr.com/7677/27328457514_1b083fb60d_z.jpg" // 📌 Kendi profil görselini ekleyebilirsin
+            src="https://live.staticflickr.com/7677/27328457514_1b083fb60d_z.jpg"
             sx={{ width: 120, height: 120, mb: 2 }}
           />
           <Typography variant="h4" gutterBottom fontWeight="bold">
@@ -50,7 +50,7 @@ const AboutPage = () => {
               <IconButton
                 color="inherit"
                 component="a"
-                href="https://github.com/username"
+                href="https://github.com/semihkececioglu"
                 target="_blank"
                 rel="noopener noreferrer"
               >
@@ -74,7 +74,7 @@ const AboutPage = () => {
               <IconButton
                 sx={{ color: "#1DA1F2" }}
                 component="a"
-                href="https://twitter.com/username"
+                href="https://twitter.com/semihkececioglu"
                 target="_blank"
                 rel="noopener noreferrer"
               >
@@ -86,7 +86,7 @@ const AboutPage = () => {
               <IconButton
                 sx={{ color: "red" }}
                 component="a"
-                href="mailto:seninmailin@gmail.com"
+                href="mailto:semihkecec@gmail.com"
               >
                 <EmailIcon fontSize="large" />
               </IconButton>

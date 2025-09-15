@@ -38,7 +38,7 @@ const FooterLinks = () => {
         },
         {
           label: "Tasarım",
-          href: "/category/design",
+          href: "/category/tasarim",
           count: 12,
           icon: Palette,
         },
