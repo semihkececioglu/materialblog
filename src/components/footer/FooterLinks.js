@@ -14,7 +14,7 @@ import { alpha } from "@mui/material/styles";
 const FooterLinks = () => {
   const linkGroups = [
     {
-      title: "Navigasyon",
+      title: "Linkler",
       links: [
         { label: "Ana Sayfa", href: "/", icon: Home, isNew: false },
         { label: "Hakkımızda", href: "/about", icon: Info, isNew: false },

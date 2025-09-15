@@ -38,7 +38,7 @@ const AboutPage = () => {
             sx={{ width: 120, height: 120, mb: 2 }}
           />
           <Typography variant="h4" gutterBottom fontWeight="bold">
-            Semih Rahman Keçecioğlu
+            Semih Keçecioğlu
           </Typography>
           <Typography variant="subtitle1" color="text.secondary" gutterBottom>
             Full-Stack Developer • React & Node.js Enthusiast

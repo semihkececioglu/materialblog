@@ -4,12 +4,12 @@ const SettingsSchema = new mongoose.Schema({
   siteTitle: { type: String, default: "Material Blog" },
   siteDescription: { type: String, default: "Modern Blog Platform" },
 
-  // ✅ Meta Pixel alanları
+  // Meta Pixel
   metaPixelEnabled: { type: Boolean, default: false },
   metaPixelId: { type: String, default: "" },
 });
 
-// ✅ Singleton settings kaydı
+// Singleton settings kaydı
 SettingsSchema.statics.getSingleton = async function () {
   let settings = await this.findOne();
   if (!settings) {

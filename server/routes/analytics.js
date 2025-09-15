@@ -21,7 +21,7 @@ router.get("/overview", async (req, res) => {
       dimensionFilter: {
         filter: {
           fieldName: "eventName",
-          stringFilter: { value: "page_view" }, // ✅ sadece page_view
+          stringFilter: { value: "page_view" },
         },
       },
     });
@@ -87,7 +87,7 @@ router.get("/top-pages", async (req, res) => {
       dimensionFilter: {
         filter: {
           fieldName: "eventName",
-          stringFilter: { value: "page_view" }, // ✅ sadece page_view
+          stringFilter: { value: "page_view" },
         },
       },
     });

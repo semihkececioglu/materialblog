@@ -21,7 +21,7 @@ router.get("/public", async (req, res) => {
       siteTitle: settings.siteTitle,
       siteDescription: settings.siteDescription,
 
-      // ✅ Meta Pixel alanlarını da döndür
+      // Meta Pixel alanlarını da döndür
       metaPixelEnabled: settings.metaPixelEnabled,
       metaPixelId: settings.metaPixelId,
     });
