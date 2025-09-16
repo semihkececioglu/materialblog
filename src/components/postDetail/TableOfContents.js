@@ -211,11 +211,6 @@ const TableOfContents = () => {
         );
       });
 
-    console.log(
-      "Found headings:",
-      newHeadings.map((h) => h.text)
-    ); // Debug için
-
     setHeadings(newHeadings);
     setActiveId(null);
     setOpen(false); // Yeni sayfa yüklendiğinde kapalı
