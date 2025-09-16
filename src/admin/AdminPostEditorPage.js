@@ -115,44 +115,29 @@ const getCharCount = (text) => {
   return text ? text.trim().length : 0;
 };
 
-// Category colors from AdminPostsPage
-const categoryColors = {
-  React: {
-    light: "#E3F2FD",
-    main: "#2196F3",
-    text: "#1976D2",
-    dark: "#0D47A1",
-  },
-  JavaScript: {
-    light: "#FFF3E0",
-    main: "#FF9800",
-    text: "#F57C00",
-    dark: "#E65100",
-  },
-  Tasarım: {
-    light: "#FCE4EC",
-    main: "#E91E63",
-    text: "#C2185B",
-    dark: "#880E4F",
-  },
-  Galatasaray: {
-    light: "#F3E5F5",
-    main: "#9C27B0",
-    text: "#7B1FA2",
-    dark: "#4A148C",
-  },
-  Node: { light: "#E8F5E8", main: "#4CAF50", text: "#388E3C", dark: "#1B5E20" },
-  Python: {
-    light: "#FFF8E1",
-    main: "#FFC107",
-    text: "#F57F17",
-    dark: "#FF6F00",
-  },
-};
-
 // Preview Dialog Component
-const PreviewDialog = ({ open, onClose, post }) => {
+const PreviewDialog = ({ open, onClose, post, categories = [] }) => {
   if (!post.title && !post.content) return null;
+
+  // Kategori adını güvenli şekilde al
+  const getCategoryName = () => {
+    if (!post.category) return "Kategorisiz";
+
+    // Eğer string ID ise
+    if (typeof post.category === "string") {
+      const found = categories.find((c) => c._id === post.category);
+      return found?.name || "Kategorisiz";
+    }
+
+    // Eğer obje ise
+    if (typeof post.category === "object" && post.category?.name) {
+      return post.category.name;
+    }
+
+    return "Kategorisiz";
+  };
+
+  const categoryName = getCategoryName();
 
   return (
     <Dialog
@@ -216,18 +201,26 @@ const PreviewDialog = ({ open, onClose, post }) => {
           <Stack direction="row" spacing={1} sx={{ mb: 3 }}>
             {post.category && (
               <Chip
-                label={post.category}
+                label={categoryName}
                 size="small"
                 sx={{
-                  bgcolor: categoryColors[post.category]?.light || "#f5f5f5",
-                  color: categoryColors[post.category]?.text || "#333",
+                  bgcolor: post.category?.color
+                    ? alpha(post.category.color, 0.1)
+                    : "#f5f5f5",
+                  color: post.category?.color || "#333",
                   fontWeight: 600,
                 }}
               />
             )}
-            {post.tags?.map((tag, i) => (
-              <Chip key={i} label={tag} size="small" variant="outlined" />
-            ))}
+            {Array.isArray(post.tags) &&
+              post.tags.map((tag, i) => (
+                <Chip
+                  key={i}
+                  label={typeof tag === "string" ? tag : String(tag)}
+                  size="small"
+                  variant="outlined"
+                />
+              ))}
           </Stack>
 
           {post.summary && (
@@ -269,7 +262,6 @@ const PreviewDialog = ({ open, onClose, post }) => {
     </Dialog>
   );
 };
-
 const PostEditorPage = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -379,7 +371,7 @@ const PostEditorPage = () => {
   useEffect(() => {
     axios
       .get(`${BASE_URL}/api/categories`)
-      .then((res) => setCategories(res.data.map((c) => c.name)))
+      .then((res) => setCategories(res.data))
       .catch((err) => console.error("Kategori alınamadı:", err));
 
     axios
@@ -396,7 +388,7 @@ const PostEditorPage = () => {
           const post = await dispatch(fetchPostById(id)).unwrap();
           setForm({
             title: post.title || "",
-            category: post.category || "",
+            category: post.category?._id || "",
             image: post.image || "",
             _imagePreview: post.image
               ? post.image.replace(
@@ -588,6 +580,7 @@ const PostEditorPage = () => {
     const payload = {
       ...form,
       tags: form.tags.map((t) => t.trim()),
+      category: form.category,
       user: user?._id,
     };
 
@@ -901,7 +894,28 @@ const PostEditorPage = () => {
                   {form.category && (
                     <Chip
                       icon={<CategoryIcon sx={{ fontSize: 18 }} />}
-                      label={form.category}
+                      label={(() => {
+                        // Debug için
+                        console.log("Header kategori:", form.category);
+
+                        if (!form.category) return "Kategorisiz";
+
+                        if (typeof form.category === "string") {
+                          const found = categories.find(
+                            (c) => c._id === form.category
+                          );
+                          return found?.name || "Kategorisiz";
+                        }
+
+                        if (
+                          typeof form.category === "object" &&
+                          form.category !== null
+                        ) {
+                          return form.category.name || "Kategorisiz";
+                        }
+
+                        return "Kategorisiz";
+                      })()}
                       size="small"
                       sx={{
                         height: 32,
@@ -1138,8 +1152,8 @@ const PostEditorPage = () => {
                           },
                         }}
                       >
-                        {categories.map((cat, i) => (
-                          <MenuItem key={i} value={cat}>
+                        {categories.map((cat) => (
+                          <MenuItem key={cat._id} value={cat._id}>
                             <Stack
                               direction="row"
                               alignItems="center"
@@ -1150,14 +1164,14 @@ const PostEditorPage = () => {
                                   width: 12,
                                   height: 12,
                                   borderRadius: "50%",
-                                  bgcolor: categoryColors[cat]?.main || "#666",
+                                  bgcolor: cat.color || "#666", // ✅ backend’den gelen renk
                                   boxShadow: `0 2px 8px ${alpha(
-                                    categoryColors[cat]?.main || "#666",
+                                    cat.color || "#666",
                                     0.3
                                   )}`,
                                 }}
                               />
-                              {cat}
+                              {cat.name}
                             </Stack>
                           </MenuItem>
                         ))}
@@ -1882,6 +1896,7 @@ const PostEditorPage = () => {
         open={previewOpen}
         onClose={() => setPreviewOpen(false)}
         post={form}
+        categories={categories}
       />
 
       {/* Snackbar */}

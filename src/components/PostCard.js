@@ -36,7 +36,6 @@ const isCloudinary = (url) =>
 /** Cloudinary URL'ine dönüşüm (KESKİN PROFİL) */
 const buildCloudinaryUrl = (url, w) => {
   if (!url || !isCloudinary(url)) return url || "";
-  // Kart için ideal: c_fill,g_auto => kadrajı doldur; e_sharpen => hafif netlik
   return url.replace(
     "/image/upload/",
     `/image/upload/f_auto,q_auto:best,dpr_auto,c_fill,g_auto,w_${w},e_sharpen/`
@@ -54,9 +53,8 @@ const buildResponsive = (url) => {
   const w900 = buildCloudinaryUrl(url, 900);
 
   return {
-    src: w600, // varsayılan orta boy
+    src: w600,
     srcSet: `${w400} 400w, ${w600} 600w, ${w900} 900w`,
-    // kart düzenine uygun boyutlar
     sizes: "(max-width: 600px) 100vw, 50vw",
   };
 };
@@ -72,7 +70,6 @@ const PostCard = ({ post }) => {
   const firstImage = getFirstImageFromHTML(post.content);
   const rawImageUrl = post.image || firstImage;
 
-  // Görsel kaynakları
   const responsive = buildResponsive(rawImageUrl);
 
   return (
@@ -104,7 +101,6 @@ const PostCard = ({ post }) => {
       {rawImageUrl ? (
         <CardMedia
           component="img"
-          // CLS için boyut ver
           width={480}
           height={140}
           image={responsive.src}
@@ -142,12 +138,19 @@ const PostCard = ({ post }) => {
         {/* Chip */}
         {post.category && (
           <Chip
-            label={post.category}
+            label={
+              typeof post.category === "object"
+                ? post.category.name
+                : post.category
+            }
             size="small"
             sx={{
               mb: 1,
-              backgroundColor: theme.palette.primary.light,
-              color: theme.palette.getContrastText(theme.palette.primary.light),
+              backgroundColor:
+                typeof post.category === "object"
+                  ? post.category.color || theme.palette.primary.light
+                  : theme.palette.primary.light,
+              color: "#fff", // kontrast için beyaz metin
               fontWeight: 500,
             }}
           />
@@ -180,7 +183,7 @@ const PostCard = ({ post }) => {
         </Typography>
       </CardContent>
 
-      {/* Alt bar: tarih + ok icon */}
+      {/* Alt bar */}
       <Box
         sx={{
           px: 2,

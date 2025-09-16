@@ -344,11 +344,18 @@ function PostDetail() {
               >
                 {/* Category */}
                 <Chip
-                  label={post.category || "Genel"}
+                  label={
+                    typeof post.category === "object"
+                      ? post.category.name
+                      : post.category || "Genel"
+                  }
                   size="small"
                   sx={{
                     mb: 2,
-                    bgcolor: alpha("#fff", 0.2),
+                    bgcolor:
+                      typeof post.category === "object"
+                        ? post.category.color || alpha("#fff", 0.2)
+                        : alpha("#fff", 0.2),
                     color: "white",
                     fontWeight: 500,
                     backdropFilter: "blur(4px)",

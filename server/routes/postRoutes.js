@@ -19,6 +19,86 @@ router.get("/slug/:slug", async (req, res) => {
   }
 });
 
+// BEĞENİ DURUMU (GET)
+router.get("/:postId/like-status", async (req, res) => {
+  const { postId } = req.params;
+  const { userId } = req.query;
+
+  try {
+    const post = await Post.findById(postId);
+    if (!post) return res.status(404).json({ message: "Yazı bulunamadı" });
+
+    const liked = post.likes.includes(userId);
+    res.status(200).json({
+      liked,
+      likeCount: post.likes.length,
+    });
+  } catch (err) {
+    console.error("Beğeni durumu hatası:", err);
+    res.status(500).json({ message: "Sunucu hatası" });
+  }
+});
+
+// BEĞEN / BEĞENME (TOGGLE)
+router.post("/:postId/like", async (req, res) => {
+  const { postId } = req.params;
+  const { userId } = req.body;
+
+  try {
+    const post = await Post.findById(postId);
+    const user = await User.findById(userId);
+    if (!post || !user) return res.status(404).json({ message: "Bulunamadı" });
+
+    const alreadyLiked = post.likes.includes(userId);
+    if (alreadyLiked) {
+      post.likes.pull(userId);
+      user.likedPosts.pull(post._id);
+    } else {
+      post.likes.push(userId);
+      user.likedPosts.push(post._id);
+    }
+
+    await post.save();
+    await user.save();
+
+    res.status(200).json({
+      liked: !alreadyLiked,
+      likeCount: post.likes.length,
+    });
+  } catch (err) {
+    console.error("Beğeni işlem hatası:", err);
+    res.status(500).json({ message: "Sunucu hatası" });
+  }
+});
+
+// KAYDET / KAYDETME (TOGGLE)
+router.post("/:postId/save", async (req, res) => {
+  const { postId } = req.params;
+  const { userId } = req.body;
+
+  try {
+    const post = await Post.findById(postId);
+    const user = await User.findById(userId);
+    if (!post || !user) return res.status(404).json({ message: "Bulunamadı" });
+
+    const alreadySaved = user.savedPosts.includes(post._id);
+    if (alreadySaved) {
+      user.savedPosts.pull(post._id);
+    } else {
+      user.savedPosts.push(post._id);
+    }
+
+    await user.save();
+
+    res.status(200).json({
+      saved: !alreadySaved,
+    });
+  } catch (err) {
+    console.error("Kaydetme işlem hatası:", err);
+    res.status(500).json({ message: "Sunucu hatası" });
+  }
+});
+
 // POST LİSTELEME (arama, kategori, etiket, yazar, sayfalama)
 router.get("/", async (req, res) => {
   try {

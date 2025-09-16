@@ -65,40 +65,6 @@ import { fetchPosts, deletePost } from "../redux/postSlice";
 const CONTROL_H = 42;
 const SKELETON_ROWS = 8;
 
-const categoryColors = {
-  React: {
-    light: "#E3F2FD",
-    main: "#2196F3",
-    text: "#1976D2",
-    dark: "#0D47A1",
-  },
-  JavaScript: {
-    light: "#FFF3E0",
-    main: "#FF9800",
-    text: "#F57C00",
-    dark: "#E65100",
-  },
-  Tasarım: {
-    light: "#FCE4EC",
-    main: "#E91E63",
-    text: "#C2185B",
-    dark: "#880E4F",
-  },
-  Galatasaray: {
-    light: "#F3E5F5",
-    main: "#9C27B0",
-    text: "#7B1FA2",
-    dark: "#4A148C",
-  },
-  Node: { light: "#E8F5E8", main: "#4CAF50", text: "#388E3C", dark: "#1B5E20" },
-  Python: {
-    light: "#FFF8E1",
-    main: "#FFC107",
-    text: "#F57F17",
-    dark: "#FF6F00",
-  },
-};
-
 const Transition = React.forwardRef(function Transition(props, ref) {
   return <Slide direction="up" ref={ref} {...props} />;
 });
@@ -186,10 +152,11 @@ const PostsPage = () => {
         (p) =>
           p.title.toLowerCase().includes(q) ||
           p.content?.toLowerCase().includes(q) ||
-          p.excerpt?.toLowerCase().includes(q)
+          p.summary?.toLowerCase().includes(q)
       );
     }
-    if (selectedCategory) f = f.filter((p) => p.category === selectedCategory);
+    if (selectedCategory)
+      f = f.filter((p) => p.category?.name === selectedCategory);
     switch (sortOption) {
       case "title-asc":
         f.sort((a, b) => a.title.localeCompare(b.title));
@@ -248,18 +215,41 @@ const PostsPage = () => {
   };
 
   const getUniqueCategories = () => {
-    const categories = allPosts.map((post) => post.category).filter(Boolean);
+    const categories = allPosts
+      .map((post) => post.category?.name)
+      .filter(Boolean);
     return [...new Set(categories)];
+  };
+
+  // Generate category color based on category name
+  const getCategoryColor = (categoryName) => {
+    if (!categoryName)
+      return {
+        light: alpha("#666", 0.1),
+        main: "#666",
+        text: "#333",
+      };
+
+    // Generate consistent color based on category name
+    let hash = 0;
+    for (let i = 0; i < categoryName.length; i++) {
+      hash = categoryName.charCodeAt(i) + ((hash << 5) - hash);
+    }
+
+    const hue = Math.abs(hash) % 360;
+    const saturation = 65;
+    const lightness = 55;
+
+    const main = `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+    const light = `hsl(${hue}, ${saturation - 20}%, ${lightness + 35}%)`;
+    const text = `hsl(${hue}, ${saturation + 10}%, ${lightness - 20}%)`;
+
+    return { light, main, text };
   };
 
   // Grid Card Component
   const PostCard = ({ post, index }) => {
-    const categoryColor = categoryColors[post.category] || {
-      light: alpha("#666", 0.1),
-      main: "#666",
-      text: "#333",
-      dark: "#000",
-    };
+    const categoryColor = getCategoryColor(post.category?.name);
 
     return (
       <Grow in timeout={300 + index * 100}>
@@ -380,7 +370,7 @@ const PostsPage = () => {
                 lineHeight: 1.5,
               }}
             >
-              {post.excerpt ||
+              {post.summary ||
                 post.content?.substring(0, 150) + "..." ||
                 "İçerik önizlemesi bulunmuyor..."}
             </Typography>
@@ -393,7 +383,7 @@ const PostsPage = () => {
             >
               <Stack direction="row" spacing={1} alignItems="center">
                 <Chip
-                  label={post.category || "Kategorisiz"}
+                  label={post.category?.name || "Kategorisiz"}
                   size="small"
                   sx={{
                     height: 28,
@@ -804,7 +794,7 @@ const PostsPage = () => {
           >
             <TextField
               size="small"
-              placeholder="Başlık, içerik veya excerpt'te ara..."
+              placeholder="Başlık, içerik veya özet'te ara..."
               value={searchTerm}
               onChange={(e) => {
                 setSearchTerm(e.target.value);
@@ -891,10 +881,7 @@ const PostsPage = () => {
             >
               <MenuItem value="">Tüm Kategoriler</MenuItem>
               {getUniqueCategories().map((cat) => {
-                const colors = categoryColors[cat] || {
-                  main: "#666",
-                  light: "#f0f0f0",
-                };
+                const colors = getCategoryColor(cat);
                 return (
                   <MenuItem key={cat} value={cat}>
                     <Stack direction="row" alignItems="center" spacing={1.5}>
@@ -1245,11 +1232,7 @@ const PostsPage = () => {
 
                 {!loading &&
                   visiblePosts.map((post, index) => {
-                    const categoryColor = categoryColors[post.category] || {
-                      light: alpha("#666", 0.1),
-                      main: "#666",
-                      text: "#333",
-                    };
+                    const categoryColor = getCategoryColor(post.category?.name);
 
                     return (
                       <TableRow
@@ -1299,7 +1282,7 @@ const PostsPage = () => {
                         </TableCell>
                         <TableCell sx={{ py: 2 }}>
                           <Chip
-                            label={post.category || "Kategorisiz"}
+                            label={post.category?.name || "Kategorisiz"}
                             size="small"
                             sx={{
                               height: 32,
