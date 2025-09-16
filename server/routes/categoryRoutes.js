@@ -1,35 +1,91 @@
 const express = require("express");
 const router = express.Router();
 const Category = require("../models/Category");
+const Post = require("../models/Post");
 
-// Get all categories
+// All categories with postcount
 router.get("/", async (req, res) => {
-  const categories = await Category.find().sort({ name: 1 });
-  res.json(categories);
+  try {
+    const categories = await Category.aggregate([
+      {
+        $lookup: {
+          from: "posts",
+          localField: "_id",
+          foreignField: "category",
+          as: "posts",
+        },
+      },
+      {
+        $addFields: {
+          postCount: { $size: "$posts" },
+        },
+      },
+      {
+        $project: {
+          posts: 0,
+        },
+      },
+      { $sort: { name: 1 } },
+    ]);
+
+    res.json(categories);
+  } catch (err) {
+    console.error("Kategori listeleme hatası:", err);
+    res.status(500).json({ error: "Kategori listesi alınamadı" });
+  }
 });
 
-// Create category
+// Create new category
 router.post("/", async (req, res) => {
-  const { name } = req.body;
-  const newCategory = new Category({ name });
-  await newCategory.save();
-  res.status(201).json(newCategory);
+  try {
+    const { name, description, color, icon, featured, parent } = req.body;
+
+    const newCategory = new Category({
+      name,
+      description,
+      color,
+      icon,
+      featured: featured || false,
+      parent: parent || null,
+    });
+
+    await newCategory.save();
+    res.status(201).json(newCategory);
+  } catch (err) {
+    console.error("Kategori ekleme hatası:", err);
+    res.status(500).json({ error: "Kategori eklenemedi" });
+  }
 });
 
 // Update category
 router.put("/:id", async (req, res) => {
-  const updated = await Category.findByIdAndUpdate(
-    req.params.id,
-    { name: req.body.name },
-    { new: true }
-  );
-  res.json(updated);
+  try {
+    const { name, description, color, icon, featured, parent } = req.body;
+
+    const updated = await Category.findByIdAndUpdate(
+      req.params.id,
+      { name, description, color, icon, featured, parent: parent || null },
+      { new: true }
+    );
+
+    if (!updated) return res.status(404).json({ error: "Kategori bulunamadı" });
+
+    res.json(updated);
+  } catch (err) {
+    console.error("Kategori güncelleme hatası:", err);
+    res.status(500).json({ error: "Kategori güncellenemedi" });
+  }
 });
 
 // Delete category
 router.delete("/:id", async (req, res) => {
-  await Category.findByIdAndDelete(req.params.id);
-  res.status(204).end();
+  try {
+    await Category.findByIdAndDelete(req.params.id);
+    res.status(204).end();
+  } catch (err) {
+    console.error("Kategori silme hatası:", err);
+    res.status(500).json({ error: "Kategori silinemedi" });
+  }
 });
 
 module.exports = router;
