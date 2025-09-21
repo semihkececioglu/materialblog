@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Box, Typography, Link, Chip } from "@mui/material";
 import {
   Home,
@@ -8,10 +8,124 @@ import {
   Javascript,
   Palette,
   ChevronRight,
+  Category as CategoryIcon,
+  Folder as FolderIcon,
+  Star as StarIcon,
+  Home as HomeIcon,
+  Work as WorkIcon,
+  Sports as SportsIcon,
+  LibraryMusic as MusicIcon,
+  Camera as CameraIcon,
+  Book as BookIcon,
+  CardTravel as TravelIcon,
+  Restaurant as RestaurantIcon,
+  Science as ScienceIcon,
+  School as SchoolIcon,
+  Business as BusinessIcon,
+  HealthAndSafety as HealthIcon,
+  Nature as NatureIcon,
+  Brush as ArtIcon,
+  Games as GamesIcon,
+  Movie as MovieIcon,
+  Build as BuildIcon,
+  DirectionsCar as DirectionsCarIcon,
+  LocalLibrary as LocalLibraryIcon,
 } from "@mui/icons-material";
 import { alpha } from "@mui/material/styles";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchCategories } from "../../redux/categoriesSlice";
+
+// AdminCategoriesPage ile aynı icon mapping'i kullan
+const AVAILABLE_ICONS = {
+  Category: CategoryIcon,
+  Folder: FolderIcon,
+  Star: StarIcon,
+  Home: HomeIcon,
+  Work: WorkIcon,
+  Sports: SportsIcon,
+  Music: MusicIcon,
+  Camera: CameraIcon,
+  Book: BookIcon,
+  Code: Code,
+  Travel: TravelIcon,
+  Restaurant: RestaurantIcon,
+  Science: ScienceIcon,
+  School: SchoolIcon,
+  Business: BusinessIcon,
+  Health: HealthIcon,
+  Nature: NatureIcon,
+  Art: ArtIcon,
+  Games: GamesIcon,
+  Movie: MovieIcon,
+  Build: BuildIcon,
+  DirectionsCar: DirectionsCarIcon,
+  LocalLibrary: LocalLibraryIcon,
+  Javascript: Javascript,
+  Palette: Palette,
+};
 
 const FooterLinks = () => {
+  const dispatch = useDispatch();
+  const { items: categories = [], loading } = useSelector(
+    (state) => state.categories
+  );
+
+  useEffect(() => {
+    if (categories.length === 0) {
+      dispatch(fetchCategories());
+    }
+  }, [dispatch, categories.length]);
+
+  // İkon component'ini al
+  const getIconComponent = (iconName) => {
+    if (iconName && AVAILABLE_ICONS[iconName]) {
+      return AVAILABLE_ICONS[iconName];
+    }
+    return CategoryIcon;
+  };
+
+  // Footer'da gösterilecek kategorileri al (featured olanlar ya da en popüler 3)
+  const getFooterCategories = () => {
+    if (loading || categories.length === 0) {
+      // Loading durumunda default kategoriler
+      return [
+        { label: "React", href: "/category/react", count: 0, icon: Code },
+        {
+          label: "Javascript",
+          href: "/category/javascript",
+          count: 0,
+          icon: Javascript,
+        },
+        {
+          label: "Tasarım",
+          href: "/category/tasarim",
+          count: 0,
+          icon: Palette,
+        },
+      ];
+    }
+
+    // Önce featured kategorileri al
+    const featuredCategories = categories.filter(
+      (cat) => cat.featured === true
+    );
+
+    // Eğer featured kategori varsa onları kullan, yoksa en popüler 3'ü al
+    const categoriesToShow =
+      featuredCategories.length > 0
+        ? featuredCategories.slice(0, 3)
+        : categories
+            .sort((a, b) => (b.postCount || 0) - (a.postCount || 0))
+            .slice(0, 3);
+
+    return categoriesToShow.map((cat) => ({
+      label: cat.name,
+      href: `/category/${cat.slug}`,
+      count: cat.postCount || 0,
+      icon: getIconComponent(cat.icon),
+    }));
+  };
+
   const linkGroups = [
     {
       title: "Linkler",
@@ -28,21 +142,7 @@ const FooterLinks = () => {
     },
     {
       title: "Kategoriler",
-      links: [
-        { label: "React", href: "/category/react", count: 24, icon: Code },
-        {
-          label: "Javascript",
-          href: "/category/javascript",
-          count: 18,
-          icon: Javascript,
-        },
-        {
-          label: "Tasarım",
-          href: "/category/tasarim",
-          count: 12,
-          icon: Palette,
-        },
-      ],
+      links: getFooterCategories(),
     },
   ];
 
@@ -149,9 +249,9 @@ const FooterLinks = () => {
                 </Link>
 
                 <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-                  {link.count && (
+                  {link.count !== undefined && (
                     <Chip
-                      label={link.count}
+                      label={loading ? "..." : link.count}
                       size="small"
                       variant="outlined"
                       sx={{
@@ -210,26 +310,31 @@ const FooterLinks = () => {
         </Typography>
 
         <Box sx={{ display: "flex", gap: 0.5, flexWrap: "wrap" }}>
-          {["React", "Javascript", "Tasarım"].map((tag) => (
-            <Chip
-              key={tag}
-              label={tag}
-              size="small"
-              clickable
-              sx={{
-                height: 24,
-                fontSize: "0.625rem",
-                backgroundColor: alpha("#2196F3", 0.08),
-                color: "primary.main",
-                border: "none",
-                "&:hover": {
-                  backgroundColor: alpha("#2196F3", 0.12),
-                  transform: "translateY(-1px)",
-                },
-                transition: "all 0.2s ease-in-out",
-              }}
-            />
-          ))}
+          {getFooterCategories()
+            .slice(0, 3)
+            .map((category) => (
+              <Chip
+                key={category.label}
+                label={category.label}
+                size="small"
+                clickable
+                component={Link}
+                href={category.href}
+                sx={{
+                  height: 24,
+                  fontSize: "0.625rem",
+                  backgroundColor: alpha("#2196F3", 0.08),
+                  color: "primary.main",
+                  border: "none",
+                  textDecoration: "none",
+                  "&:hover": {
+                    backgroundColor: alpha("#2196F3", 0.12),
+                    transform: "translateY(-1px)",
+                  },
+                  transition: "all 0.2s ease-in-out",
+                }}
+              />
+            ))}
         </Box>
       </Box>
     </Box>

@@ -215,41 +215,35 @@ const PostsPage = () => {
   };
 
   const getUniqueCategories = () => {
-    const categories = allPosts
-      .map((post) => post.category?.name)
-      .filter(Boolean);
-    return [...new Set(categories)];
+    const categories = allPosts.map((post) => post.category).filter(Boolean);
+    // Unique kategorileri name'e göre filtrele ama tüm kategori verisini sakla
+    const uniqueCategories = categories.filter(
+      (category, index, self) =>
+        index === self.findIndex((c) => c.name === category.name)
+    );
+    return uniqueCategories;
   };
 
-  // Generate category color based on category name
-  const getCategoryColor = (categoryName) => {
-    if (!categoryName)
+  // Backend'den gelen kategori rengi kullan
+  const getCategoryColor = (category) => {
+    if (!category || !category.color) {
       return {
         light: alpha("#666", 0.1),
         main: "#666",
         text: "#333",
       };
-
-    // Generate consistent color based on category name
-    let hash = 0;
-    for (let i = 0; i < categoryName.length; i++) {
-      hash = categoryName.charCodeAt(i) + ((hash << 5) - hash);
     }
 
-    const hue = Math.abs(hash) % 360;
-    const saturation = 65;
-    const lightness = 55;
-
-    const main = `hsl(${hue}, ${saturation}%, ${lightness}%)`;
-    const light = `hsl(${hue}, ${saturation - 20}%, ${lightness + 35}%)`;
-    const text = `hsl(${hue}, ${saturation + 10}%, ${lightness - 20}%)`;
+    const main = category.color;
+    const light = alpha(main, 0.15);
+    const text = darken(main, 0.3);
 
     return { light, main, text };
   };
 
   // Grid Card Component
   const PostCard = ({ post, index }) => {
-    const categoryColor = getCategoryColor(post.category?.name);
+    const categoryColor = getCategoryColor(post.category);
 
     return (
       <Grow in timeout={300 + index * 100}>
@@ -880,10 +874,10 @@ const PostsPage = () => {
               }}
             >
               <MenuItem value="">Tüm Kategoriler</MenuItem>
-              {getUniqueCategories().map((cat) => {
-                const colors = getCategoryColor(cat);
+              {getUniqueCategories().map((category) => {
+                const colors = getCategoryColor(category);
                 return (
-                  <MenuItem key={cat} value={cat}>
+                  <MenuItem key={category._id} value={category.name}>
                     <Stack direction="row" alignItems="center" spacing={1.5}>
                       <Box
                         sx={{
@@ -895,7 +889,7 @@ const PostsPage = () => {
                         }}
                       />
                       <Typography variant="body2" fontWeight={600}>
-                        {cat}
+                        {category.name}
                       </Typography>
                     </Stack>
                   </MenuItem>
@@ -1232,7 +1226,7 @@ const PostsPage = () => {
 
                 {!loading &&
                   visiblePosts.map((post, index) => {
-                    const categoryColor = getCategoryColor(post.category?.name);
+                    const categoryColor = getCategoryColor(post.category);
 
                     return (
                       <TableRow

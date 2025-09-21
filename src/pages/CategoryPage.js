@@ -8,14 +8,71 @@ import {
   useTheme,
   Pagination,
   CircularProgress,
-  Paper,
+  Avatar,
+  Badge,
+  alpha,
+  Skeleton,
 } from "@mui/material";
+import {
+  Article as ArticleIcon,
+  Category as CategoryIcon,
+  Code as CodeIcon,
+  Folder as FolderIcon,
+  Star as StarIcon,
+  Home as HomeIcon,
+  Work as WorkIcon,
+  Sports as SportsIcon,
+  LibraryMusic as MusicIcon,
+  Camera as CameraIcon,
+  Book as BookIcon,
+  CardTravel as TravelIcon,
+  Restaurant as RestaurantIcon,
+  Science as ScienceIcon,
+  School as SchoolIcon,
+  Business as BusinessIcon,
+  HealthAndSafety as HealthIcon,
+  Nature as NatureIcon,
+  Brush as ArtIcon,
+  Games as GamesIcon,
+  Movie as MovieIcon,
+  Build as BuildIcon,
+  DirectionsCar as DirectionsCarIcon,
+  LocalLibrary as LocalLibraryIcon,
+} from "@mui/icons-material";
 
 // Redux
 import { useDispatch, useSelector } from "react-redux";
 import { fetchPosts } from "../redux/postSlice";
+import { fetchCategories } from "../redux/categoriesSlice";
 
 const POSTS_PER_PAGE = 6;
+
+// AdminCategoriesPage ile aynı icon mapping'i kullan
+const AVAILABLE_ICONS = {
+  Category: CategoryIcon,
+  Folder: FolderIcon,
+  Star: StarIcon,
+  Home: HomeIcon,
+  Work: WorkIcon,
+  Sports: SportsIcon,
+  Music: MusicIcon,
+  Camera: CameraIcon,
+  Book: BookIcon,
+  Code: CodeIcon,
+  Travel: TravelIcon,
+  Restaurant: RestaurantIcon,
+  Science: ScienceIcon,
+  School: SchoolIcon,
+  Business: BusinessIcon,
+  Health: HealthIcon,
+  Nature: NatureIcon,
+  Art: ArtIcon,
+  Games: GamesIcon,
+  Movie: MovieIcon,
+  Build: BuildIcon,
+  DirectionsCar: DirectionsCarIcon,
+  LocalLibrary: LocalLibraryIcon,
+};
 
 function CategoryPage() {
   const { kategoriAdi, pageNumber } = useParams();
@@ -25,9 +82,24 @@ function CategoryPage() {
 
   const page = parseInt(pageNumber) || 1;
 
-  const { posts, totalPages, loading } = useSelector((state) => state.posts);
+  // Posts state'i
+  const {
+    posts,
+    totalPages,
+    loading: postsLoading,
+    totalPosts,
+  } = useSelector((state) => state.posts);
+
+  // Categories state'i
+  const { items: categories, loading: categoriesLoading } = useSelector(
+    (state) => state.categories
+  );
 
   useEffect(() => {
+    if (categories.length === 0) {
+      dispatch(fetchCategories());
+    }
+
     dispatch(
       fetchPosts({
         category: decodeURIComponent(kategoriAdi),
@@ -35,7 +107,7 @@ function CategoryPage() {
         limit: POSTS_PER_PAGE,
       })
     );
-  }, [dispatch, kategoriAdi, page]);
+  }, [dispatch, kategoriAdi, page, categories.length]);
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -49,64 +121,173 @@ function CategoryPage() {
     navigate(pageUrl);
   };
 
-  const formattedCategoryName = decodeURIComponent(kategoriAdi)
-    .replace(/-/g, " ")
-    .replace(/\b\w/g, (l) => l.toUpperCase());
+  // Kategori bilgilerini bul
+  const currentCategory = categories.find(
+    (cat) =>
+      cat.slug === decodeURIComponent(kategoriAdi) ||
+      cat.name.toLowerCase().replace(/\s+/g, "-") ===
+        decodeURIComponent(kategoriAdi)
+  );
 
-  const getCategoryDescription = (slug) => {
-    const descriptions = {
-      react:
-        "React, bileşen tabanlı kullanıcı arayüzleri geliştirmek için kullanılan popüler bir JavaScript kütüphanesidir.",
-      javascript:
-        "JavaScript, web’in dinamik doğasını mümkün kılan güçlü bir programlama dilidir.",
-      tasarim:
-        "Tasarım kategorisi; UI/UX, renk teorisi ve kullanıcı odaklı arayüz geliştirme üzerine içerikler sunar.",
-      oyun: "Bu kategoride oyun geliştirme, Unity, Godot ve oyun tasarımıyla ilgili yazılar yer alır.",
-      yazilim:
-        "Yazılım geliştirme süreçleri, temiz kod prensipleri ve proje mimarilerine dair yazılar burada bulunur.",
-    };
+  const formattedCategoryName =
+    currentCategory?.name ||
+    decodeURIComponent(kategoriAdi)
+      .replace(/-/g, " ")
+      .replace(/\b\w/g, (l) => l.toUpperCase());
 
-    const key = decodeURIComponent(slug).toLowerCase();
-    return descriptions[key] || "Bu kategoriye ait açıklama henüz eklenmedi.";
+  const categoryColor = currentCategory?.color || theme.palette.primary.main;
+  const categoryDescription = currentCategory?.description || "";
+  const postCount = totalPosts || posts.length;
+
+  // AdminCategoriesPage ile aynı icon belirleme mantığı
+  const getCategoryIcon = () => {
+    if (currentCategory?.icon && AVAILABLE_ICONS[currentCategory.icon]) {
+      return AVAILABLE_ICONS[currentCategory.icon];
+    }
+    return CategoryIcon; // Default icon
   };
 
+  const IconComponent = getCategoryIcon();
+  const loading = postsLoading || categoriesLoading;
+
+  // Header Skeleton Component
+  const HeaderSkeleton = () => (
+    <Box
+      sx={{
+        mb: 5,
+        textAlign: "center",
+        py: 4,
+      }}
+    >
+      <Skeleton
+        variant="circular"
+        width={80}
+        height={80}
+        sx={{ mx: "auto", mb: 2 }}
+      />
+      <Skeleton
+        variant="text"
+        width="40%"
+        height={60}
+        sx={{ mx: "auto", mb: 1.5 }}
+      />
+      <Skeleton variant="text" width="60%" height={30} sx={{ mx: "auto" }} />
+    </Box>
+  );
+
   return (
-    <Container sx={{ mt: 4 }}>
-      {/* Kategori Bilgi Kutusu */}
-      <Paper
-        elevation={0}
-        sx={{
-          p: 3,
-          borderRadius: 3,
-          backgroundColor:
-            theme.palette.mode === "dark"
-              ? "rgba(255,255,255,0.04)"
-              : "rgba(0,0,0,0.03)",
-          backdropFilter: "blur(8px)",
-          mb: 4,
-        }}
-      >
-        <Typography variant="h4" fontWeight="bold" gutterBottom>
-          {formattedCategoryName} Kategorisi
-        </Typography>
-
-        <Typography variant="body1" color="text.secondary" gutterBottom>
-          {getCategoryDescription(kategoriAdi)}
-        </Typography>
-
-        <Typography variant="caption" color="text.disabled">
-          Toplam {posts.length} yazı bulundu.
-        </Typography>
-      </Paper>
-
-      {/* Yükleniyor */}
+    <Container sx={{ mt: 4, mb: 6 }}>
+      {/* Header - Loading ya da Normal */}
       {loading ? (
-        <Box sx={{ display: "flex", justifyContent: "center", mt: 8 }}>
-          <CircularProgress />
+        <HeaderSkeleton />
+      ) : (
+        <Box
+          sx={{
+            mb: 5,
+            textAlign: "center",
+            py: 4,
+          }}
+        >
+          {/* Icon with Badge */}
+          <Badge
+            badgeContent={postCount}
+            max={999}
+            sx={{
+              mb: 2,
+              "& .MuiBadge-badge": {
+                backgroundColor: categoryColor,
+                color: "white",
+                fontWeight: 700,
+                fontSize: "0.75rem",
+                minWidth: "22px",
+                height: "22px",
+                borderRadius: "11px",
+                border: `2px solid ${theme.palette.background.default}`,
+                boxShadow: `0 2px 8px ${alpha(categoryColor, 0.4)}`,
+                top: 8,
+                right: 8,
+              },
+            }}
+          >
+            <Avatar
+              sx={{
+                width: 80,
+                height: 80,
+                backgroundColor: categoryColor,
+                boxShadow: `0 8px 24px ${alpha(categoryColor, 0.3)}`,
+                border: `3px solid ${alpha(categoryColor, 0.2)}`,
+                mx: "auto",
+              }}
+            >
+              <IconComponent
+                sx={{
+                  fontSize: 40,
+                  color: "white",
+                }}
+              />
+            </Avatar>
+          </Badge>
+
+          {/* Category Name - UPPERCASE */}
+          <Typography
+            variant="h2"
+            sx={{
+              fontSize: { xs: "2rem", sm: "2.5rem", md: "3rem" },
+              fontWeight: 800,
+              color: categoryColor,
+              lineHeight: 1.1,
+              mb: 1.5,
+              letterSpacing: "-0.02em",
+              textTransform: "uppercase",
+            }}
+          >
+            {formattedCategoryName}
+          </Typography>
+
+          {/* Category Description */}
+          {categoryDescription && (
+            <Box sx={{ maxWidth: "600px", mx: "auto" }}>
+              <Typography
+                variant="body1"
+                sx={{
+                  fontSize: "1.1rem",
+                  fontWeight: 400,
+                  color: theme.palette.text.secondary,
+                  lineHeight: 1.6,
+                  fontStyle: "italic",
+                }}
+              >
+                "{categoryDescription}"
+              </Typography>
+            </Box>
+          )}
+        </Box>
+      )}
+
+      {/* Posts Grid - Loading ya da Normal */}
+      {loading ? (
+        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 3, mt: 3 }}>
+          {Array.from(new Array(6)).map((_, index) => (
+            <Box
+              key={index}
+              sx={{
+                flex: "1 1 calc(33.333% - 20px)",
+                minWidth: "250px",
+              }}
+            >
+              <Skeleton
+                variant="rectangular"
+                height={200}
+                sx={{ borderRadius: 2, mb: 2 }}
+              />
+              <Skeleton variant="text" width="80%" height={30} sx={{ mb: 1 }} />
+              <Skeleton variant="text" width="60%" height={20} />
+            </Box>
+          ))}
         </Box>
       ) : (
         <>
-          {/* Yazılar Listesi */}
+          {/* Posts Grid */}
           <Box sx={{ display: "flex", flexWrap: "wrap", gap: 3, mt: 3 }}>
             {posts.map((post) => (
               <Box
@@ -121,7 +302,7 @@ function CategoryPage() {
             ))}
           </Box>
 
-          {/* Sayfalama */}
+          {/* Pagination */}
           {totalPages > 1 && (
             <Box sx={{ display: "flex", justifyContent: "center", mt: 5 }}>
               <Pagination
