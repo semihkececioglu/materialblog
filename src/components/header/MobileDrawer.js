@@ -39,7 +39,7 @@ const MobileDrawer = ({
   const hoverBg = isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)";
   const dividerColor = isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)";
 
-  // id’ler: aria-controls hedefleri
+  // id'ler: aria-controls hedefleri
   const catPanelId = "drawer-categories-panel";
   const userPanelId = "drawer-user-panel";
 
@@ -58,7 +58,7 @@ const MobileDrawer = ({
           boxShadow: "0 8px 32px rgba(0,0,0,0.2)",
           borderRadius: "0 12px 12px 0",
         },
-        // Drawer’ın kendisine isim veriyoruz
+        // Drawer'ın kendisine isim veriyoruz
         "aria-label": "Ana menü çekmecesi",
       }}
     >
@@ -124,6 +124,48 @@ const MobileDrawer = ({
               ))}
             </List>
           </Collapse>
+
+          <Divider sx={{ my: 1, backgroundColor: dividerColor }} />
+
+          {/* Hakkımızda */}
+          <ListItemButton
+            component={Link}
+            to="/about"
+            aria-label="Hakkımızda sayfasına git"
+            onClick={() => {
+              window.scrollTo(0, 0);
+              setDrawerOpen(false);
+            }}
+            sx={{ "&:hover": { backgroundColor: hoverBg } }}
+          >
+            <ListItemText
+              primary="Hakkımızda"
+              primaryTypographyProps={{
+                color: "text.primary",
+                fontWeight: 500,
+              }}
+            />
+          </ListItemButton>
+
+          {/* İletişim */}
+          <ListItemButton
+            component={Link}
+            to="/contact"
+            aria-label="İletişim sayfasına git"
+            onClick={() => {
+              window.scrollTo(0, 0);
+              setDrawerOpen(false);
+            }}
+            sx={{ "&:hover": { backgroundColor: hoverBg } }}
+          >
+            <ListItemText
+              primary="İletişim"
+              primaryTypographyProps={{
+                color: "text.primary",
+                fontWeight: 500,
+              }}
+            />
+          </ListItemButton>
 
           <Divider sx={{ my: 1, backgroundColor: dividerColor }} />
 
