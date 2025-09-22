@@ -3,13 +3,15 @@ const router = express.Router();
 const Post = require("../models/Post");
 const User = require("../models/User");
 const Category = require("../models/Category");
+const Tag = require("../models/Tag");
 
-// SLUG İLE POST GETİR (kategori populate)
+// SLUG İLE POST GETİR (kategori + etiket populate)
 router.get("/slug/:slug", async (req, res) => {
   try {
     const post = await Post.findOne({ slug: req.params.slug })
       .populate("user", "username name profileImage")
-      .populate("category", "name slug color icon");
+      .populate("category", "name slug color icon")
+      .populate("tags", "name tagSlug");
 
     if (!post) return res.status(404).json({ message: "Yazı bulunamadı" });
     res.json(post);
@@ -128,8 +130,17 @@ router.get("/", async (req, res) => {
       }
     }
 
-    if (tag) filter.tags = tag;
+    // etiket slug → ObjectId
+    if (tag) {
+      const tagDoc = await Tag.findOne({ tagSlug: tag });
+      if (tagDoc) {
+        filter.tags = tagDoc._id;
+      } else {
+        return res.json({ posts: [], totalPages: 0, currentPage: 1 });
+      }
+    }
 
+    // yazar username → ObjectId
     if (author) {
       const authorUser = await User.findOne({ username: author });
       if (authorUser) {
@@ -150,6 +161,7 @@ router.get("/", async (req, res) => {
       .skip((pageNumber - 1) * pageSize)
       .limit(pageSize)
       .populate("category", "name slug color icon")
+      .populate("tags", "name tagSlug")
       .populate("user", "username name profileImage");
 
     res.json({
@@ -170,7 +182,8 @@ router.get("/latest", async (req, res) => {
       .sort({ date: -1 })
       .limit(5)
       .select("title slug date image")
-      .populate("category", "name slug color icon");
+      .populate("category", "name slug color icon")
+      .populate("tags", "name tagSlug");
 
     res.status(200).json(latestPosts);
   } catch (err) {
@@ -184,6 +197,7 @@ router.get("/:id", async (req, res) => {
   try {
     const post = await Post.findById(req.params.id)
       .populate("category", "name slug color icon")
+      .populate("tags", "name tagSlug")
       .populate("user", "username name profileImage");
 
     if (!post) return res.status(404).json({ error: "Yazı bulunamadı" });
@@ -199,10 +213,9 @@ router.post("/", async (req, res) => {
   try {
     const newPost = new Post(req.body);
     const savedPost = await newPost.save();
-    const populatedPost = await savedPost.populate(
-      "category",
-      "name slug color icon"
-    );
+    const populatedPost = await savedPost
+      .populate("category", "name slug color icon")
+      .populate("tags", "name tagSlug");
     res.status(201).json(populatedPost);
   } catch (err) {
     console.error("Yeni yazı ekleme hatası:", err);
@@ -215,7 +228,9 @@ router.put("/:id", async (req, res) => {
   try {
     const updatedPost = await Post.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
-    }).populate("category", "name slug color icon");
+    })
+      .populate("category", "name slug color icon")
+      .populate("tags", "name tagSlug");
 
     if (!updatedPost) return res.status(404).json({ error: "Yazı bulunamadı" });
     res.json(updatedPost);

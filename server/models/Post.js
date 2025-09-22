@@ -7,7 +7,12 @@ const postSchema = new mongoose.Schema({
   summary: String,
   content: String,
   category: { type: mongoose.Schema.Types.ObjectId, ref: "Category" },
-  tags: [String],
+  tags: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Tag",
+    },
+  ],
   date: {
     type: Date,
     default: Date.now,
@@ -21,6 +26,7 @@ const postSchema = new mongoose.Schema({
   },
 });
 
+// slug otomatik üret
 postSchema.pre("save", function (next) {
   if (this.title && !this.slug) {
     this.slug = slugify(this.title, { lower: true, strict: true });

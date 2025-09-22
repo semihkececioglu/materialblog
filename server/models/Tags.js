@@ -7,7 +7,7 @@ const tagSchema = new mongoose.Schema({
 });
 
 tagSchema.pre("save", function (next) {
-  if (this.name) {
+  if (this.name && !this.tagSlug) {
     this.tagSlug = slugify(this.name, { lower: true, strict: true });
   }
   next();

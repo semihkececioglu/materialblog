@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
-const Tag = require("../models/Tags");
+const Tag = require("../models/Tag");
+const Post = require("../models/Post");
 
 // Get all tags
 router.get("/", async (req, res) => {
@@ -44,6 +45,41 @@ router.delete("/:id", async (req, res) => {
     res.status(204).end();
   } catch (err) {
     res.status(500).json({ error: "Etiket silinemedi" });
+  }
+});
+
+// ✅ Popüler etiketler (en çok kullanılan ilk 6)
+router.get("/popular", async (req, res) => {
+  try {
+    const tags = await Post.aggregate([
+      { $unwind: "$tags" }, // her tag'i ayır
+      { $group: { _id: "$tags", count: { $sum: 1 } } }, // tagId bazlı grupla
+      { $sort: { count: -1 } },
+      { $limit: 6 },
+      {
+        $lookup: {
+          from: "tags", // MongoDB'deki collection ismi (küçük harf + çoğul)
+          localField: "_id",
+          foreignField: "_id",
+          as: "tagDetails",
+        },
+      },
+      { $unwind: "$tagDetails" },
+      {
+        $project: {
+          _id: 0,
+          id: "$tagDetails._id",
+          name: "$tagDetails.name",
+          tagSlug: "$tagDetails.tagSlug",
+          count: 1,
+        },
+      },
+    ]);
+
+    res.json(tags);
+  } catch (err) {
+    console.error("Popüler etiketler alınamadı:", err);
+    res.status(500).json({ error: "Sunucu hatası" });
   }
 });
 
