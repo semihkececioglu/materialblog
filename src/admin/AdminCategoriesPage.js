@@ -1910,6 +1910,7 @@ const AdminCategoriesPage = () => {
               backgroundClip: "text",
               WebkitBackgroundClip: "text",
               color: "rgba(0, 0, 0, 0)",
+              paddingTop: "8px",
             }}
           >
             {editingCategory ? "Kategoriyi Düzenle" : "Yeni Kategori Ekle"}
