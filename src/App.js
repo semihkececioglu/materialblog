@@ -32,6 +32,7 @@ import RoleBasedAdminRedirect from "./auth/RoleBasedAdminRedirect";
 import "./firebase";
 import AboutPage from "./pages/AboutPage";
 import ContactPage from "./pages/ContactPage";
+import AllCategoriesPage from "./pages/AllCategoriesPage";
 // Redux
 import { Provider, useDispatch, useSelector } from "react-redux";
 import store from "./redux/store";
@@ -106,6 +107,7 @@ function App() {
                   path="/category/:kategoriAdi"
                   element={<CategoryPage />}
                 />
+                <Route path="/categories" element={<AllCategoriesPage />} />
                 <Route
                   path="/category/:kategoriAdi/page/:pageNumber"
                   element={<CategoryPage />}
