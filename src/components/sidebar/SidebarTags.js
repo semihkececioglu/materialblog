@@ -1,20 +1,318 @@
-import React from "react";
-import { Box, Typography, Paper, useTheme, Chip } from "@mui/material";
-import { Link } from "react-router-dom";
+import React, { useState, useEffect, useCallback, useRef } from "react";
+import { Box, Typography, Paper, Chip, Skeleton } from "@mui/material";
+import { Link, useLocation } from "react-router-dom";
 import { alpha } from "@mui/material/styles";
 import slugify from "../../utils/slugify";
+import axios from "axios";
+import { BASE_URL } from "../../config";
 
-const tags = [
-  { label: "React", count: 12, color: "#61dafb" },
-  { label: "JavaScript", count: 8, color: "#f0db4f" },
-  { label: "Tasarım", count: 5, color: "#ff6b6b" },
-  { label: "TypeScript", count: 4, color: "#3178c6" },
-  { label: "Node.js", count: 6, color: "#68a063" },
-  { label: "CSS", count: 7, color: "#1572b6" },
+// 6 ayrı renk paleti - modern ve kontrast
+const tagColors = [
+  "#3b82f6", // Blue
+  "#10b981", // Emerald
+  "#f59e0b", // Amber
+  "#ef4444", // Red
+  "#8b5cf6", // Violet
+  "#06b6d4", // Cyan
 ];
 
+// Cache için global variable
+let cachedTags = null;
+let cacheTime = null;
+const CACHE_DURATION = 5 * 60 * 1000; // 5 dakika cache
+
 const SidebarTags = () => {
-  const theme = useTheme();
+  const [tags, setTags] = useState(cachedTags || []);
+  const [loading, setLoading] = useState(!cachedTags);
+  const [error, setError] = useState(false);
+  const location = useLocation();
+  const mountedRef = useRef(true);
+
+  // Component unmount olduğunda ref'i false yap
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
+
+  const fetchPopularTags = useCallback(async (force = false) => {
+    // Cache kontrolü
+    if (
+      !force &&
+      cachedTags &&
+      cacheTime &&
+      Date.now() - cacheTime < CACHE_DURATION
+    ) {
+      if (mountedRef.current) {
+        setTags(cachedTags);
+        setLoading(false);
+      }
+      return;
+    }
+
+    try {
+      if (mountedRef.current) {
+        setLoading(true);
+        setError(false);
+      }
+
+      const response = await axios.get(`${BASE_URL}/api/tags/popular`);
+
+      // Component hala mount edilmiş mi kontrol et
+      if (!mountedRef.current) return;
+
+      console.log("Tags response:", response.data);
+
+      // Veri kontrolü
+      if (
+        response.data &&
+        Array.isArray(response.data) &&
+        response.data.length > 0
+      ) {
+        // Her etikete bir renk ata
+        const tagsWithColors = response.data.map((tag, index) => ({
+          ...tag,
+          color: tagColors[index % tagColors.length],
+        }));
+
+        // Cache'e kaydet
+        cachedTags = tagsWithColors;
+        cacheTime = Date.now();
+
+        if (mountedRef.current) {
+          setTags(tagsWithColors);
+        }
+      } else {
+        console.warn("Geçersiz veri formatı:", response.data);
+        if (mountedRef.current) {
+          setTags([]);
+        }
+      }
+    } catch (err) {
+      console.error("Popüler etiketler yüklenemedi:", err);
+      if (mountedRef.current) {
+        setError(true);
+        setTags([]);
+      }
+    } finally {
+      if (mountedRef.current) {
+        setLoading(false);
+      }
+    }
+  }, []);
+
+  // İlk yüklemede ve route değişimlerinde
+  useEffect(() => {
+    fetchPopularTags();
+  }, [fetchPopularTags]);
+
+  // Route değişimlerinde cache'i kontrol et
+  useEffect(() => {
+    if (cachedTags && cachedTags.length > 0) {
+      setTags(cachedTags);
+      setLoading(false);
+      setError(false);
+    }
+  }, [location.pathname]);
+
+  // Retry fonksiyonu
+  const handleRetry = useCallback(() => {
+    cachedTags = null;
+    cacheTime = null;
+    fetchPopularTags(true);
+  }, [fetchPopularTags]);
+
+  // Loading skeleton
+  if (loading && (!tags || tags.length === 0)) {
+    return (
+      <Paper
+        elevation={0}
+        sx={{
+          p: 2,
+          mt: 3,
+          borderRadius: 2,
+          bgcolor: (theme) =>
+            theme.palette.mode === "dark"
+              ? alpha(theme.palette.background.paper, 0.4)
+              : alpha(theme.palette.background.paper, 0.85),
+          backdropFilter: "blur(12px)",
+          border: "1px solid",
+          borderColor: "divider",
+        }}
+      >
+        {/* Başlık */}
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
+          <Box
+            sx={{
+              width: 3,
+              height: 16,
+              borderRadius: 0.5,
+              bgcolor: "primary.main",
+            }}
+          />
+          <Typography
+            component="h2"
+            variant="h3"
+            sx={{
+              fontWeight: 600,
+              color: "text.primary",
+              fontSize: "1rem",
+            }}
+          >
+            Etiketler
+          </Typography>
+        </Box>
+
+        {/* Loading skeletons - 2 satır dinamik genişlik */}
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 0.75 }}>
+          {Array.from({ length: 2 }).map((_, rowIndex) => (
+            <Box
+              key={rowIndex}
+              sx={{ display: "flex", gap: 0.75, justifyContent: "flex-start" }}
+            >
+              {Array.from({ length: 3 }).map((_, colIndex) => (
+                <Box
+                  key={colIndex}
+                  sx={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 0.25,
+                    height: 24,
+                    px: 0.5,
+                    borderRadius: 1.5,
+                    bgcolor: (t) => alpha(t.palette.primary.main, 0.08),
+                    border: (t) =>
+                      `1px solid ${alpha(t.palette.primary.main, 0.2)}`,
+                  }}
+                >
+                  <Skeleton
+                    variant="text"
+                    width={Math.random() * 20 + 25}
+                    height={12}
+                    sx={{ borderRadius: 1 }}
+                  />
+                  <Skeleton variant="circular" width={12} height={12} />
+                </Box>
+              ))}
+            </Box>
+          ))}
+        </Box>
+      </Paper>
+    );
+  }
+
+  // Error state
+  if (error && (!tags || tags.length === 0)) {
+    return (
+      <Paper
+        elevation={0}
+        sx={{
+          p: 2,
+          mt: 3,
+          borderRadius: 2,
+          bgcolor: (theme) =>
+            theme.palette.mode === "dark"
+              ? alpha(theme.palette.background.paper, 0.4)
+              : alpha(theme.palette.background.paper, 0.85),
+          backdropFilter: "blur(12px)",
+          border: "1px solid",
+          borderColor: "divider",
+        }}
+      >
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
+          <Box
+            sx={{
+              width: 3,
+              height: 16,
+              borderRadius: 0.5,
+              bgcolor: "primary.main",
+            }}
+          />
+          <Typography
+            component="h2"
+            variant="h3"
+            sx={{
+              fontWeight: 600,
+              color: "text.primary",
+              fontSize: "1rem",
+            }}
+          >
+            Etiketler
+          </Typography>
+        </Box>
+        <Typography
+          variant="body2"
+          color="text.secondary"
+          sx={{ fontStyle: "italic", mb: 1 }}
+        >
+          Etiketler yüklenemedi
+        </Typography>
+        <Typography
+          variant="caption"
+          color="primary.main"
+          sx={{
+            cursor: "pointer",
+            textDecoration: "underline",
+            "&:hover": { opacity: 0.8 },
+          }}
+          onClick={handleRetry}
+        >
+          Tekrar dene
+        </Typography>
+      </Paper>
+    );
+  }
+
+  // Eğer tags varsa ama boşsa
+  if (!tags || tags.length === 0) {
+    return (
+      <Paper
+        elevation={0}
+        sx={{
+          p: 2,
+          mt: 3,
+          borderRadius: 2,
+          bgcolor: (theme) =>
+            theme.palette.mode === "dark"
+              ? alpha(theme.palette.background.paper, 0.4)
+              : alpha(theme.palette.background.paper, 0.85),
+          backdropFilter: "blur(12px)",
+          border: "1px solid",
+          borderColor: "divider",
+        }}
+      >
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
+          <Box
+            sx={{
+              width: 3,
+              height: 16,
+              borderRadius: 0.5,
+              bgcolor: "primary.main",
+            }}
+          />
+          <Typography
+            component="h2"
+            variant="h3"
+            sx={{
+              fontWeight: 600,
+              color: "text.primary",
+              fontSize: "1rem",
+            }}
+          >
+            Etiketler
+          </Typography>
+        </Box>
+        <Typography
+          variant="body2"
+          color="text.secondary"
+          sx={{ fontStyle: "italic" }}
+        >
+          Henüz etiket bulunmuyor
+        </Typography>
+      </Paper>
+    );
+  }
 
   return (
     <Paper
@@ -30,6 +328,15 @@ const SidebarTags = () => {
         backdropFilter: "blur(12px)",
         border: "1px solid",
         borderColor: "divider",
+        transition: "all 0.3s ease",
+        "&:hover": {
+          bgcolor: (theme) =>
+            theme.palette.mode === "dark"
+              ? alpha(theme.palette.background.paper, 0.5)
+              : alpha(theme.palette.background.paper, 0.95),
+          transform: "translateY(-1px)",
+          boxShadow: "0 4px 20px rgba(0, 0, 0, 0.1)",
+        },
       }}
     >
       {/* Başlık */}
@@ -40,6 +347,7 @@ const SidebarTags = () => {
             height: 16,
             borderRadius: 0.5,
             bgcolor: "primary.main",
+            transition: "all 0.3s ease",
           }}
         />
         <Typography
@@ -55,87 +363,245 @@ const SidebarTags = () => {
         </Typography>
       </Box>
 
-      {/* Etiketler */}
-      <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
-        {tags.map((tag, index) => {
-          return (
-            <Chip
-              key={index}
-              label={
-                <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-                  <Typography
-                    component="span"
-                    sx={{
-                      fontSize: "0.75rem",
-                      fontWeight: 600,
-                      color: "text.primary",
-                    }}
-                  >
-                    {tag.label}
-                  </Typography>
-                  <Typography
-                    component="span"
-                    sx={{
-                      fontSize: "0.7rem",
-                      fontWeight: 400,
-                      color: "text.secondary",
-                      opacity: 0.9,
-                    }}
-                  >
-                    {tag.count}
-                  </Typography>
-                </Box>
-              }
-              component={Link}
-              to={`/tag/${slugify(tag.label)}`}
-              clickable
-              size="small"
-              sx={{
-                height: 28,
-                borderRadius: 2,
-                px: 1,
-                // Glassmorphism efekti + hafif renk
-                bgcolor: (theme) =>
-                  theme.palette.mode === "dark"
-                    ? alpha(tag.color, 0.1)
-                    : alpha(tag.color, 0.08),
-                backdropFilter: "blur(10px)",
-                border: "1px solid",
-                borderColor: (theme) =>
-                  theme.palette.mode === "dark"
-                    ? alpha(tag.color, 0.2)
-                    : alpha(tag.color, 0.15),
-                // İyi kontrast için text renkleri
-                color: "text.primary",
-                fontWeight: 500,
-                transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-                "&:hover": {
-                  // Hover'da daha belirgin glassmorphism + renk
+      {/* Etiketler - 2 satır x 3 sütun dinamik genişlik */}
+      <Box sx={{ display: "flex", flexDirection: "column", gap: 0.75 }}>
+        {/* İlk satır - 3 etiket */}
+        <Box sx={{ display: "flex", gap: 0.75, justifyContent: "flex-start" }}>
+          {tags.slice(0, 3).map((tag, index) => {
+            // Güvenli veri kontrolü
+            if (!tag || !tag.name) {
+              console.warn("Geçersiz tag verisi:", tag);
+              return null;
+            }
+
+            return (
+              <Box
+                key={tag.id || tag._id || index}
+                component={Link}
+                to={`/tag/${slugify(tag.name)}`}
+                sx={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 0.25,
+                  height: 24,
+                  px: 0.5,
+                  borderRadius: 1.5,
+                  textDecoration: "none",
                   bgcolor: (theme) =>
                     theme.palette.mode === "dark"
-                      ? alpha(tag.color, 0.2)
-                      : alpha(tag.color, 0.15),
+                      ? alpha(tag.color, 0.12)
+                      : alpha(tag.color, 0.08),
+                  border: "1px solid",
                   borderColor: (theme) =>
                     theme.palette.mode === "dark"
-                      ? alpha(tag.color, 0.4)
-                      : alpha(tag.color, 0.3),
-                  transform: "translateY(-2px)",
-                  boxShadow: (theme) =>
-                    theme.palette.mode === "dark"
-                      ? `0 8px 32px ${alpha(tag.color, 0.2)}`
-                      : `0 8px 32px ${alpha(tag.color, 0.15)}`,
-                  "& .MuiChip-label": {
-                    color: "text.primary",
+                      ? alpha(tag.color, 0.25)
+                      : alpha(tag.color, 0.2),
+                  transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+                  position: "relative",
+                  overflow: "hidden",
+                  "&::before": {
+                    content: '""',
+                    position: "absolute",
+                    top: 0,
+                    left: "-100%",
+                    width: "100%",
+                    height: "100%",
+                    background: `linear-gradient(90deg, transparent, ${alpha(
+                      tag.color,
+                      0.1
+                    )}, transparent)`,
+                    transition: "left 0.5s ease",
                   },
-                },
-                "&:active": {
-                  transform: "translateY(0px)",
-                },
-              }}
-            />
-          );
-        })}
+                  "&:hover": {
+                    bgcolor: (theme) =>
+                      theme.palette.mode === "dark"
+                        ? alpha(tag.color, 0.2)
+                        : alpha(tag.color, 0.15),
+                    borderColor: (theme) =>
+                      theme.palette.mode === "dark"
+                        ? alpha(tag.color, 0.4)
+                        : alpha(tag.color, 0.35),
+                    transform: "translateY(-1px) scale(1.02)",
+                    boxShadow: `0 6px 20px ${alpha(tag.color, 0.2)}`,
+                    "&::before": {
+                      left: "100%",
+                    },
+                  },
+                  "&:active": {
+                    transform: "translateY(0) scale(1.01)",
+                  },
+                }}
+              >
+                <Typography
+                  component="span"
+                  sx={{
+                    fontSize: "0.65rem",
+                    fontWeight: 600,
+                    color: "text.primary",
+                    lineHeight: 1,
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  #{tag.name}
+                </Typography>
+                <Box
+                  sx={{
+                    minWidth: 12,
+                    height: 12,
+                    borderRadius: "50%",
+                    bgcolor: (theme) =>
+                      theme.palette.mode === "dark"
+                        ? alpha(tag.color, 0.3)
+                        : alpha(tag.color, 0.2),
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    border: `1px solid ${alpha(tag.color, 0.4)}`,
+                  }}
+                >
+                  <Typography
+                    component="span"
+                    sx={{
+                      fontSize: "0.55rem",
+                      fontWeight: 700,
+                      color: tag.color,
+                      lineHeight: 1,
+                    }}
+                  >
+                    {tag.count || 0}
+                  </Typography>
+                </Box>
+              </Box>
+            );
+          })}
+        </Box>
+
+        {/* İkinci satır - 3 etiket */}
+        <Box sx={{ display: "flex", gap: 0.75, justifyContent: "flex-start" }}>
+          {tags.slice(3, 6).map((tag, index) => {
+            // Güvenli veri kontrolü
+            if (!tag || !tag.name) {
+              console.warn("Geçersiz tag verisi:", tag);
+              return null;
+            }
+
+            return (
+              <Box
+                key={tag.id || tag._id || `row2-${index}`}
+                component={Link}
+                to={`/tag/${slugify(tag.name)}`}
+                sx={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 0.25,
+                  height: 24,
+                  px: 0.5,
+                  borderRadius: 1.5,
+                  textDecoration: "none",
+                  bgcolor: (theme) =>
+                    theme.palette.mode === "dark"
+                      ? alpha(tag.color, 0.12)
+                      : alpha(tag.color, 0.08),
+                  border: "1px solid",
+                  borderColor: (theme) =>
+                    theme.palette.mode === "dark"
+                      ? alpha(tag.color, 0.25)
+                      : alpha(tag.color, 0.2),
+                  transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+                  position: "relative",
+                  overflow: "hidden",
+                  "&::before": {
+                    content: '""',
+                    position: "absolute",
+                    top: 0,
+                    left: "-100%",
+                    width: "100%",
+                    height: "100%",
+                    background: `linear-gradient(90deg, transparent, ${alpha(
+                      tag.color,
+                      0.1
+                    )}, transparent)`,
+                    transition: "left 0.5s ease",
+                  },
+                  "&:hover": {
+                    bgcolor: (theme) =>
+                      theme.palette.mode === "dark"
+                        ? alpha(tag.color, 0.2)
+                        : alpha(tag.color, 0.15),
+                    borderColor: (theme) =>
+                      theme.palette.mode === "dark"
+                        ? alpha(tag.color, 0.4)
+                        : alpha(tag.color, 0.35),
+                    transform: "translateY(-1px) scale(1.02)",
+                    boxShadow: `0 6px 20px ${alpha(tag.color, 0.2)}`,
+                    "&::before": {
+                      left: "100%",
+                    },
+                  },
+                  "&:active": {
+                    transform: "translateY(0) scale(1.01)",
+                  },
+                }}
+              >
+                <Typography
+                  component="span"
+                  sx={{
+                    fontSize: "0.65rem",
+                    fontWeight: 600,
+                    color: "text.primary",
+                    lineHeight: 1,
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  #{tag.name}
+                </Typography>
+                <Box
+                  sx={{
+                    minWidth: 12,
+                    height: 12,
+                    borderRadius: "50%",
+                    bgcolor: (theme) =>
+                      theme.palette.mode === "dark"
+                        ? alpha(tag.color, 0.3)
+                        : alpha(tag.color, 0.2),
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    border: `1px solid ${alpha(tag.color, 0.4)}`,
+                  }}
+                >
+                  <Typography
+                    component="span"
+                    sx={{
+                      fontSize: "0.55rem",
+                      fontWeight: 700,
+                      color: tag.color,
+                      lineHeight: 1,
+                    }}
+                  >
+                    {tag.count || 0}
+                  </Typography>
+                </Box>
+              </Box>
+            );
+          })}
+        </Box>
       </Box>
+
+      {/* Alt bilgi */}
+      <Typography
+        variant="caption"
+        color="text.secondary"
+        sx={{
+          mt: 1.5,
+          display: "block",
+          fontStyle: "italic",
+          textAlign: "center",
+          opacity: 0.8,
+        }}
+      >
+        En çok kullanılan etiketler
+      </Typography>
     </Paper>
   );
 };

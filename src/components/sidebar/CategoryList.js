@@ -35,6 +35,7 @@ import {
   Build as BuildIcon,
   DirectionsCar as DirectionsCarIcon,
   LocalLibrary as LocalLibraryIcon,
+  ArrowForward as ArrowForwardIcon,
 } from "@mui/icons-material";
 
 // AdminCategoriesPage ile aynı icon mapping'i kullan
@@ -87,7 +88,7 @@ const CategoryList = () => {
     return CategoryIcon; // Default icon
   };
 
-  // Loading skeleton component
+  // Loading skeleton component - yeni düzene uygun
   const CategorySkeleton = () => (
     <ListItem disablePadding sx={{ mb: 0.75 }}>
       <Paper
@@ -95,27 +96,58 @@ const CategoryList = () => {
         sx={{
           width: "100%",
           p: 1.5,
-          borderRadius: 1.5,
+          borderRadius: 2.5,
           display: "flex",
           alignItems: "center",
-          gap: 1,
+          gap: 1.5,
           bgcolor: (theme) => alpha(theme.palette.background.default, 0.3),
           border: "1px solid",
           borderColor: "divider",
         }}
       >
+        {/* Icon skeleton */}
         <Skeleton
           variant="rounded"
-          width={32}
-          height={32}
-          sx={{ borderRadius: 1 }}
+          width={40}
+          height={40}
+          sx={{ borderRadius: 2 }}
         />
+
+        {/* Text content skeleton */}
         <Box sx={{ flex: 1 }}>
-          <Skeleton variant="text" width="70%" height={16} sx={{ mb: 0.5 }} />
-          <Skeleton variant="text" width="50%" height={12} />
+          <Skeleton variant="text" width="75%" height={18} sx={{ mb: 0.25 }} />
+          <Skeleton variant="text" width="45%" height={14} />
         </Box>
+
+        {/* Arrow skeleton */}
+        <Skeleton variant="circular" width={16} height={16} />
       </Paper>
     </ListItem>
+  );
+
+  // "Tüm Kategoriler" button skeleton
+  const AllCategoriesSkeleton = () => (
+    <Box sx={{ mt: 1.5 }}>
+      <Paper
+        elevation={0}
+        sx={{
+          width: "100%",
+          p: 1.5,
+          borderRadius: 2.5,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: 1.5,
+          bgcolor: (theme) => alpha(theme.palette.background.default, 0.3),
+          border: "1px dashed",
+          borderColor: "divider",
+        }}
+      >
+        <Skeleton variant="circular" width={18} height={18} />
+        <Skeleton variant="text" width={100} height={16} />
+        <Skeleton variant="circular" width={16} height={16} />
+      </Paper>
+    </Box>
   );
 
   return (
@@ -128,20 +160,14 @@ const CategoryList = () => {
         bgcolor: (theme) =>
           theme.palette.mode === "dark"
             ? alpha(theme.palette.background.paper, 0.4)
-            : alpha(theme.palette.background.paper, 0.8),
+            : alpha(theme.palette.background.paper, 0.85),
         backdropFilter: "blur(12px)",
         border: "1px solid",
         borderColor: "divider",
       }}
     >
-      <Box
-        sx={{
-          display: "flex",
-          alignItems: "center",
-          gap: 1,
-          mb: 2,
-        }}
-      >
+      {/* Başlık - orijinal hali */}
+      <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
         <Box
           sx={{
             width: 3,
@@ -151,6 +177,7 @@ const CategoryList = () => {
           }}
         />
         <Typography
+          component="h2"
           variant="h3"
           sx={{
             fontWeight: 600,
@@ -169,6 +196,7 @@ const CategoryList = () => {
             {Array.from({ length: 4 }).map((_, index) => (
               <CategorySkeleton key={`skeleton-${index}`} />
             ))}
+            <AllCategoriesSkeleton />
           </>
         )}
 
@@ -177,24 +205,36 @@ const CategoryList = () => {
           <Box
             sx={{
               textAlign: "center",
-              py: 3,
-              opacity: 0.6,
+              py: 4,
+              opacity: 0.7,
             }}
           >
-            <CategoryIcon
+            <Box
               sx={{
-                fontSize: 32,
-                color: "text.disabled",
-                mb: 1,
+                width: 64,
+                height: 64,
+                borderRadius: 3,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                bgcolor: (theme) => alpha(theme.palette.text.disabled, 0.1),
+                mx: "auto",
+                mb: 2,
               }}
-            />
+            >
+              <CategoryIcon
+                sx={{
+                  fontSize: 32,
+                  color: "text.disabled",
+                }}
+              />
+            </Box>
             <Typography
-              variant="caption"
+              variant="body2"
               color="text.secondary"
               sx={{
-                fontSize: "0.75rem",
-                display: "block",
-                lineHeight: 1.4,
+                fontSize: "0.85rem",
+                fontWeight: 500,
               }}
             >
               Henüz kategori bulunmuyor
@@ -204,9 +244,9 @@ const CategoryList = () => {
 
         {/* Featured kategoriler listesi */}
         {!loading &&
-          featuredCategories.map((category) => {
+          featuredCategories.map((category, index) => {
             const IconComponent = getIconComponent(category.icon);
-            const categoryColor = category.color || "#999999"; // fallback color
+            const categoryColor = category.color || "#6366f1"; // modern fallback color
 
             return (
               <ListItem key={category._id} disablePadding sx={{ mb: 0.75 }}>
@@ -217,24 +257,28 @@ const CategoryList = () => {
                   sx={{
                     width: "100%",
                     p: 1.5,
-                    borderRadius: 1.5,
+                    borderRadius: 2.5,
                     display: "flex",
                     alignItems: "center",
-                    gap: 1,
+                    gap: 1.5,
                     textDecoration: "none",
                     color: "text.primary",
-                    bgcolor: alpha(categoryColor, 0.08),
+                    bgcolor: alpha(categoryColor, 0.06),
                     border: "1px solid",
-                    borderColor: alpha(categoryColor, 0.15),
-                    transition: "all 0.25s cubic-bezier(0.4, 0, 0.2, 1)",
+                    borderColor: alpha(categoryColor, 0.12),
+                    transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
                     position: "relative",
                     overflow: "hidden",
                     "&:hover": {
                       bgcolor: alpha(categoryColor, 0.12),
-                      transform: "translateX(4px)",
+                      transform: "translateX(8px) scale(1.02)",
                       borderColor: alpha(categoryColor, 0.25),
-                      boxShadow: `0 4px 12px ${alpha(categoryColor, 0.15)}`,
+                      boxShadow: `0 8px 25px ${alpha(categoryColor, 0.2)}`,
                       "&:before": {
+                        width: 4,
+                      },
+                      "& .category-arrow": {
+                        opacity: 1,
                         transform: "translateX(0)",
                       },
                     },
@@ -244,29 +288,30 @@ const CategoryList = () => {
                       top: 0,
                       left: 0,
                       bottom: 0,
-                      width: 3,
+                      width: 0,
                       bgcolor: categoryColor,
-                      transform: "translateX(-100%)",
-                      transition: "transform 0.25s ease",
+                      transition: "width 0.3s ease",
+                      borderRadius: "0 4px 4px 0",
                     },
                   }}
                 >
                   {/* İkon container */}
                   <Box
                     sx={{
-                      width: 32,
-                      height: 32,
+                      width: 40,
+                      height: 40,
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
-                      borderRadius: 1,
+                      borderRadius: 2,
                       bgcolor: alpha(categoryColor, 0.15),
                       color: categoryColor,
                       position: "relative",
                       zIndex: 1,
+                      boxShadow: `0 2px 8px ${alpha(categoryColor, 0.2)}`,
                     }}
                   >
-                    <IconComponent sx={{ fontSize: 18 }} />
+                    <IconComponent sx={{ fontSize: 20 }} />
                   </Box>
 
                   {/* Kategori bilgileri */}
@@ -280,12 +325,13 @@ const CategoryList = () => {
                   >
                     <Typography
                       sx={{
-                        fontWeight: 600,
+                        fontWeight: 650,
                         mb: 0.25,
-                        fontSize: "0.875rem",
+                        fontSize: "0.9rem",
                         overflow: "hidden",
                         textOverflow: "ellipsis",
                         whiteSpace: "nowrap",
+                        letterSpacing: "-0.25px",
                       }}
                     >
                       {category.name}
@@ -295,6 +341,7 @@ const CategoryList = () => {
                       sx={{
                         color: "text.secondary",
                         fontSize: "0.75rem",
+                        fontWeight: 500,
                         display: "flex",
                         alignItems: "center",
                         gap: 0.5,
@@ -303,6 +350,20 @@ const CategoryList = () => {
                       {category.postCount || 0} yazı
                     </Typography>
                   </Box>
+
+                  {/* Arrow icon */}
+                  <ArrowForwardIcon
+                    className="category-arrow"
+                    sx={{
+                      fontSize: 16,
+                      color: categoryColor,
+                      opacity: 0,
+                      transform: "translateX(-8px)",
+                      transition: "all 0.3s ease",
+                      position: "relative",
+                      zIndex: 1,
+                    }}
+                  />
                 </Paper>
               </ListItem>
             );
@@ -311,14 +372,7 @@ const CategoryList = () => {
 
       {/* Tüm kategorileri görme linki */}
       {!loading && featuredCategories.length > 0 && (
-        <Box
-          sx={{
-            mt: 2,
-            pt: 1.5,
-            borderTop: "1px solid",
-            borderColor: "divider",
-          }}
-        >
+        <Box sx={{ mt: 1.5 }}>
           <Paper
             component={Link}
             to="/categories"
@@ -326,33 +380,71 @@ const CategoryList = () => {
             sx={{
               width: "100%",
               p: 1.5,
-              borderRadius: 1.5,
+              borderRadius: 2.5,
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              gap: 1,
+              gap: 1.5,
               textDecoration: "none",
               color: "text.secondary",
-              bgcolor: (theme) => alpha(theme.palette.primary.main, 0.05),
-              border: "1px solid",
-              borderColor: (theme) => alpha(theme.palette.primary.main, 0.1),
-              transition: "all 0.2s ease",
+              bgcolor: (theme) => alpha(theme.palette.primary.main, 0.06),
+              border: "1px dashed",
+              borderColor: (theme) => alpha(theme.palette.primary.main, 0.2),
+              transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+              position: "relative",
+              overflow: "hidden",
               "&:hover": {
-                bgcolor: (theme) => alpha(theme.palette.primary.main, 0.08),
+                bgcolor: (theme) => alpha(theme.palette.primary.main, 0.1),
                 color: "primary.main",
-                borderColor: (theme) => alpha(theme.palette.primary.main, 0.2),
+                borderColor: (theme) => alpha(theme.palette.primary.main, 0.4),
+                borderStyle: "solid",
+                transform: "translateY(-1px)",
+                boxShadow: (theme) =>
+                  `0 4px 20px ${alpha(theme.palette.primary.main, 0.15)}`,
+                "& .all-categories-arrow": {
+                  transform: "translateX(4px)",
+                },
+              },
+              "&:before": {
+                content: '""',
+                position: "absolute",
+                inset: 0,
+                background: (theme) =>
+                  `linear-gradient(45deg, ${alpha(
+                    theme.palette.primary.main,
+                    0.02
+                  )} 25%, transparent 25%), 
+                   linear-gradient(-45deg, ${alpha(
+                     theme.palette.primary.main,
+                     0.02
+                   )} 25%, transparent 25%)`,
+                backgroundSize: "8px 8px",
+                opacity: 0.5,
               },
             }}
           >
-            <CategoryIcon sx={{ fontSize: 16 }} />
+            <CategoryIcon
+              sx={{ fontSize: 18, position: "relative", zIndex: 1 }}
+            />
             <Typography
               sx={{
-                fontWeight: 500,
-                fontSize: "0.8rem",
+                fontWeight: 600,
+                fontSize: "0.85rem",
+                position: "relative",
+                zIndex: 1,
               }}
             >
               Tüm Kategoriler
             </Typography>
+            <ArrowForwardIcon
+              className="all-categories-arrow"
+              sx={{
+                fontSize: 16,
+                transition: "transform 0.3s ease",
+                position: "relative",
+                zIndex: 1,
+              }}
+            />
           </Paper>
         </Box>
       )}
