@@ -3,7 +3,7 @@ const router = express.Router();
 const Post = require("../models/Post");
 const User = require("../models/User");
 const Category = require("../models/Category");
-const Tag = require("../models/Tag");
+const Tag = require("../models/Tags");
 
 // SLUG İLE POST GETİR (kategori + etiket populate)
 router.get("/slug/:slug", async (req, res) => {

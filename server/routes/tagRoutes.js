@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const Tag = require("../models/Tag");
+const Tag = require("../models/Tags");
 const Post = require("../models/Post");
 
 // Get all tags
