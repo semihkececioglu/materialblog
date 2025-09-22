@@ -38,7 +38,6 @@ const Home = () => {
 
   return (
     <Container maxWidth="lg" sx={{ mt: 4 }}>
-      {/* Slider - kendi içinde loading skeleton'u var */}
       <HomeSlider />
 
       <Box
@@ -138,7 +137,7 @@ const Home = () => {
 
         {/* Sidebar */}
         <Box sx={{ flex: 1 }}>
-          {loading ? <SidebarSkeleton /> : <Sidebar />}
+          <Sidebar />
         </Box>
       </Box>
     </Container>
