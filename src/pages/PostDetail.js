@@ -29,7 +29,6 @@ import ScrollProgressBar from "../components/postDetail/ScrollProgressBar";
 import TableOfContents from "../components/postDetail/TableOfContents";
 import ShareDialog from "../components/ShareDialog";
 import slugify from "../utils/slugify";
-import SidebarSkeleton from "../components/skeletons/SidebarSkeleton";
 import PostDetailSkeleton from "../components/skeletons/PostDetailSkeleton";
 
 import { useDispatch, useSelector } from "react-redux";
@@ -172,7 +171,7 @@ function PostDetail() {
         >
           <PostDetailSkeleton />
           <Box sx={{ flex: 1 }}>
-            <SidebarSkeleton />
+            <Sidebar />
           </Box>
         </Box>
       </Container>
@@ -517,12 +516,12 @@ function PostDetail() {
                       gap: 1,
                     }}
                   >
-                    {post.tags.map((tag, index) => (
+                    {post.tags.map((tag) => (
                       <Chip
-                        key={index}
-                        label={`#${tag}`}
+                        key={tag._id}
+                        label={`#${tag.name}`}
                         component={Link}
-                        to={`/tag/${tag}`}
+                        to={`/tag/${tag.tagSlug}`}
                         clickable
                         sx={{
                           bgcolor: (theme) =>
