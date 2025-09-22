@@ -70,13 +70,13 @@ import {
   updatePost,
 } from "../redux/postSlice";
 
-// ✅ ReactQuill lazy import
+// ReactQuill lazy import
 const ReactQuill = React.lazy(() => import("react-quill"));
 
 // Constants from AdminPostsPage
 const CONTROL_H = 42;
 
-// ✅ Cloudinary upload
+// Cloudinary upload
 const uploadToCloudinary = async (file) => {
   const formData = new FormData();
   formData.append("file", file);
@@ -162,7 +162,7 @@ const PreviewDialog = ({ open, onClose, post, categories = [] }) => {
         }}
       >
         <Typography variant="h5" fontWeight={700}>
-          📖 Yazı Önizlemesi
+          Yazı Önizlemesi
         </Typography>
         <IconButton onClick={onClose} size="small">
           <CloseIcon />
@@ -212,15 +212,22 @@ const PreviewDialog = ({ open, onClose, post, categories = [] }) => {
                 }}
               />
             )}
+            {/* PreviewDialog içindeki tags render'ı */}
             {Array.isArray(post.tags) &&
-              post.tags.map((tag, i) => (
-                <Chip
-                  key={i}
-                  label={typeof tag === "string" ? tag : String(tag)}
-                  size="small"
-                  variant="outlined"
-                />
-              ))}
+              post.tags.map((tag, i) => {
+                const tagName = typeof tag === "string" ? tag : tag.name;
+                const tagKey =
+                  typeof tag === "string" ? `preview-${tag}` : tag._id;
+
+                return (
+                  <Chip
+                    key={tagKey}
+                    label={tagName || "Etiketsiz"}
+                    size="small"
+                    variant="outlined"
+                  />
+                );
+              })}
           </Stack>
 
           {post.summary && (
@@ -291,6 +298,7 @@ const PostEditorPage = () => {
     message: "",
     severity: "success",
   });
+  const [tagInputValue, setTagInputValue] = useState("");
 
   // Quill modules
   const [quillModules, setQuillModules] = useState(null);
@@ -386,6 +394,9 @@ const PostEditorPage = () => {
       if (id) {
         try {
           const post = await dispatch(fetchPostById(id)).unwrap();
+          console.log("Post verisi:", post); // Debug için
+          console.log("Post tags:", post.tags); // Debug için
+
           setForm({
             title: post.title || "",
             category: post.category?._id || "",
@@ -398,7 +409,7 @@ const PostEditorPage = () => {
               : "",
             summary: post.summary || "",
             content: post.content || "",
-            tags: post.tags || [],
+            tags: post.tags || [], // ✅ Backend'den gelen tag objeleri
           });
         } catch (err) {
           console.error("Yazı alınamadı:", err);
@@ -538,6 +549,44 @@ const PostEditorPage = () => {
     }
   };
 
+  // ✅ Yeni tag ekleme helper
+  const handleAddTag = async (rawName) => {
+    const name = rawName.trim();
+    if (!name) return;
+
+    // Zaten varsa tekrar ekleme
+    const existing = allTags.find(
+      (t) => t.name.toLowerCase() === name.toLowerCase()
+    );
+    if (existing) {
+      if (!form.tags.some((t) => t._id === existing._id)) {
+        setForm({ ...form, tags: [...form.tags, existing] });
+      }
+      setTagInputValue("");
+      return;
+    }
+
+    try {
+      const res = await axios.post(`${BASE_URL}/api/tags`, { name });
+      setAllTags((prev) => [...prev, res.data]);
+      setForm({ ...form, tags: [...form.tags, res.data] });
+      setSnackbar({
+        open: true,
+        message: "Etiket eklendi",
+        severity: "success",
+      });
+    } catch (err) {
+      console.error("Etiket oluşturulamadı:", err);
+      setSnackbar({
+        open: true,
+        message: "Etiket eklenemedi",
+        severity: "error",
+      });
+    } finally {
+      setTagInputValue("");
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -564,25 +613,35 @@ const PostEditorPage = () => {
 
     setIsSubmitting(true);
 
+    // ✅ Yeni etiketleri backend'e ekle
+    const processedTags = [];
+
     for (const tag of form.tags) {
-      const exists = allTags.some(
-        (t) => t.name.toLowerCase() === tag.toLowerCase()
-      );
-      if (!exists) {
+      if (typeof tag === "string") {
+        // Yeni etiket (string olarak gelir)
         try {
-          await axios.post(`${BASE_URL}/api/tags`, { name: tag });
+          const response = await axios.post(`${BASE_URL}/api/tags`, {
+            name: tag,
+          });
+          processedTags.push(response.data._id);
         } catch (err) {
           console.error("Yeni etiket eklenemedi:", err);
         }
+      } else if (tag._id) {
+        // Mevcut etiket (obje olarak gelir)
+        processedTags.push(tag._id);
       }
     }
 
+    // Etiketler zaten oluşturulmuş (yeni eklenenler Enter ile kaydedildi)
     const payload = {
       ...form,
-      tags: form.tags.map((t) => t.trim()),
+      tags: form.tags.map((t) => t._id),
       category: form.category,
       user: user?._id,
     };
+
+    console.log("Gönderilecek payload:", payload); // Debug için
 
     try {
       if (id) {
@@ -927,6 +986,7 @@ const PostEditorPage = () => {
                     />
                   )}
 
+                  {/* Header'daki tags chip'i */}
                   {form.tags.length > 0 && (
                     <Chip
                       icon={<LocalOfferIcon sx={{ fontSize: 18 }} />}
@@ -1154,25 +1214,29 @@ const PostEditorPage = () => {
                       >
                         {categories.map((cat) => (
                           <MenuItem key={cat._id} value={cat._id}>
-                            <Stack
-                              direction="row"
-                              alignItems="center"
-                              spacing={1.5}
+                            <Box
+                              sx={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 2,
+                              }}
                             >
                               <Box
                                 sx={{
                                   width: 12,
                                   height: 12,
                                   borderRadius: "50%",
-                                  bgcolor: cat.color || "#666", // ✅ backend’den gelen renk
+                                  bgcolor: cat.color || "#666",
                                   boxShadow: `0 2px 8px ${alpha(
                                     cat.color || "#666",
                                     0.3
                                   )}`,
                                 }}
                               />
-                              {cat.name}
-                            </Stack>
+                              <Typography variant="body2" fontWeight={500}>
+                                {cat.name}
+                              </Typography>
+                            </Box>
                           </MenuItem>
                         ))}
                       </Select>
@@ -1664,54 +1728,479 @@ const PostEditorPage = () => {
                     fontSize: "0.75rem",
                   }}
                 />
-              </Typography>
-
-              <Autocomplete
-                multiple
-                freeSolo
-                options={allTags.map((tag) => tag.name)}
-                value={form.tags}
-                onChange={(e, newValue) => setForm({ ...form, tags: newValue })}
-                renderTags={(value, getTagProps) =>
-                  value.map((option, index) => (
-                    <Chip
-                      variant="filled"
-                      label={option}
-                      {...getTagProps({ index })}
-                      sx={{
-                        borderRadius: 3,
-                        fontWeight: 600,
-                        bgcolor: (t) => alpha(t.palette.primary.main, 0.15),
-                        color: "primary.main",
-                        "& .MuiChip-deleteIcon": {
-                          color: "primary.main",
-                          "&:hover": {
-                            color: "primary.dark",
-                          },
-                        },
-                      }}
-                    />
-                  ))
-                }
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    label="Etiketler ekleyin"
-                    placeholder="Etiket yazın ve Enter'a basın..."
+                {form.tags.length > 0 && (
+                  <Chip
+                    label={`${form.tags.length} seçili`}
+                    size="small"
                     sx={{
-                      "& .MuiOutlinedInput-root": {
-                        borderRadius: 4,
-                        bgcolor: (t) =>
-                          alpha(t.palette.background.default, 0.6),
-                        "&:hover": {
-                          bgcolor: (t) =>
-                            alpha(t.palette.background.default, 0.8),
-                        },
-                      },
+                      bgcolor: (t) => alpha(t.palette.success.main, 0.1),
+                      color: "success.main",
+                      fontWeight: 600,
+                      fontSize: "0.75rem",
                     }}
                   />
                 )}
-              />
+              </Typography>
+
+              <Paper
+                elevation={0}
+                sx={{
+                  p: 3,
+                  borderRadius: 4,
+                  bgcolor: (t) => alpha(t.palette.background.default, 0.4),
+                  border: (t) => `1px solid ${alpha(t.palette.divider, 0.1)}`,
+                  backdropFilter: "blur(12px)",
+                  transition: "all 0.3s ease",
+                  "&:hover": {
+                    bgcolor: (t) => alpha(t.palette.background.default, 0.6),
+                    boxShadow: "0 4px 20px rgba(0, 0, 0, 0.05)",
+                    transform: "translateY(-1px)",
+                  },
+                }}
+              >
+                {/* Seçili Etiketler */}
+                {form.tags.length > 0 && (
+                  <Box sx={{ mb: 3 }}>
+                    <Typography
+                      variant="subtitle2"
+                      color="text.secondary"
+                      sx={{
+                        mb: 1.5,
+                        fontWeight: 600,
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 1,
+                      }}
+                    >
+                      <Box
+                        sx={{
+                          width: 6,
+                          height: 6,
+                          borderRadius: "50%",
+                          bgcolor: "success.main",
+                        }}
+                      />
+                      Seçili Etiketler
+                    </Typography>
+                    <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1.5 }}>
+                      {form.tags.map((tag, index) => (
+                        <Chip
+                          key={tag._id || index}
+                          label={`#${tag.name}`}
+                          onDelete={() => {
+                            const newTags = form.tags.filter(
+                              (_, i) => i !== index
+                            );
+                            setForm({ ...form, tags: newTags });
+                          }}
+                          deleteIcon={<CloseIcon sx={{ fontSize: 16 }} />}
+                          sx={{
+                            borderRadius: 3,
+                            fontWeight: 600,
+                            fontSize: "0.8rem",
+                            height: 34,
+                            bgcolor: (t) => alpha(t.palette.primary.main, 0.12),
+                            color: "primary.main",
+                            border: (t) =>
+                              `1px solid ${alpha(
+                                t.palette.primary.main,
+                                0.25
+                              )}`,
+                            "& .MuiChip-deleteIcon": {
+                              color: "primary.main",
+                              "&:hover": {
+                                color: "error.main",
+                                transform: "scale(1.15)",
+                                bgcolor: (t) =>
+                                  alpha(t.palette.error.main, 0.1),
+                                borderRadius: "50%",
+                              },
+                              transition: "all 0.2s ease",
+                            },
+                            "&:hover": {
+                              bgcolor: (t) =>
+                                alpha(t.palette.primary.main, 0.18),
+                              transform: "translateY(-1px)",
+                              boxShadow: (t) =>
+                                `0 4px 12px ${alpha(
+                                  t.palette.primary.main,
+                                  0.2
+                                )}`,
+                            },
+                            transition: "all 0.2s ease",
+                          }}
+                        />
+                      ))}
+                    </Box>
+                  </Box>
+                )}
+
+                {/* Autocomplete Input */}
+                <Box>
+                  <Typography
+                    variant="subtitle2"
+                    color="text.secondary"
+                    sx={{
+                      mb: 2,
+                      fontWeight: 600,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 1,
+                    }}
+                  >
+                    <Box
+                      sx={{
+                        width: 6,
+                        height: 6,
+                        borderRadius: "50%",
+                        bgcolor: "info.main",
+                      }}
+                    />
+                    Yeni Etiket Ekle
+                  </Typography>
+
+                  <Autocomplete
+                    freeSolo
+                    options={allTags}
+                    value={null}
+                    inputValue={tagInputValue}
+                    onInputChange={(e, newInput) => setTagInputValue(newInput)}
+                    getOptionLabel={(option) => option.name || ""}
+                    filterSelectedOptions={false}
+                    onChange={(e, newValue) => {
+                      if (
+                        newValue &&
+                        !form.tags.some((t) => t._id === newValue._id)
+                      ) {
+                        setForm({ ...form, tags: [...form.tags, newValue] });
+                        setTagInputValue("");
+                      }
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && tagInputValue.trim()) {
+                        e.preventDefault();
+                        handleAddTag(tagInputValue);
+                      }
+                    }}
+                    renderOption={(props, option) => (
+                      <Box
+                        component="li"
+                        {...props}
+                        sx={{
+                          p: 1.5,
+                          borderRadius: 2,
+                          mx: 1,
+                          my: 0.5,
+                          transition: "all 0.2s ease",
+                          "&:hover": {
+                            bgcolor: (t) => alpha(t.palette.primary.main, 0.08),
+                            transform: "translateX(2px)",
+                          },
+                        }}
+                      >
+                        <Stack
+                          direction="row"
+                          alignItems="center"
+                          spacing={1.5}
+                        >
+                          <Box
+                            sx={{
+                              width: 24,
+                              height: 24,
+                              borderRadius: 1.5,
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              bgcolor: (t) =>
+                                alpha(t.palette.primary.main, 0.1),
+                              color: "primary.main",
+                              fontWeight: 700,
+                              fontSize: "0.7rem",
+                            }}
+                          >
+                            #
+                          </Box>
+                          <Typography variant="body2" fontWeight={500}>
+                            {option.name}
+                          </Typography>
+                          {form.tags.some((t) => t._id === option._id) && (
+                            <CheckCircleIcon
+                              sx={{
+                                fontSize: 16,
+                                color: "success.main",
+                                ml: "auto",
+                              }}
+                            />
+                          )}
+                        </Stack>
+                      </Box>
+                    )}
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        placeholder="Etiket ara veya yeni oluştur..."
+                        InputProps={{
+                          ...params.InputProps,
+                          endAdornment: (
+                            <Stack
+                              direction="row"
+                              alignItems="center"
+                              spacing={1}
+                            >
+                              {params.InputProps.endAdornment}
+                              {tagInputValue.trim() && (
+                                <Tooltip
+                                  title={
+                                    allTags.some(
+                                      (t) =>
+                                        t.name.toLowerCase() ===
+                                        tagInputValue.trim().toLowerCase()
+                                    )
+                                      ? "Mevcut etiketi seç"
+                                      : "Yeni etiket oluştur"
+                                  }
+                                  arrow
+                                  placement="top"
+                                >
+                                  <Chip
+                                    label={
+                                      allTags.some(
+                                        (t) =>
+                                          t.name.toLowerCase() ===
+                                          tagInputValue.trim().toLowerCase()
+                                      )
+                                        ? "Seç"
+                                        : "Yeni"
+                                    }
+                                    size="small"
+                                    sx={{
+                                      height: 22,
+                                      fontSize: "0.65rem",
+                                      fontWeight: 700,
+                                      bgcolor: allTags.some(
+                                        (t) =>
+                                          t.name.toLowerCase() ===
+                                          tagInputValue.trim().toLowerCase()
+                                      )
+                                        ? (t) =>
+                                            alpha(t.palette.info.main, 0.12)
+                                        : (t) =>
+                                            alpha(t.palette.success.main, 0.12),
+                                      color: allTags.some(
+                                        (t) =>
+                                          t.name.toLowerCase() ===
+                                          tagInputValue.trim().toLowerCase()
+                                      )
+                                        ? "info.main"
+                                        : "success.main",
+                                      border: (t) =>
+                                        `1px solid ${alpha(
+                                          allTags.some(
+                                            (t) =>
+                                              t.name.toLowerCase() ===
+                                              tagInputValue.trim().toLowerCase()
+                                          )
+                                            ? t.palette.info.main
+                                            : t.palette.success.main,
+                                          0.3
+                                        )}`,
+                                      animation: "pulse 1.5s infinite",
+                                      "@keyframes pulse": {
+                                        "0%, 100%": { opacity: 1 },
+                                        "50%": { opacity: 0.8 },
+                                      },
+                                    }}
+                                  />
+                                </Tooltip>
+                              )}
+                            </Stack>
+                          ),
+                        }}
+                        sx={{
+                          "& .MuiOutlinedInput-root": {
+                            borderRadius: 3,
+                            bgcolor: (t) =>
+                              alpha(t.palette.background.paper, 0.9),
+                            height: 48,
+                            backdropFilter: "blur(8px)",
+                            border: (t) =>
+                              `1px solid ${alpha(t.palette.divider, 0.2)}`,
+                            "&:hover": {
+                              bgcolor: (t) =>
+                                alpha(t.palette.background.paper, 1),
+                              borderColor: (t) =>
+                                alpha(t.palette.primary.main, 0.3),
+                            },
+                            "&.Mui-focused": {
+                              bgcolor: (t) =>
+                                alpha(t.palette.background.paper, 1),
+                              borderColor: "primary.main",
+                              boxShadow: (t) =>
+                                `0 0 0 2px ${alpha(
+                                  t.palette.primary.main,
+                                  0.1
+                                )}`,
+                            },
+                            transition: "all 0.2s ease",
+                          },
+                          "& .MuiInputLabel-root": {
+                            display: "none",
+                          },
+                        }}
+                      />
+                    )}
+                    filterOptions={(options, state) => {
+                      const input = state.inputValue.toLowerCase();
+                      const filtered = options.filter(
+                        (o) =>
+                          o.name.toLowerCase().includes(input) &&
+                          !form.tags.some((t) => t._id === o._id)
+                      );
+                      return filtered;
+                    }}
+                    ListboxProps={{
+                      sx: {
+                        borderRadius: 2,
+                        mt: 0.5,
+                        maxHeight: 200,
+                        border: (t) =>
+                          `1px solid ${alpha(t.palette.divider, 0.1)}`,
+                        bgcolor: (t) => alpha(t.palette.background.paper, 0.98),
+                        backdropFilter: "blur(12px)",
+                        boxShadow: "0 4px 20px rgba(0, 0, 0, 0.1)",
+                        "& .MuiAutocomplete-option": {
+                          borderRadius: 2,
+                          mx: 1,
+                          my: 0.5,
+                        },
+                        // Theme.js'deki scroll stilini kullan
+                        scrollbarWidth: "thin",
+                        scrollbarColor: (t) =>
+                          t.palette.mode === "dark"
+                            ? "rgba(255,255,255,0.1) transparent"
+                            : "rgba(0,0,0,0.1) transparent",
+                        "&::-webkit-scrollbar": {
+                          width: "6px",
+                        },
+                        "&::-webkit-scrollbar-track": {
+                          background: "transparent",
+                        },
+                        "&::-webkit-scrollbar-thumb": {
+                          backgroundColor: (t) =>
+                            t.palette.mode === "dark"
+                              ? "rgba(255,255,255,0.15)"
+                              : "rgba(0,0,0,0.15)",
+                          borderRadius: "8px",
+                          backdropFilter: "blur(6px)",
+                          transition: "all 0.3s ease",
+                        },
+                        "&::-webkit-scrollbar-thumb:hover": {
+                          backgroundImage: (t) =>
+                            t.palette.mode === "dark"
+                              ? "linear-gradient(135deg, rgba(255,255,255,0.2), rgba(255,255,255,0.05))"
+                              : "linear-gradient(135deg, rgba(0,0,0,0.1), rgba(0,0,0,0.05))",
+                        },
+                      },
+                    }}
+                    PaperComponent={({ children, ...props }) => (
+                      <Paper
+                        {...props}
+                        elevation={0}
+                        sx={{
+                          borderRadius: 2,
+                          border: (t) =>
+                            `1px solid ${alpha(t.palette.divider, 0.1)}`,
+                          boxShadow: "0 4px 20px rgba(0, 0, 0, 0.1)",
+                          bgcolor: (t) =>
+                            alpha(t.palette.background.paper, 0.98),
+                          backdropFilter: "blur(12px)",
+                          mt: 0.5,
+                          overflow: "hidden",
+                        }}
+                      >
+                        {children}
+                      </Paper>
+                    )}
+                  />
+                </Box>
+
+                {/* Help Text */}
+                <Box
+                  sx={{
+                    mt: 3,
+                    pt: 2,
+                    borderTop: (t) =>
+                      `1px solid ${alpha(t.palette.divider, 0.1)}`,
+                  }}
+                >
+                  <Stack
+                    direction="row"
+                    spacing={3}
+                    flexWrap="wrap"
+                    alignItems="center"
+                  >
+                    <Box
+                      sx={{ display: "flex", alignItems: "center", gap: 1.5 }}
+                    >
+                      <Box
+                        sx={{
+                          width: 8,
+                          height: 8,
+                          borderRadius: "50%",
+                          bgcolor: "success.main",
+                        }}
+                      />
+                      <Typography
+                        variant="caption"
+                        color="text.secondary"
+                        fontWeight={500}
+                      >
+                        <strong>Enter:</strong> Yeni etiket oluştur
+                      </Typography>
+                    </Box>
+
+                    <Box
+                      sx={{ display: "flex", alignItems: "center", gap: 1.5 }}
+                    >
+                      <Box
+                        sx={{
+                          width: 8,
+                          height: 8,
+                          borderRadius: "50%",
+                          bgcolor: "info.main",
+                        }}
+                      />
+                      <Typography
+                        variant="caption"
+                        color="text.secondary"
+                        fontWeight={500}
+                      >
+                        <strong>Tıkla:</strong> Mevcut etiketi seç
+                      </Typography>
+                    </Box>
+
+                    <Box
+                      sx={{ display: "flex", alignItems: "center", gap: 1.5 }}
+                    >
+                      <Box
+                        sx={{
+                          width: 8,
+                          height: 8,
+                          borderRadius: "50%",
+                          bgcolor: "primary.main",
+                        }}
+                      />
+                      <Typography
+                        variant="caption"
+                        color="text.secondary"
+                        fontWeight={500}
+                      >
+                        SEO için <strong>3-5 etiket</strong> önerilir
+                      </Typography>
+                    </Box>
+                  </Stack>
+                </Box>
+              </Paper>
             </Box>
 
             {/* Action Buttons */}
