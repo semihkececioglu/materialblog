@@ -12,7 +12,7 @@ router.post("/", async (req, res) => {
 
   try {
     const data = await resend.emails.send({
-      from: "MBlog İletişim <onboarding@resend.dev>",
+      from: "MUI BLOG İletişim <onboarding@resend.dev>",
       to: process.env.TO_EMAIL,
       reply_to: email,
       subject: `Yeni İletişim Mesajı: ${name}`,

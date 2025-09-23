@@ -11,6 +11,8 @@ import {
   Tooltip,
   Fade,
   Grow,
+  Stack,
+  Snackbar,
 } from "@mui/material";
 import {
   LocationOn,
@@ -20,6 +22,8 @@ import {
   PersonOutline,
   MessageOutlined,
   EmailOutlined,
+  CheckCircle,
+  Info,
 } from "@mui/icons-material";
 import axios from "axios";
 
@@ -63,11 +67,17 @@ const ContactPage = () => {
       );
       setSuccess(true);
       setForm({ name: "", email: "", message: "" });
-      setTimeout(() => setSuccess(false), 5000);
     } catch (err) {
       alert("Mesaj gönderilemedi. Lütfen tekrar deneyin.");
     }
     setLoading(false);
+  };
+
+  const handleCloseSnackbar = (event, reason) => {
+    if (reason === "clickaway") {
+      return;
+    }
+    setSuccess(false);
   };
 
   return (
@@ -79,292 +89,224 @@ const ContactPage = () => {
       }}
     >
       <Container maxWidth="lg">
-        {/* Başlık */}
-        <Fade in timeout={800}>
-          <Box textAlign="center" mb={8}>
-            <Typography
-              variant="h2"
-              fontWeight="700"
-              gutterBottom
-              sx={{
-                color: "#1a237e",
-                fontSize: { xs: "2.5rem", md: "3.5rem" },
-                mb: 2,
-                textShadow: "0 2px 4px rgba(26, 35, 126, 0.3)",
-                background: "linear-gradient(135deg, #1a237e 0%, #3949ab 100%)",
-                backgroundClip: "text",
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
-              }}
-            >
-              İletişim
-            </Typography>
-            <Typography
-              variant="h6"
-              sx={{
-                color: "#424242",
-                fontWeight: 400,
-                maxWidth: 600,
-                mx: "auto",
-              }}
-            >
-              Bizimle iletişime geçmek için formu doldurun. Size en kısa sürede
-              geri dönüş yapacağız.
-            </Typography>
-          </Box>
-        </Fade>
-
-        {/* Ana İçerik Grid */}
-        <Grid container spacing={6} justifyContent="center">
-          {/* Form */}
-          <Grid item xs={12} lg={8}>
+        {/* Ana İçerik Grid - Yan Yana */}
+        <Grid
+          container
+          spacing={3}
+          justifyContent="center"
+          alignItems="flex-start"
+          sx={{ minHeight: "calc(100vh - 200px)" }}
+        >
+          {/* Form - Sol Taraf */}
+          <Grid item xs={12} md={5}>
             <Grow in timeout={1000}>
               <Paper
                 elevation={4}
                 sx={{
-                  p: { xs: 4, md: 6 },
+                  p: { xs: 3, md: 4 },
                   borderRadius: 4,
                   background:
                     "linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)",
                   border: "1px solid #e3f2fd",
                   transition: "all 0.3s ease",
+                  height: "100%",
+                  display: "flex",
+                  flexDirection: "column",
                   "&:hover": {
                     boxShadow: "0 12px 40px rgba(26, 35, 126, 0.15)",
                     transform: "translateY(-4px)",
                   },
                 }}
               >
-                {success && (
-                  <Fade in={success}>
-                    <Alert
-                      severity="success"
-                      sx={{
-                        mb: 4,
-                        borderRadius: 3,
-                        backgroundColor: "#e8f5e8",
-                        color: "#2e7d32",
-                        border: "1px solid #4caf50",
-                        boxShadow: "0 4px 12px rgba(76, 175, 80, 0.2)",
-                      }}
-                    >
-                      ✨ Mesajınız başarıyla gönderildi! Teşekkür ederiz.
-                    </Alert>
-                  </Fade>
-                )}
+                {/* Form Başlığı */}
+                <Box mb={3}>
+                  <Typography
+                    variant="h4"
+                    fontWeight="700"
+                    sx={{
+                      color: "#1a237e",
+                      mb: 1,
+                      background:
+                        "linear-gradient(135deg, #1a237e 0%, #3949ab 100%)",
+                      backgroundClip: "text",
+                      WebkitBackgroundClip: "text",
+                      WebkitTextFillColor: "transparent",
+                    }}
+                  >
+                    Bize Ulaşın
+                  </Typography>
+                </Box>
 
-                <form onSubmit={handleSubmit}>
+                <form
+                  onSubmit={handleSubmit}
+                  style={{ flex: 1, display: "flex", flexDirection: "column" }}
+                >
                   <Box
-                    sx={{ display: "flex", flexDirection: "column", gap: 4 }}
+                    sx={{
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: 2.5,
+                      flex: 1,
+                    }}
                   >
                     {/* Name Field */}
-                    <Tooltip title="Tam adınızı yazın" placement="top">
-                      <TextField
-                        label="Adınız Soyadınız"
-                        name="name"
-                        value={form.name}
-                        onChange={handleChange}
-                        fullWidth
-                        error={!!errors.name}
-                        helperText={errors.name}
-                        InputProps={{
-                          startAdornment: (
-                            <PersonOutline sx={{ mr: 2, color: "#5e35b1" }} />
-                          ),
-                        }}
-                        sx={{
-                          "& .MuiOutlinedInput-root": {
-                            backgroundColor: "#fff",
+                    <TextField
+                      label="Adınız Soyadınız"
+                      name="name"
+                      value={form.name}
+                      onChange={handleChange}
+                      fullWidth
+                      error={!!errors.name}
+                      helperText={errors.name}
+                      InputProps={{
+                        startAdornment: (
+                          <PersonOutline sx={{ mr: 2, color: "#5e35b1" }} />
+                        ),
+                      }}
+                      sx={{
+                        "& .MuiOutlinedInput-root": {
+                          backgroundColor: "#fff",
+                          borderRadius: 3,
+                          transition: "all 0.3s ease",
+                          "& fieldset": {
+                            border: "2px solid #e1bee7",
                             borderRadius: 3,
-                            transition: "all 0.3s ease",
+                          },
+                          "&:hover": {
+                            backgroundColor: "#fafafa",
                             "& fieldset": {
-                              border: "2px solid #e1bee7",
-                              borderRadius: 3,
-                            },
-                            "&:hover": {
-                              backgroundColor: "#fafafa",
-                              "& fieldset": {
-                                borderColor: "#9c27b0",
-                                boxShadow: "0 0 0 3px rgba(156, 39, 176, 0.1)",
-                              },
-                            },
-                            "&.Mui-focused fieldset": {
-                              borderColor: "#5e35b1",
-                              borderWidth: 2,
-                              boxShadow: "0 0 0 3px rgba(94, 53, 177, 0.1)",
-                            },
-                            "& input": {
-                              color: "#424242",
-                              fontSize: "1.1rem",
-                              py: 1.5,
+                              borderColor: "#9c27b0",
+                              boxShadow: "0 0 0 3px rgba(156, 39, 176, 0.1)",
                             },
                           },
-                          "& .MuiInputLabel-root": {
-                            color: "#757575",
-                            fontSize: "1.1rem",
-                            "&.Mui-focused": {
-                              color: "#5e35b1",
-                              fontWeight: 600,
-                            },
+                          "&.Mui-focused fieldset": {
+                            borderColor: "#5e35b1",
+                            borderWidth: 2,
+                            boxShadow: "0 0 0 3px rgba(94, 53, 177, 0.1)",
                           },
-                          "& .MuiFormHelperText-root": {
-                            color: "#f44336",
-                            fontSize: "0.9rem",
-                            mt: 1,
+                          "& input": {
+                            color: "#424242",
+                            fontSize: "1rem",
+                            py: 1,
                           },
-                        }}
-                        required
-                      />
-                    </Tooltip>
+                        },
+                      }}
+                      required
+                    />
 
                     {/* Email Field */}
-                    <Tooltip
-                      title="Geçerli bir e-posta adresi girin"
-                      placement="top"
-                    >
-                      <TextField
-                        label="E-posta Adresiniz"
-                        name="email"
-                        type="email"
-                        value={form.email}
-                        onChange={handleChange}
-                        fullWidth
-                        error={!!errors.email}
-                        helperText={errors.email}
-                        InputProps={{
-                          startAdornment: (
-                            <EmailOutlined sx={{ mr: 2, color: "#1976d2" }} />
-                          ),
-                        }}
-                        sx={{
-                          "& .MuiOutlinedInput-root": {
-                            backgroundColor: "#fff",
+                    <TextField
+                      label="E-posta Adresiniz"
+                      name="email"
+                      type="email"
+                      value={form.email}
+                      onChange={handleChange}
+                      fullWidth
+                      error={!!errors.email}
+                      helperText={errors.email}
+                      InputProps={{
+                        startAdornment: (
+                          <EmailOutlined sx={{ mr: 2, color: "#1976d2" }} />
+                        ),
+                      }}
+                      sx={{
+                        "& .MuiOutlinedInput-root": {
+                          backgroundColor: "#fff",
+                          borderRadius: 3,
+                          transition: "all 0.3s ease",
+                          "& fieldset": {
+                            border: "2px solid #bbdefb",
                             borderRadius: 3,
-                            transition: "all 0.3s ease",
+                          },
+                          "&:hover": {
+                            backgroundColor: "#fafafa",
                             "& fieldset": {
-                              border: "2px solid #bbdefb",
-                              borderRadius: 3,
-                            },
-                            "&:hover": {
-                              backgroundColor: "#fafafa",
-                              "& fieldset": {
-                                borderColor: "#2196f3",
-                                boxShadow: "0 0 0 3px rgba(33, 150, 243, 0.1)",
-                              },
-                            },
-                            "&.Mui-focused fieldset": {
-                              borderColor: "#1976d2",
-                              borderWidth: 2,
-                              boxShadow: "0 0 0 3px rgba(25, 118, 210, 0.1)",
-                            },
-                            "& input": {
-                              color: "#424242",
-                              fontSize: "1.1rem",
-                              py: 1.5,
+                              borderColor: "#2196f3",
+                              boxShadow: "0 0 0 3px rgba(33, 150, 243, 0.1)",
                             },
                           },
-                          "& .MuiInputLabel-root": {
-                            color: "#757575",
-                            fontSize: "1.1rem",
-                            "&.Mui-focused": {
-                              color: "#1976d2",
-                              fontWeight: 600,
-                            },
+                          "&.Mui-focused fieldset": {
+                            borderColor: "#1976d2",
+                            borderWidth: 2,
+                            boxShadow: "0 0 0 3px rgba(25, 118, 210, 0.1)",
                           },
-                          "& .MuiFormHelperText-root": {
-                            color: "#f44336",
-                            fontSize: "0.9rem",
-                            mt: 1,
+                          "& input": {
+                            color: "#424242",
+                            fontSize: "1rem",
+                            py: 1,
                           },
-                        }}
-                        required
-                      />
-                    </Tooltip>
+                        },
+                      }}
+                      required
+                    />
 
                     {/* Message Field */}
-                    <Tooltip
-                      title="Mesajınızı detaylı olarak yazın (min. 10 karakter)"
-                      placement="top"
-                    >
-                      <TextField
-                        label="Mesajınız"
-                        name="message"
-                        value={form.message}
-                        onChange={handleChange}
-                        multiline
-                        rows={6}
-                        fullWidth
-                        error={!!errors.message}
-                        helperText={
-                          errors.message ||
-                          `${form.message.length}/500 karakter`
-                        }
-                        inputProps={{ maxLength: 500 }}
-                        InputProps={{
-                          startAdornment: (
-                            <MessageOutlined
-                              sx={{
-                                mr: 2,
-                                color: "#388e3c",
-                                alignSelf: "flex-start",
-                                mt: 2,
-                              }}
-                            />
-                          ),
-                        }}
-                        sx={{
-                          "& .MuiOutlinedInput-root": {
-                            backgroundColor: "#fff",
-                            borderRadius: 3,
-                            transition: "all 0.3s ease",
-                            "& fieldset": {
-                              border: "2px solid #c8e6c9",
-                              borderRadius: 3,
-                            },
-                            "&:hover": {
-                              backgroundColor: "#fafafa",
-                              "& fieldset": {
-                                borderColor: "#4caf50",
-                                boxShadow: "0 0 0 3px rgba(76, 175, 80, 0.1)",
-                              },
-                            },
-                            "&.Mui-focused fieldset": {
-                              borderColor: "#388e3c",
-                              borderWidth: 2,
-                              boxShadow: "0 0 0 3px rgba(56, 142, 60, 0.1)",
-                            },
-                            "& textarea": {
-                              color: "#424242",
-                              fontSize: "1.1rem",
-                            },
-                          },
-                          "& .MuiInputLabel-root": {
-                            color: "#757575",
-                            fontSize: "1.1rem",
-                            "&.Mui-focused": {
+                    <TextField
+                      label="Mesajınız"
+                      name="message"
+                      value={form.message}
+                      onChange={handleChange}
+                      multiline
+                      rows={5}
+                      fullWidth
+                      error={!!errors.message}
+                      helperText={
+                        errors.message || `${form.message.length}/500 karakter`
+                      }
+                      inputProps={{ maxLength: 500 }}
+                      InputProps={{
+                        startAdornment: (
+                          <MessageOutlined
+                            sx={{
+                              mr: 2,
                               color: "#388e3c",
-                              fontWeight: 600,
+                              alignSelf: "flex-start",
+                              mt: 2,
+                            }}
+                          />
+                        ),
+                      }}
+                      sx={{
+                        flex: 1,
+                        "& .MuiOutlinedInput-root": {
+                          backgroundColor: "#fff",
+                          borderRadius: 3,
+                          transition: "all 0.3s ease",
+                          "& fieldset": {
+                            border: "2px solid #c8e6c9",
+                            borderRadius: 3,
+                          },
+                          "&:hover": {
+                            backgroundColor: "#fafafa",
+                            "& fieldset": {
+                              borderColor: "#4caf50",
+                              boxShadow: "0 0 0 3px rgba(76, 175, 80, 0.1)",
                             },
                           },
-                          "& .MuiFormHelperText-root": {
-                            color: errors.message ? "#f44336" : "#757575",
-                            fontSize: "0.9rem",
-                            mt: 1,
+                          "&.Mui-focused fieldset": {
+                            borderColor: "#388e3c",
+                            borderWidth: 2,
+                            boxShadow: "0 0 0 3px rgba(56, 142, 60, 0.1)",
                           },
-                        }}
-                        required
-                      />
-                    </Tooltip>
+                          "& textarea": {
+                            color: "#424242",
+                            fontSize: "1rem",
+                          },
+                        },
+                      }}
+                      required
+                    />
 
                     {/* Submit Button */}
                     <Button
                       type="submit"
                       variant="contained"
-                      size="medium"
+                      size="large"
                       disabled={loading}
                       startIcon={<Send />}
                       sx={{
-                        mt: 2,
-                        py: 1.8,
+                        mt: 1,
+                        py: 1.5,
                         px: 4,
                         fontWeight: "600",
                         fontSize: "1rem",
@@ -375,8 +317,6 @@ const ContactPage = () => {
                         textTransform: "none",
                         transition: "all 0.4s ease",
                         boxShadow: "0 6px 20px rgba(102, 126, 234, 0.4)",
-                        alignSelf: "center",
-                        maxWidth: "300px",
                         "&:hover": {
                           background:
                             "linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%)",
@@ -402,104 +342,158 @@ const ContactPage = () => {
               </Paper>
             </Grow>
           </Grid>
-        </Grid>
 
-        {/* İletişim Bilgileri Cards */}
-        <Box mt={10}>
-          <Grid container spacing={4} justifyContent="center">
-            {[
-              {
-                icon: <LocationOn />,
-                title: "Adres",
-                info: "İstanbul, Türkiye",
-                color: "#e91e63",
-                bgColor: "#fce4ec",
-              },
-              {
-                icon: <Email />,
-                title: "E-posta",
-                info: "semihkecec@gmail.com",
-                color: "#2196f3",
-                bgColor: "#e3f2fd",
-              },
-              {
-                icon: <Phone />,
-                title: "Telefon",
-                info: "+90 555 555 55 55",
-                color: "#4caf50",
-                bgColor: "#e8f5e8",
-              },
-            ].map((item, index) => (
-              <Grid item xs={12} sm={6} md={4} key={index}>
-                <Grow in timeout={1200 + index * 200}>
+          {/* İletişim Bilgileri Cards - Sağ Taraf */}
+          <Grid item xs={12} md={4}>
+            <Stack spacing={2} sx={{ height: "100%" }}>
+              {/* Bilgi Kartı */}
+              <Grow in timeout={800}>
+                <Paper
+                  elevation={2}
+                  sx={{
+                    p: 2,
+                    borderRadius: 4,
+                    background:
+                      "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                    color: "white",
+                    transition: "all 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
+                    "&:hover": {
+                      transform: "translateY(-4px)",
+                      boxShadow: "0 15px 35px rgba(102, 126, 234, 0.4)",
+                    },
+                  }}
+                >
+                  <Stack direction="row" spacing={1.5} alignItems="center">
+                    <Box
+                      sx={{
+                        p: 1.5,
+                        borderRadius: 3,
+                        backgroundColor: "rgba(255, 255, 255, 0.2)",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      <Info sx={{ fontSize: 24 }} />
+                    </Box>
+                    <Box sx={{ flex: 1 }}>
+                      <Typography
+                        variant="subtitle1"
+                        sx={{ fontWeight: 700, mb: 0.2, fontSize: "1rem" }}
+                      >
+                        Hızlı İletişim
+                      </Typography>
+                      <Typography
+                        variant="body2"
+                        sx={{ opacity: 0.9, fontSize: "0.85rem" }}
+                      >
+                        7/24 destek için aşağıdaki bilgileri kullanın.
+                      </Typography>
+                    </Box>
+                  </Stack>
+                </Paper>
+              </Grow>
+
+              {/* İletişim Kartları */}
+              {[
+                {
+                  icon: <LocationOn />,
+                  title: "Adres",
+                  info: "İstanbul, Türkiye",
+                  color: "#e91e63",
+                  bgColor: "#fce4ec",
+                },
+                {
+                  icon: <Email />,
+                  title: "E-posta",
+                  info: "semihkecec@gmail.com",
+                  color: "#2196f3",
+                  bgColor: "#e3f2fd",
+                },
+                {
+                  icon: <Phone />,
+                  title: "Telefon",
+                  info: "+90 555 555 55 55",
+                  color: "#4caf50",
+                  bgColor: "#e8f5e8",
+                },
+              ].map((item, index) => (
+                <Grow in timeout={1000 + index * 150} key={index}>
                   <Paper
-                    elevation={2}
+                    elevation={1}
                     sx={{
-                      p: 4,
+                      p: 2,
                       borderRadius: 4,
-                      textAlign: "center",
-                      height: "100%",
                       background:
                         "linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)",
                       border: `2px solid ${item.color}20`,
-                      transition: "all 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
+                      transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
                       cursor: "pointer",
+                      flex: 1,
                       "&:hover": {
-                        transform: "translateY(-12px) scale(1.02)",
-                        boxShadow: `0 20px 40px ${item.color}30`,
-                        borderColor: `${item.color}60`,
+                        transform: "translateY(-4px) scale(1.01)",
+                        boxShadow: `0 12px 28px ${item.color}25`,
+                        borderColor: `${item.color}40`,
                         background: `linear-gradient(135deg, ${item.bgColor} 0%, #ffffff 100%)`,
                       },
                     }}
                   >
-                    <Box
-                      sx={{
-                        color: item.color,
-                        mb: 3,
-                        p: 3,
-                        borderRadius: "50%",
-                        backgroundColor: `${item.color}15`,
-                        display: "inline-flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        transition: "all 0.3s ease",
-                        "&:hover": {
-                          backgroundColor: `${item.color}25`,
-                          transform: "scale(1.1) rotate(5deg)",
-                        },
-                      }}
-                    >
-                      {React.cloneElement(item.icon, { sx: { fontSize: 36 } })}
-                    </Box>
-                    <Typography
-                      variant="h6"
-                      gutterBottom
-                      sx={{
-                        color: "#424242",
-                        fontWeight: 700,
-                        mb: 2,
-                      }}
-                    >
-                      {item.title}
-                    </Typography>
-                    <Typography
-                      sx={{
-                        color: "#757575",
-                        fontSize: "1rem",
-                        fontWeight: 500,
-                      }}
-                    >
-                      {item.info}
-                    </Typography>
+                    <Stack direction="row" spacing={1.5} alignItems="center">
+                      <Box
+                        sx={{
+                          color: item.color,
+                          p: 1.5,
+                          borderRadius: 3,
+                          backgroundColor: `${item.color}10`,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          transition: "all 0.3s ease",
+                          minWidth: 42,
+                          minHeight: 42,
+                          "&:hover": {
+                            backgroundColor: `${item.color}20`,
+                            transform: "scale(1.1) rotate(3deg)",
+                          },
+                        }}
+                      >
+                        {React.cloneElement(item.icon, {
+                          sx: { fontSize: 20 },
+                        })}
+                      </Box>
+                      <Box sx={{ flex: 1 }}>
+                        <Typography
+                          variant="subtitle2"
+                          sx={{
+                            color: "#424242",
+                            fontWeight: 600,
+                            mb: 0.2,
+                            fontSize: "0.9rem",
+                          }}
+                        >
+                          {item.title}
+                        </Typography>
+                        <Typography
+                          variant="body2"
+                          sx={{
+                            color: "#757575",
+                            fontSize: "0.8rem",
+                            fontWeight: 500,
+                          }}
+                        >
+                          {item.info}
+                        </Typography>
+                      </Box>
+                    </Stack>
                   </Paper>
                 </Grow>
-              </Grid>
-            ))}
+              ))}
+            </Stack>
           </Grid>
-        </Box>
+        </Grid>
 
         {/* Harita */}
-        <Box mt={10}>
+        <Box mt={6}>
           <Grow in timeout={1800}>
             <Paper
               elevation={4}
@@ -520,7 +514,7 @@ const ContactPage = () => {
                 title="Google Maps Istanbul"
                 src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d12041.475262663867!2d28.978358!3d41.008238!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x14caba2d5d0a4db7%3A0x4b3e44fa85e58c32!2sIstanbul!5e0!3m2!1str!2str!4v1693220000000!5m2!1str!2str"
                 width="100%"
-                height="400"
+                height="300"
                 style={{ border: 0, borderRadius: "20px" }}
                 allowFullScreen=""
                 loading="lazy"
@@ -530,6 +524,46 @@ const ContactPage = () => {
           </Grow>
         </Box>
       </Container>
+
+      {/* Success Snackbar */}
+      <Snackbar
+        open={success}
+        autoHideDuration={6000}
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+        sx={{
+          bottom: { xs: 24, md: 32 },
+          "& .MuiSnackbarContent-root": {
+            borderRadius: 4,
+            minWidth: 350,
+          },
+        }}
+      >
+        <Alert
+          onClose={handleCloseSnackbar}
+          severity="success"
+          variant="filled"
+          icon={<CheckCircle />}
+          sx={{
+            width: "100%",
+            borderRadius: 4,
+            backgroundColor: "#4caf50",
+            color: "#ffffff",
+            fontSize: "1rem",
+            fontWeight: 600,
+            boxShadow: "0 8px 32px rgba(76, 175, 80, 0.4)",
+            "& .MuiAlert-icon": {
+              color: "#ffffff",
+              fontSize: "1.5rem",
+            },
+            "& .MuiAlert-action": {
+              color: "#ffffff",
+            },
+          }}
+        >
+          🎉 Mesajınız başarıyla gönderildi! Teşekkür ederiz.
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };
