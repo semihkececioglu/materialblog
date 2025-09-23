@@ -1,6 +1,8 @@
 const express = require("express");
-const nodemailer = require("nodemailer");
+const { Resend } = require("resend");
 const router = express.Router();
+
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 router.post("/", async (req, res) => {
   const { name, email, message } = req.body || {};
@@ -9,22 +11,11 @@ router.post("/", async (req, res) => {
   }
 
   try {
-    const transporter = nodemailer.createTransport({
-      host: process.env.EMAIL_HOST,
-      port: Number(process.env.EMAIL_PORT) || 465,
-      secure: true,
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-    });
-
-    await transporter.sendMail({
-      from: `MBlog İletişim <${process.env.EMAIL_USER}>`, // SPF/DMARC için sabit gönderici
+    const data = await resend.emails.send({
+      from: "MBlog İletişim <onboarding@resend.dev>",
       to: process.env.TO_EMAIL,
-      replyTo: `${name} <${email}>`, // dönüşler kullanıcıya gitsin
+      reply_to: email,
       subject: `Yeni İletişim Mesajı: ${name}`,
-      text: `Ad: ${name}\nE-posta: ${email}\n\nMesaj:\n${message}`,
       html: `
         <h2>Yeni İletişim Mesajı</h2>
         <p><b>Ad:</b> ${name}</p>
@@ -34,9 +25,10 @@ router.post("/", async (req, res) => {
       `,
     });
 
+    console.log("Resend response:", data);
     return res.status(200).json({ message: "Mesaj başarıyla gönderildi" });
   } catch (err) {
-    console.error("E-posta hata:", err?.message || err);
+    console.error("Resend hata:", err?.message || err);
     return res.status(500).json({ message: "Mesaj gönderilemedi" });
   }
 });
