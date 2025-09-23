@@ -151,7 +151,7 @@ function App() {
                 />
                 <Route path="posts" element={<PostsPage />} />
                 <Route path="posts/edit/:id" element={<PostEditorPage />} />
-                <Route path="editor" element={<PostEditorPage />} />
+                <Route path="posts/new" element={<PostEditorPage />} />
                 <Route
                   path="categories"
                   element={
