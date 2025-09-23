@@ -635,13 +635,16 @@ const PostEditorPage = () => {
 
     // Etiketler zaten oluşturulmuş (yeni eklenenler Enter ile kaydedildi)
     const payload = {
-      ...form,
-      tags: form.tags.map((t) => t._id),
-      category: form.category,
+      title: form.title,
+      summary: form.summary,
+      content: form.content,
+      image: form.image,
+      category: form.category, // string id
+      tags: form.tags.map((t) => t._id), // sadece id dizisi
       user: user?._id,
     };
 
-    console.log("Gönderilecek payload:", payload); // Debug için
+    console.log("Gönderilen payload:", JSON.stringify(payload, null, 2));
 
     try {
       if (id) {

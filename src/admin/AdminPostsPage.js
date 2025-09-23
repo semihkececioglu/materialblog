@@ -699,7 +699,7 @@ const PostsPage = () => {
                 <Button
                   variant="contained"
                   startIcon={<AddIcon />}
-                  onClick={() => navigate("/admin/editor")}
+                  onClick={() => navigate("/admin/posts/new")}
                   sx={(t) => ({
                     height: CONTROL_H,
                     borderRadius: 4,

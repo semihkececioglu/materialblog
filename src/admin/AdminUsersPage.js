@@ -27,11 +27,12 @@ import {
   InputAdornment,
   IconButton,
   Skeleton,
-  Divider,
-  ToggleButtonGroup,
-  ToggleButton,
+  Stack,
+  Badge,
+  Pagination,
+  Slide,
 } from "@mui/material";
-import { alpha } from "@mui/material/styles";
+import { alpha, darken, styled } from "@mui/material/styles";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
@@ -40,28 +41,37 @@ import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettings";
 import EditIcon from "@mui/icons-material/Edit";
 import PersonIcon from "@mui/icons-material/Person";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
-import TuneRoundedIcon from "@mui/icons-material/TuneRounded";
-import RestartAltRoundedIcon from "@mui/icons-material/RestartAltRounded";
+import RefreshRoundedIcon from "@mui/icons-material/RefreshRounded";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import SecurityRoundedIcon from "@mui/icons-material/SecurityRounded";
+import TrendingUpIcon from "@mui/icons-material/TrendingUp";
+import ClearIcon from "@mui/icons-material/Clear";
+
+const CONTROL_H = 42;
+const SKELETON_ROWS = 8;
+const ITEMS_PER_PAGE = 10;
+
+const Transition = React.forwardRef(function Transition(props, ref) {
+  return <Slide direction="up" ref={ref} {...props} />;
+});
 
 const ROLE_META = {
   admin: {
-    label: "Admin",
+    label: "ADMİN",
     tone: "error",
     light: "#FDECEA",
     main: "#D84315",
     icon: <AdminPanelSettingsIcon sx={{ fontSize: 18 }} />,
   },
   editor: {
-    label: "Editör",
+    label: "EDİTÖR",
     tone: "info",
     light: "#E3F2FD",
     main: "#1976D2",
     icon: <EditIcon sx={{ fontSize: 18 }} />,
   },
   user: {
-    label: "User",
+    label: "USER",
     tone: "default",
     light: "#F5F5F5",
     main: "#616161",
@@ -69,7 +79,24 @@ const ROLE_META = {
   },
 };
 
-const SKELETON_ROWS = 6;
+const StyledTableRow = styled(TableRow)(({ theme }) => ({
+  transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+  "&:hover": {
+    backgroundColor: alpha(theme.palette.primary.main, 0.04),
+    "& .action-buttons": {
+      opacity: 1,
+      transform: "translateX(0)",
+    },
+  },
+}));
+
+const StyledChip = styled(Chip)(({ theme }) => ({
+  height: 28,
+  borderRadius: 14,
+  fontWeight: 600,
+  fontSize: "0.75rem",
+  transition: "all 0.3s ease",
+}));
 
 const AdminUsersPage = () => {
   const [users, setUsers] = useState([]);
@@ -87,6 +114,7 @@ const AdminUsersPage = () => {
 
   const [query, setQuery] = useState("");
   const [roleFilter, setRoleFilter] = useState("all");
+  const [currentPage, setCurrentPage] = useState(1);
 
   const navigate = useNavigate();
 
@@ -115,6 +143,10 @@ const AdminUsersPage = () => {
       });
   };
 
+  const showSnackbar = (message, severity = "success") => {
+    setSnackbar({ open: true, message, severity });
+  };
+
   const handleOpenRoleDialog = (user) => {
     if (user.username === "semihkececioglu") return;
     setSelectedUser(user);
@@ -129,20 +161,10 @@ const AdminUsersPage = () => {
         { role: newRole }
       )
       .then(() => {
-        setSnackbar({
-          open: true,
-          message: "Rol güncellendi",
-          severity: "success",
-        });
+        showSnackbar("Rol başarıyla güncellendi!", "success");
         fetchUsers();
       })
-      .catch(() =>
-        setSnackbar({
-          open: true,
-          message: "Rol güncellenemedi",
-          severity: "error",
-        })
-      )
+      .catch(() => showSnackbar("Rol güncellenemedi!", "error"))
       .finally(() => {
         setDialogOpen(false);
         setSelectedUser(null);
@@ -165,591 +187,790 @@ const AdminUsersPage = () => {
     return list;
   }, [users, query, roleFilter]);
 
-  const isEmpty = !rawLoading && filteredUsers.length === 0;
+  // Pagination
+  const totalPages = Math.ceil(filteredUsers.length / ITEMS_PER_PAGE);
+  const paginatedUsers = filteredUsers.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
+
+  const isEmpty = !rawLoading && paginatedUsers.length === 0;
+
+  const clearFilters = () => {
+    setQuery("");
+    setRoleFilter("all");
+    setCurrentPage(1);
+  };
+
+  // Role counts
+  const roleCounts = useMemo(() => {
+    return users.reduce((acc, user) => {
+      acc[user.role] = (acc[user.role] || 0) + 1;
+      return acc;
+    }, {});
+  }, [users]);
 
   return (
-    <Container
-      maxWidth="lg"
-      sx={{ py: { xs: 4, md: 5 }, position: "relative" }}
-    >
-      {/* Ambient background */}
+    <Box sx={{ minHeight: "100vh", position: "relative" }}>
+      {/* Enhanced Background */}
       <Box
         aria-hidden
         sx={{
           position: "fixed",
           inset: 0,
           zIndex: -1,
-          background: (theme) =>
-            theme.palette.mode === "dark"
-              ? `radial-gradient(circle at 25% 15%, ${alpha(
-                  theme.palette.primary.main,
+          background: (t) =>
+            t.palette.mode === "dark"
+              ? `radial-gradient(circle at 20% 15%, ${alpha(
+                  t.palette.primary.main,
                   0.15
-                )}, transparent 60%), linear-gradient(135deg, ${alpha(
-                  theme.palette.background.default,
-                  1
-                )}, ${alpha(theme.palette.background.default, 1)})`
-              : `radial-gradient(circle at 25% 15%, ${alpha(
-                  theme.palette.primary.light,
-                  0.28
-                )}, transparent 65%), linear-gradient(135deg, ${alpha(
-                  theme.palette.background.default,
-                  0.9
-                )}, ${alpha(theme.palette.background.paper, 0.9)})`,
-          pointerEvents: "none",
+                )}, transparent 60%), 
+                 radial-gradient(circle at 80% 85%, ${alpha(
+                   t.palette.secondary.main,
+                   0.12
+                 )}, transparent 60%),
+                 linear-gradient(135deg, ${t.palette.background.default}, ${
+                  t.palette.background.default
+                })`
+              : `radial-gradient(circle at 20% 15%, ${alpha(
+                  t.palette.primary.light,
+                  0.4
+                )}, transparent 65%), 
+                 radial-gradient(circle at 80% 85%, ${alpha(
+                   t.palette.secondary.light,
+                   0.3
+                 )}, transparent 65%),
+                 linear-gradient(135deg, ${t.palette.background.default}, ${
+                  t.palette.background.paper
+                })`,
         }}
       />
 
-      {/* Header / Toolbar */}
-      <Paper
-        elevation={0}
-        sx={(theme) => ({
-          mb: 4,
-          p: 3,
-          borderRadius: 4,
-          display: "flex",
-          flexWrap: "wrap",
-          gap: 2,
-          alignItems: "center",
-          backdropFilter: "blur(18px)",
-          background: alpha(theme.palette.background.paper, 0.85),
-          border: `1px solid ${alpha(theme.palette.divider, 0.3)}`,
-          position: "relative",
-          overflow: "hidden",
-          "&::before": {
-            content: '""',
-            position: "absolute",
-            inset: 0,
-            background: `linear-gradient(120deg, ${alpha(
-              theme.palette.primary.main,
-              0.08
-            )}, transparent 60%)`,
-            pointerEvents: "none",
-          },
-        })}
-      >
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            gap: 2,
-            flex: 1,
-            minWidth: 240,
-          }}
-        >
-          <Box
-            sx={(theme) => ({
-              width: 52,
-              height: 52,
-              borderRadius: 3,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              background: alpha(theme.palette.primary.main, 0.15),
-              border: `1px solid ${alpha(theme.palette.primary.main, 0.25)}`,
-            })}
-          >
-            <PeopleIcon color="primary" />
-          </Box>
-          <Box>
-            <Typography
-              variant="h5"
-              sx={{
-                fontWeight: 700,
-                letterSpacing: "-0.5px",
-              }}
-            >
-              Kullanıcılar
-            </Typography>
-            <Typography variant="caption" color="text.secondary">
-              Rol yönetimi ve kullanıcı listesi
-            </Typography>
-          </Box>
-        </Box>
-
-        <TextField
-          size="small"
-          placeholder="Ara (isim, kullanıcı, e‑posta)"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          sx={(theme) => ({
-            minWidth: { xs: "100%", sm: 260 },
-            flexShrink: 0,
-            "& .MuiOutlinedInput-root": {
-              borderRadius: 3,
-              background: alpha(theme.palette.background.default, 0.5),
-              backdropFilter: "blur(6px)",
-              "&:hover": {
-                background: alpha(theme.palette.background.default, 0.7),
-              },
+      <Container maxWidth="xl" sx={{ py: { xs: 4, md: 5 } }}>
+        {/* Enhanced Header */}
+        <Paper
+          elevation={0}
+          sx={(t) => ({
+            mb: 4,
+            p: 4,
+            borderRadius: 6,
+            backdropFilter: "blur(20px)",
+            background:
+              t.palette.mode === "dark"
+                ? `linear-gradient(145deg, ${alpha(
+                    t.palette.background.paper,
+                    0.9
+                  )}, ${alpha(t.palette.background.default, 0.95)})`
+                : `linear-gradient(145deg, ${alpha("#fff", 0.95)}, ${alpha(
+                    "#f8fafc",
+                    0.9
+                  )})`,
+            border: `1px solid ${alpha(t.palette.divider, 0.2)}`,
+            position: "relative",
+            overflow: "hidden",
+            "&:before": {
+              content: '""',
+              position: "absolute",
+              inset: 0,
+              background: `radial-gradient(circle at 30% 20%, ${alpha(
+                t.palette.primary.main,
+                0.08
+              )} 0%, transparent 50%), 
+                           radial-gradient(circle at 80% 80%, ${alpha(
+                             t.palette.secondary.main,
+                             0.06
+                           )} 0%, transparent 50%)`,
+              pointerEvents: "none",
             },
           })}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <SearchRoundedIcon fontSize="small" />
-              </InputAdornment>
-            ),
-            endAdornment: query && (
-              <InputAdornment position="end">
-                <IconButton
-                  size="small"
-                  onClick={() => setQuery("")}
-                  edge="end"
-                  aria-label="Temizle"
-                >
-                  <CloseRoundedIcon fontSize="small" />
-                </IconButton>
-              </InputAdornment>
-            ),
-          }}
-        />
-
-        <Select
-          size="small"
-          value={roleFilter}
-          onChange={(e) => setRoleFilter(e.target.value)}
-          displayEmpty
-          sx={(theme) => ({
-            minWidth: 140,
-            borderRadius: 3,
-            background: alpha(theme.palette.background.default, 0.5),
-            "& .MuiOutlinedInput-notchedOutline": { border: "none" },
-          })}
-          renderValue={(val) =>
-            val === "all" ? "Tüm Roller" : ROLE_META[val].label
-          }
         >
-          <MenuItem value="all">Tüm Roller</MenuItem>
-          <MenuItem value="admin">Admin</MenuItem>
-          <MenuItem value="editor">Editör</MenuItem>
-          <MenuItem value="user">User</MenuItem>
-        </Select>
-
-        <Chip
-          label={`${filteredUsers.length} / ${users.length}`}
-          size="small"
-          sx={{
-            fontWeight: 600,
-            bgcolor: (theme) => alpha(theme.palette.primary.main, 0.12),
-            color: "primary.main",
-            height: 30,
-          }}
-        />
-
-        <IconButton
-          size="small"
-          onClick={() => fetchUsers(false)}
-          disabled={refreshing}
-          aria-label="Yenile"
-          sx={{
-            border: "1px solid",
-            borderColor: "divider",
-            ml: 1,
-          }}
-        >
-          {refreshing ? (
-            <CircularProgress size={16} />
-          ) : (
-            <RestartAltRoundedIcon fontSize="small" />
-          )}
-        </IconButton>
-      </Paper>
-
-      {/* Table Card */}
-      <Paper
-        elevation={0}
-        sx={(theme) => ({
-          borderRadius: 4,
-          backdropFilter: "blur(14px)",
-          background: alpha(theme.palette.background.paper, 0.85),
-          border: `1px solid ${alpha(theme.palette.divider, 0.3)}`,
-          overflow: "hidden",
-          position: "relative",
-        })}
-      >
-        <TableContainer sx={{ maxHeight: 620 }}>
-          <Table stickyHeader>
-            <TableHead>
-              <TableRow>
-                <TableCell
-                  sx={{ fontWeight: 600, background: "background.paper" }}
+          <Box sx={{ position: "relative", zIndex: 1 }}>
+            {/* Title Section */}
+            <Stack
+              direction={{ xs: "column", sm: "row" }}
+              justifyContent="space-between"
+              alignItems={{ xs: "flex-start", sm: "center" }}
+              spacing={3}
+              sx={{ mb: 3 }}
+            >
+              <Stack direction="row" alignItems="center" spacing={3}>
+                <Box
+                  sx={(t) => ({
+                    width: 64,
+                    height: 64,
+                    borderRadius: 4,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    background: `linear-gradient(135deg, ${t.palette.primary.main}, ${t.palette.secondary.main})`,
+                    boxShadow: `0 8px 32px ${alpha(
+                      t.palette.primary.main,
+                      0.3
+                    )}`,
+                  })}
                 >
-                  Kullanıcı
-                </TableCell>
-                <TableCell
-                  sx={{ fontWeight: 600, background: "background.paper" }}
-                >
-                  İletişim
-                </TableCell>
-                <TableCell
-                  sx={{ fontWeight: 600, background: "background.paper" }}
-                >
-                  Rol
-                </TableCell>
-                <TableCell
-                  sx={{
-                    fontWeight: 600,
-                    background: "background.paper",
-                    width: 90,
-                  }}
-                >
-                  Güvenlik
-                </TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {rawLoading &&
-                Array.from({ length: SKELETON_ROWS }).map((_, i) => (
-                  <TableRow key={`sk-${i}`}>
-                    <TableCell>
-                      <Box
-                        sx={{ display: "flex", alignItems: "center", gap: 2 }}
-                      >
-                        <Skeleton variant="circular" width={42} height={42} />
-                        <Box sx={{ flex: 1 }}>
-                          <Skeleton width="55%" height={18} />
-                          <Skeleton width="35%" height={14} />
-                        </Box>
-                      </Box>
-                    </TableCell>
-                    <TableCell>
-                      <Skeleton width="70%" height={18} />
-                    </TableCell>
-                    <TableCell>
-                      <Skeleton width={90} height={30} />
-                    </TableCell>
-                    <TableCell>
-                      <Skeleton width={60} height={24} />
-                    </TableCell>
-                  </TableRow>
-                ))}
-
-              {!rawLoading &&
-                filteredUsers.map((user) => {
-                  const meta = ROLE_META[user.role] || ROLE_META.user;
-                  const isProtected = user.username === "semihkececioglu";
-                  return (
-                    <TableRow
-                      key={user._id}
-                      hover
-                      sx={{
-                        transition: ".25s",
-                        "&:hover": {
-                          backgroundColor: (theme) =>
-                            alpha(theme.palette.primary.main, 0.03),
-                        },
-                      }}
+                  <PeopleIcon sx={{ fontSize: 32, color: "white" }} />
+                </Box>
+                <Box>
+                  <Typography
+                    variant="h3"
+                    fontWeight={900}
+                    sx={{
+                      mb: 1,
+                      background: (t) =>
+                        `linear-gradient(135deg, ${t.palette.primary.main}, ${t.palette.secondary.main})`,
+                      backgroundClip: "text",
+                      WebkitBackgroundClip: "text",
+                      color: "rgba(0, 0, 0, 0)",
+                      letterSpacing: "-1px",
+                      fontSize: { xs: "2rem", md: "2.5rem" },
+                    }}
+                  >
+                    Kullanıcı Yönetimi
+                  </Typography>
+                  <Stack direction="row" spacing={2} flexWrap="wrap">
+                    <Badge
+                      badgeContent={users.length}
+                      color="primary"
+                      max={999}
                     >
-                      <TableCell sx={{ py: 1.5 }}>
+                      <StyledChip
+                        icon={<PeopleIcon sx={{ fontSize: 18 }} />}
+                        label="Toplam Kullanıcı"
+                        sx={{
+                          bgcolor: (t) => alpha(t.palette.primary.main, 0.15),
+                          color: "primary.main",
+                        }}
+                      />
+                    </Badge>
+                    {(query || roleFilter !== "all") && (
+                      <Badge
+                        badgeContent={filteredUsers.length}
+                        color="secondary"
+                        max={999}
+                      >
+                        <StyledChip
+                          icon={<TrendingUpIcon sx={{ fontSize: 18 }} />}
+                          label="Görüntülenen"
+                          sx={{
+                            bgcolor: (t) =>
+                              alpha(t.palette.secondary.main, 0.15),
+                            color: "secondary.main",
+                          }}
+                        />
+                      </Badge>
+                    )}
+                    <Badge
+                      badgeContent={roleCounts.admin || 0}
+                      color="error"
+                      max={999}
+                    >
+                      <StyledChip
+                        icon={<AdminPanelSettingsIcon sx={{ fontSize: 18 }} />}
+                        label="Admin"
+                        sx={{
+                          bgcolor: (t) => alpha(t.palette.error.main, 0.15),
+                          color: "error.main",
+                        }}
+                      />
+                    </Badge>
+                  </Stack>
+                </Box>
+              </Stack>
+
+              {/* Refresh Button */}
+              <IconButton
+                onClick={() => fetchUsers(false)}
+                disabled={refreshing}
+                sx={(t) => ({
+                  width: 48,
+                  height: 48,
+                  borderRadius: 3,
+                  bgcolor: alpha(t.palette.primary.main, 0.1),
+                  color: "primary.main",
+                  border: `1px solid ${alpha(t.palette.primary.main, 0.2)}`,
+                  "&:hover": {
+                    bgcolor: alpha(t.palette.primary.main, 0.2),
+                    transform: "scale(1.05)",
+                  },
+                  transition: "all 0.3s ease",
+                })}
+              >
+                {refreshing ? (
+                  <CircularProgress size={20} />
+                ) : (
+                  <RefreshRoundedIcon sx={{ fontSize: 24 }} />
+                )}
+              </IconButton>
+            </Stack>
+
+            {/* Enhanced Filters */}
+            <Stack
+              direction={{ xs: "column", md: "row" }}
+              spacing={2}
+              alignItems={{ xs: "stretch", md: "center" }}
+              flexWrap="wrap"
+            >
+              <TextField
+                size="small"
+                placeholder="Ara (isim, kullanıcı, e‑posta)"
+                value={query}
+                onChange={(e) => {
+                  setQuery(e.target.value);
+                  setCurrentPage(1);
+                }}
+                sx={(t) => ({
+                  flex: 1,
+                  minWidth: 320,
+                  "& .MuiOutlinedInput-root": {
+                    height: CONTROL_H,
+                    borderRadius: 4,
+                    background: alpha(t.palette.background.default, 0.6),
+                    backdropFilter: "blur(10px)",
+                  },
+                })}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <SearchRoundedIcon
+                        sx={{ fontSize: 22, color: "primary.main" }}
+                      />
+                    </InputAdornment>
+                  ),
+                  endAdornment: query && (
+                    <InputAdornment position="end">
+                      <IconButton
+                        size="small"
+                        onClick={() => {
+                          setQuery("");
+                          setCurrentPage(1);
+                        }}
+                        sx={{
+                          bgcolor: (t) => alpha(t.palette.error.main, 0.1),
+                          color: "error.main",
+                        }}
+                      >
+                        <ClearIcon sx={{ fontSize: 18 }} />
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                }}
+              />
+
+              <Select
+                size="small"
+                value={roleFilter}
+                onChange={(e) => {
+                  setRoleFilter(e.target.value);
+                  setCurrentPage(1);
+                }}
+                displayEmpty
+                sx={(t) => ({
+                  minWidth: 160,
+                  "& .MuiOutlinedInput-root": {
+                    height: CONTROL_H,
+                    borderRadius: 4,
+                    background: alpha(t.palette.background.default, 0.6),
+                    backdropFilter: "blur(10px)",
+                  },
+                })}
+                renderValue={(val) =>
+                  val === "all" ? "Tüm Roller" : ROLE_META[val]?.label || val
+                }
+              >
+                <MenuItem value="all">Tüm Roller</MenuItem>
+                <MenuItem value="admin">Admin</MenuItem>
+                <MenuItem value="editor">Editör</MenuItem>
+                <MenuItem value="user">User</MenuItem>
+              </Select>
+
+              {(query || roleFilter !== "all") && (
+                <Button
+                  variant="outlined"
+                  onClick={clearFilters}
+                  sx={{
+                    height: CONTROL_H,
+                    borderRadius: 4,
+                    textTransform: "none",
+                    fontWeight: 600,
+                    px: 2,
+                    minWidth: "auto",
+                    whiteSpace: "nowrap",
+                  }}
+                  startIcon={<ClearIcon fontSize="small" />}
+                >
+                  Temizle
+                </Button>
+              )}
+            </Stack>
+          </Box>
+        </Paper>
+
+        {/* Enhanced Table */}
+        <Paper
+          elevation={0}
+          sx={(t) => ({
+            borderRadius: 4,
+            backdropFilter: "blur(20px)",
+            background: alpha(t.palette.background.paper, 0.9),
+            border: `1px solid ${alpha(t.palette.divider, 0.2)}`,
+            overflow: "hidden",
+          })}
+        >
+          <TableContainer>
+            <Table stickyHeader>
+              <TableHead>
+                <TableRow>
+                  <TableCell sx={{ fontWeight: 700 }}>Kullanıcı</TableCell>
+                  <TableCell sx={{ fontWeight: 700 }}>İletişim</TableCell>
+                  <TableCell sx={{ fontWeight: 700 }}>Rol</TableCell>
+                  <TableCell sx={{ fontWeight: 700, width: 90 }}>
+                    Güvenlik
+                  </TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {rawLoading &&
+                  Array.from({ length: SKELETON_ROWS }).map((_, i) => (
+                    <TableRow key={`sk-${i}`}>
+                      <TableCell>
                         <Box
                           sx={{ display: "flex", alignItems: "center", gap: 2 }}
                         >
-                          <Tooltip title="Profili görüntüle" arrow>
-                            <Avatar
-                              src={user.profileImage}
-                              alt={user.username}
-                              sx={{
-                                width: 44,
-                                height: 44,
-                                cursor: "pointer",
-                                boxShadow: (theme) =>
-                                  `0 4px 10px -4px ${alpha(
-                                    theme.palette.primary.main,
-                                    0.4
-                                  )}`,
-                                transition: ".25s",
-                                "&:hover": { transform: "translateY(-3px)" },
-                              }}
-                              onClick={() =>
-                                navigate(`/profile/${user.username}`)
-                              }
-                            >
-                              {user.username?.[0]?.toUpperCase()}
-                            </Avatar>
+                          <Skeleton variant="circular" width={44} height={44} />
+                          <Box sx={{ flex: 1 }}>
+                            <Skeleton width="55%" height={18} />
+                            <Skeleton width="35%" height={14} />
+                          </Box>
+                        </Box>
+                      </TableCell>
+                      <TableCell>
+                        <Skeleton width="70%" height={18} />
+                      </TableCell>
+                      <TableCell>
+                        <Skeleton width={90} height={30} />
+                      </TableCell>
+                      <TableCell>
+                        <Skeleton width={60} height={24} />
+                      </TableCell>
+                    </TableRow>
+                  ))}
+
+                {!rawLoading &&
+                  paginatedUsers.map((user) => {
+                    const meta = ROLE_META[user.role] || ROLE_META.user;
+                    const isProtected = user.username === "semihkececioglu";
+                    return (
+                      <StyledTableRow key={user._id}>
+                        <TableCell sx={{ py: 1.5 }}>
+                          <Box
+                            sx={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 2,
+                            }}
+                          >
+                            <Tooltip title="Profili görüntüle" arrow>
+                              <Avatar
+                                src={user.profileImage}
+                                alt={user.username}
+                                sx={{
+                                  width: 44,
+                                  height: 44,
+                                  cursor: "pointer",
+                                  fontWeight: 600,
+                                  bgcolor: (t) =>
+                                    !user.profileImage &&
+                                    alpha(t.palette.primary.main, 0.15),
+                                  color: "primary.main",
+                                  transition: "all 0.3s ease",
+                                  "&:hover": {
+                                    transform: "translateY(-2px)",
+                                    boxShadow: (t) =>
+                                      `0 8px 24px ${alpha(
+                                        t.palette.primary.main,
+                                        0.4
+                                      )}`,
+                                  },
+                                }}
+                                onClick={() =>
+                                  navigate(`/profile/${user.username}`)
+                                }
+                              >
+                                {(user.username?.[0] || "").toUpperCase()}
+                              </Avatar>
+                            </Tooltip>
+                            <Box sx={{ minWidth: 140 }}>
+                              <Typography
+                                sx={{
+                                  fontWeight: 600,
+                                  fontSize: "0.92rem",
+                                  lineHeight: 1.2,
+                                  mb: 0.3,
+                                }}
+                              >
+                                {user.firstName && user.lastName
+                                  ? `${user.firstName} ${user.lastName}`
+                                  : user.username}
+                              </Typography>
+                              <Typography
+                                variant="caption"
+                                sx={{
+                                  color: "text.secondary",
+                                  fontSize: "0.7rem",
+                                }}
+                              >
+                                @{user.username}
+                              </Typography>
+                            </Box>
+                          </Box>
+                        </TableCell>
+
+                        <TableCell sx={{ py: 1.5 }}>
+                          <Typography
+                            sx={{
+                              fontSize: "0.8rem",
+                              color: "text.secondary",
+                              maxWidth: 240,
+                              whiteSpace: "nowrap",
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                            }}
+                            title={user.email}
+                          >
+                            {user.email}
+                          </Typography>
+                        </TableCell>
+
+                        <TableCell sx={{ py: 1.5 }}>
+                          <Tooltip
+                            title={
+                              isProtected
+                                ? "Korunan kullanıcı"
+                                : "Rolü değiştirmek için tıklayın"
+                            }
+                            arrow
+                          >
+                            <span>
+                              <StyledChip
+                                icon={meta.icon}
+                                label={meta.label}
+                                size="small"
+                                onClick={() =>
+                                  !isProtected && handleOpenRoleDialog(user)
+                                }
+                                sx={{
+                                  bgcolor: alpha(meta.main, 0.08),
+                                  color: meta.main,
+                                  letterSpacing: ".5px",
+                                  cursor: isProtected
+                                    ? "not-allowed"
+                                    : "pointer",
+                                  opacity: isProtected ? 0.7 : 1,
+                                  "&:hover": !isProtected && {
+                                    bgcolor: alpha(meta.main, 0.15),
+                                    transform: "translateY(-2px)",
+                                  },
+                                }}
+                              />
+                            </span>
                           </Tooltip>
-                          <Box sx={{ minWidth: 140 }}>
-                            <Typography
-                              sx={{
-                                fontWeight: 600,
-                                fontSize: "0.95rem",
-                                lineHeight: 1.2,
-                                mb: 0.3,
-                              }}
-                            >
-                              {user.firstName && user.lastName
-                                ? `${user.firstName} ${user.lastName}`
-                                : user.username}
-                            </Typography>
+                        </TableCell>
+
+                        <TableCell sx={{ py: 1.5 }}>
+                          {isProtected ? (
+                            <Chip
+                              size="small"
+                              label="Protected"
+                              color="secondary"
+                              variant="outlined"
+                              icon={
+                                <SecurityRoundedIcon sx={{ fontSize: 16 }} />
+                              }
+                              sx={{ fontWeight: 600, height: 28 }}
+                            />
+                          ) : (
                             <Typography
                               variant="caption"
                               sx={{
                                 color: "text.secondary",
-                                fontSize: "0.7rem",
+                                fontSize: ".7rem",
                               }}
                             >
-                              @{user.username}
+                              -
                             </Typography>
-                          </Box>
-                        </Box>
-                      </TableCell>
+                          )}
+                        </TableCell>
+                      </StyledTableRow>
+                    );
+                  })}
 
-                      <TableCell sx={{ py: 1.5 }}>
+                {isEmpty && (
+                  <TableRow>
+                    <TableCell colSpan={4} sx={{ py: 8 }}>
+                      <Box
+                        sx={{
+                          display: "flex",
+                          flexDirection: "column",
+                          alignItems: "center",
+                          gap: 2,
+                        }}
+                      >
+                        <PeopleIcon color="disabled" sx={{ fontSize: 64 }} />
                         <Typography
-                          sx={{
-                            fontSize: "0.83rem",
-                            color: "text.secondary",
-                            maxWidth: 240,
-                            whiteSpace: "nowrap",
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                          }}
-                          title={user.email}
+                          variant="h6"
+                          color="text.secondary"
+                          fontWeight={600}
                         >
-                          {user.email}
+                          Kullanıcı bulunamadı
                         </Typography>
-                      </TableCell>
-
-                      <TableCell sx={{ py: 1.5 }}>
-                        <Tooltip
-                          title={
-                            isProtected
-                              ? "Korunan kullanıcı"
-                              : "Rolü değiştirmek için tıklayın"
-                          }
-                          arrow
-                        >
-                          <span>
-                            <Chip
-                              icon={meta.icon}
-                              label={meta.label.toUpperCase()}
-                              size="small"
-                              onClick={() =>
-                                !isProtected && handleOpenRoleDialog(user)
-                              }
-                              sx={{
-                                bgcolor: alpha(meta.main, 0.08),
-                                color: meta.main,
-                                fontWeight: 600,
-                                letterSpacing: ".5px",
-                                cursor: isProtected ? "not-allowed" : "pointer",
-                                transition: ".25s",
-                                "&:hover": !isProtected && {
-                                  bgcolor: alpha(meta.main, 0.15),
-                                  transform: "translateY(-2px)",
-                                },
-                              }}
-                            />
-                          </span>
-                        </Tooltip>
-                      </TableCell>
-
-                      <TableCell sx={{ py: 1.5 }}>
-                        {isProtected ? (
-                          <Chip
-                            size="small"
-                            label="Protected"
-                            color="secondary"
+                        <Typography variant="body2" color="text.secondary">
+                          {query || roleFilter !== "all"
+                            ? "Aradığınız kriterlere uygun kullanıcı bulunamadı"
+                            : "Henüz kullanıcı bulunmuyor"}
+                        </Typography>
+                        {(query || roleFilter !== "all") && (
+                          <Button
                             variant="outlined"
-                            icon={<SecurityRoundedIcon sx={{ fontSize: 16 }} />}
-                            sx={{ fontWeight: 600 }}
-                          />
-                        ) : (
-                          <Typography
-                            variant="caption"
-                            sx={{ color: "text.secondary", fontSize: ".7rem" }}
+                            size="small"
+                            onClick={clearFilters}
+                            startIcon={<ClearIcon />}
                           >
-                            -
-                          </Typography>
+                            Filtreleri Temizle
+                          </Button>
                         )}
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
+                      </Box>
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </TableContainer>
 
-              {isEmpty && (
-                <TableRow>
-                  <TableCell colSpan={4} sx={{ py: 6 }}>
-                    <Box
-                      sx={{
-                        display: "flex",
-                        flexDirection: "column",
-                        alignItems: "center",
-                        gap: 2,
-                        opacity: 0.75,
-                      }}
-                    >
-                      <TuneRoundedIcon color="disabled" sx={{ fontSize: 48 }} />
-                      <Typography variant="body2" color="text.secondary">
-                        Kriterlere uygun kullanıcı bulunamadı.
-                      </Typography>
-                      {(query || roleFilter !== "all") && (
-                        <Button
-                          size="small"
-                          variant="outlined"
-                          onClick={() => {
-                            setQuery("");
-                            setRoleFilter("all");
-                          }}
-                          sx={{ borderRadius: 2 }}
-                        >
-                          Filtreleri sıfırla
-                        </Button>
-                      )}
-                    </Box>
-                  </TableCell>
-                </TableRow>
+          {/* Enhanced Table Footer with Pagination */}
+          {!rawLoading && filteredUsers.length > 0 && (
+            <Box
+              sx={{
+                px: 4,
+                py: 3,
+                display: "flex",
+                flexWrap: "wrap",
+                gap: 2,
+                alignItems: "center",
+                justifyContent: "space-between",
+                borderTop: (t) => `1px solid ${alpha(t.palette.divider, 0.1)}`,
+                bgcolor: (t) => alpha(t.palette.background.default, 0.3),
+              }}
+            >
+              <Stack direction="row" spacing={2} alignItems="center">
+                <Typography
+                  variant="body2"
+                  color="text.primary"
+                  fontWeight={600}
+                >
+                  Toplam {filteredUsers.length} kullanıcı
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  • Sayfa {currentPage} / {totalPages}
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  • Gösterilen {paginatedUsers.length} kullanıcı
+                </Typography>
+              </Stack>
+
+              {totalPages > 1 && (
+                <Pagination
+                  count={totalPages}
+                  page={currentPage}
+                  onChange={(e, value) => setCurrentPage(value)}
+                  color="primary"
+                  shape="rounded"
+                  size="small"
+                  sx={{
+                    "& .MuiPaginationItem-root": {
+                      fontWeight: 600,
+                      transition: "all 0.3s ease",
+                      "&.Mui-selected": {
+                        background: (t) =>
+                          `linear-gradient(135deg, ${
+                            t.palette.primary.main
+                          }, ${darken(t.palette.primary.main, 0.2)})`,
+                      },
+                    },
+                  }}
+                />
               )}
-            </TableBody>
-          </Table>
-        </TableContainer>
+            </Box>
+          )}
+        </Paper>
 
-        <Divider />
-        <Box
-          sx={{
-            px: 3,
-            py: 2.5,
-            display: "flex",
-            flexWrap: "wrap",
-            gap: 2,
-            alignItems: "center",
-            justifyContent: "space-between",
+        {/* Enhanced Role Dialog */}
+        <Dialog
+          open={dialogOpen}
+          onClose={() => {
+            setDialogOpen(false);
+            setSelectedUser(null);
+            setNewRole("");
+          }}
+          TransitionComponent={Transition}
+          PaperProps={{
+            sx: {
+              borderRadius: 6,
+              overflow: "hidden",
+              background: (t) =>
+                t.palette.mode === "dark"
+                  ? `linear-gradient(145deg, ${alpha(
+                      t.palette.background.paper,
+                      0.95
+                    )}, ${alpha(t.palette.background.default, 0.9)})`
+                  : `linear-gradient(145deg, ${alpha("#fff", 0.98)}, ${alpha(
+                      "#f8fafc",
+                      0.95
+                    )})`,
+              backdropFilter: "blur(20px)",
+              width: "100%",
+              maxWidth: 420,
+            },
           }}
         >
-          <Typography variant="caption" color="text.secondary">
-            Toplam {users.length} kullanıcı listelendi.
-          </Typography>
-          <Typography variant="caption" color="text.disabled">
-            Seçim: {filteredUsers.length}
-          </Typography>
-        </Box>
-      </Paper>
-
-      {/* Role Dialog */}
-      <Dialog
-        open={dialogOpen}
-        onClose={() => {
-          setDialogOpen(false);
-          setSelectedUser(null);
-          setNewRole("");
-        }}
-        PaperProps={{
-          sx: {
-            borderRadius: 4,
-            p: 0,
-            width: "100%",
-            maxWidth: 420,
-            overflow: "hidden",
-            backdropFilter: "blur(10px)",
-          },
-        }}
-      >
-        <DialogTitle sx={{ pb: 1.5 }}>
-          <Typography variant="h6" sx={{ fontWeight: 700 }}>
-            Rol Değiştir
-          </Typography>
-          <Typography variant="caption" color="text.secondary">
-            {selectedUser?.username}
-          </Typography>
-        </DialogTitle>
-        <DialogContent sx={{ pt: 1 }}>
-          <Typography
-            variant="subtitle2"
-            sx={{ mb: 1.5, color: "text.secondary", fontWeight: 500 }}
-          >
-            Yeni rolü seçin:
-          </Typography>
-
-          <ToggleButtonGroup
-            value={newRole}
-            exclusive
-            onChange={(_, val) => val && setNewRole(val)}
-            fullWidth
-            sx={(theme) => ({
-              mb: 3,
-              gap: 1,
-              "& .MuiToggleButton-root": {
-                flex: 1,
-                borderRadius: 3 + " !important",
-                border: `1px solid ${alpha(theme.palette.divider, 0.4)}`,
-                textTransform: "none",
-                fontWeight: 600,
-                letterSpacing: ".5px",
-                "&.Mui-selected": {
-                  background: alpha(theme.palette.primary.main, 0.15),
-                  borderColor: alpha(theme.palette.primary.main, 0.4),
-                  color: theme.palette.primary.main,
-                },
-              },
-            })}
-          >
-            <ToggleButton value="user">User</ToggleButton>
-            <ToggleButton value="editor">Editör</ToggleButton>
-            <ToggleButton value="admin">Admin</ToggleButton>
-          </ToggleButtonGroup>
-
-          <Select
-            fullWidth
-            size="small"
-            value={newRole || ""}
-            onChange={(e) => setNewRole(e.target.value)}
+          <DialogTitle
             sx={{
-              borderRadius: 3,
-              mb: 2,
-              "& .MuiOutlinedInput-root": { borderRadius: 3 },
+              fontWeight: 800,
+              pb: 1,
+              pt: 3,
+              fontSize: "1.4rem",
+              background: (t) =>
+                `linear-gradient(135deg, ${t.palette.primary.main}, ${t.palette.secondary.main})`,
+              backgroundClip: "text",
+              WebkitBackgroundClip: "text",
+              color: "rgba(0, 0, 0, 0)",
             }}
           >
-            <MenuItem value="user">User</MenuItem>
-            <MenuItem value="editor">Editör</MenuItem>
-            <MenuItem value="admin">Admin</MenuItem>
-          </Select>
+            Rol Değiştir
+          </DialogTitle>
 
-          <Alert
-            severity="info"
-            variant="outlined"
-            sx={{ borderRadius: 3, fontSize: 12, lineHeight: 1.4 }}
-          >
-            Rol değişikliği anında uygulanır ve kullanıcı oturum davranışını
-            etkileyebilir.
-          </Alert>
-        </DialogContent>
-        <DialogActions sx={{ p: 3, pt: 1 }}>
-          <Button
-            onClick={() => {
-              setDialogOpen(false);
-              setSelectedUser(null);
-              setNewRole("");
-            }}
-            sx={{ textTransform: "none", borderRadius: 3 }}
-          >
-            İptal
-          </Button>
-          <Button
-            variant="contained"
-            disabled={!newRole || newRole === selectedUser?.role}
-            onClick={handleConfirmRoleChange}
-            sx={{ textTransform: "none", borderRadius: 3, fontWeight: 600 }}
-          >
-            Kaydet
-          </Button>
-        </DialogActions>
-      </Dialog>
+          <DialogContent sx={{ pt: 4, pb: 1 }}>
+            <Box sx={{ mb: 3 }}>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                Kullanıcı: <strong>@{selectedUser?.username}</strong>
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                Yeni rolü seçin:
+              </Typography>
+            </Box>
 
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={3200}
-        onClose={() => setSnackbar((s) => ({ ...s, open: false }))}
-        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
-      >
-        <Alert
-          severity={snackbar.severity}
-          variant="filled"
-          onClose={() => setSnackbar((s) => ({ ...s, open: false }))}
-          sx={{ borderRadius: 3 }}
+            <Select
+              fullWidth
+              size="small"
+              value={newRole || ""}
+              onChange={(e) => setNewRole(e.target.value)}
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  borderRadius: 3,
+                  height: 48,
+                },
+              }}
+            >
+              <MenuItem value="user">
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                  <PersonIcon sx={{ fontSize: 18 }} />
+                  User
+                </Box>
+              </MenuItem>
+              <MenuItem value="editor">
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                  <EditIcon sx={{ fontSize: 18 }} />
+                  Editör
+                </Box>
+              </MenuItem>
+              <MenuItem value="admin">
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                  <AdminPanelSettingsIcon sx={{ fontSize: 18 }} />
+                  Admin
+                </Box>
+              </MenuItem>
+            </Select>
+
+            <Alert
+              severity="info"
+              variant="outlined"
+              sx={{
+                borderRadius: 3,
+                fontSize: 12,
+                lineHeight: 1.4,
+                mt: 2,
+                bgcolor: (t) => alpha(t.palette.info.main, 0.05),
+              }}
+            >
+              Rol değişikliği anında uygulanır ve kullanıcı oturum davranışını
+              etkileyebilir.
+            </Alert>
+          </DialogContent>
+
+          <DialogActions sx={{ p: 3, pt: 2 }}>
+            <Button
+              onClick={() => {
+                setDialogOpen(false);
+                setSelectedUser(null);
+                setNewRole("");
+              }}
+              sx={{
+                textTransform: "none",
+                borderRadius: 3,
+                fontWeight: 600,
+                px: 3,
+              }}
+            >
+              İptal Et
+            </Button>
+            <Button
+              variant="contained"
+              disabled={!newRole || newRole === selectedUser?.role}
+              onClick={handleConfirmRoleChange}
+              sx={(t) => ({
+                textTransform: "none",
+                borderRadius: 3,
+                fontWeight: 700,
+                px: 3,
+                background: `linear-gradient(135deg, ${
+                  t.palette.primary.main
+                }, ${darken(t.palette.primary.main, 0.2)})`,
+                "&:hover": {
+                  transform: "translateY(-2px)",
+                  boxShadow: `0 8px 24px ${alpha(t.palette.primary.main, 0.4)}`,
+                },
+              })}
+            >
+              Kaydet
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* Enhanced Snackbar */}
+        <Snackbar
+          open={snackbar.open}
+          autoHideDuration={4000}
+          onClose={() => setSnackbar({ ...snackbar, open: false })}
+          anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+          TransitionComponent={Slide}
         >
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
-    </Container>
+          <Alert
+            onClose={() => setSnackbar({ ...snackbar, open: false })}
+            severity={snackbar.severity}
+            variant="filled"
+            sx={{
+              width: "100%",
+              borderRadius: 3,
+              fontWeight: 600,
+              boxShadow: (t) =>
+                `0 8px 32px ${alpha(t.palette[snackbar.severity].main, 0.3)}`,
+            }}
+          >
+            {snackbar.message}
+          </Alert>
+        </Snackbar>
+      </Container>
+    </Box>
   );
 };
 

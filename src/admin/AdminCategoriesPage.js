@@ -1886,13 +1886,14 @@ const AdminCategoriesPage = () => {
                 t.palette.mode === "dark"
                   ? `linear-gradient(145deg, ${alpha(
                       t.palette.background.paper,
-                      0.95
-                    )}, ${alpha(t.palette.background.default, 0.9)})`
-                  : `linear-gradient(145deg, ${alpha("#fff", 0.98)}, ${alpha(
+                      0.85 // 0.95'ten 0.85'e düşürüldü (daha saydam)
+                    )}, ${alpha(t.palette.background.default, 0.8)})`
+                  : `linear-gradient(145deg, ${alpha("#fff", 0.9)}, ${alpha(
                       "#f8fafc",
-                      0.95
+                      0.85
                     )})`,
-              backdropFilter: "blur(20px)",
+              backdropFilter: "blur(30px)", // 20px'den 30px'e artırıldı (daha blurlu)
+              border: `1px solid ${alpha("#fff", 0.1)}`, // Çok hafif border
               maxHeight: "90vh",
               paddingTop: "8px",
             },
@@ -1918,333 +1919,349 @@ const AdminCategoriesPage = () => {
 
           <DialogContent
             sx={{
-              pt: 3,
-              px: { xs: 2, sm: 3 }, // Mobilde padding azalt
+              pt: 4, // 3'ten 4'e artırıldı
+              px: { xs: 2, sm: 3 },
               pb: 1,
             }}
           >
-            <Stack spacing={3}>
-              {/* Kategori Adı */}
-              <TextField
-                label="Kategori Adı"
-                fullWidth
-                value={categoryInput.name}
-                onChange={(e) =>
-                  setCategoryInput({ ...categoryInput, name: e.target.value })
-                }
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <CategoryIcon sx={{ fontSize: 20 }} />
-                    </InputAdornment>
-                  ),
-                }}
-                sx={{
-                  "& .MuiOutlinedInput-root": {
-                    borderRadius: 3,
-                    height: { xs: 48, sm: 56 }, // Mobilde daha küçük
-                  },
-                }}
-              />
-
-              {/* Açıklama */}
-              <TextField
-                label="Açıklama"
-                fullWidth
-                multiline
-                rows={3}
-                value={categoryInput.description}
-                onChange={(e) =>
-                  setCategoryInput({
-                    ...categoryInput,
-                    description: e.target.value,
-                  })
-                }
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment
-                      position="start"
-                      sx={{ alignSelf: "flex-start", mt: 1 }}
-                    >
-                      <DescriptionIcon sx={{ fontSize: 20 }} />
-                    </InputAdornment>
-                  ),
-                }}
-                sx={{ "& .MuiOutlinedInput-root": { borderRadius: 3 } }}
-              />
-
-              {/* Renk Seçimi */}
-              <Box>
-                <Typography
-                  variant="subtitle2"
-                  fontWeight={600}
-                  sx={{
-                    mb: 2,
-                    fontSize: { xs: "0.9rem", sm: "1rem" },
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 1,
-                  }}
-                >
-                  <PaletteIcon sx={{ fontSize: 18 }} />
-                  Renk Seçin
-                </Typography>
-                <Box
-                  sx={{
-                    display: "grid",
-                    gridTemplateColumns: {
-                      xs: "repeat(8, 1fr)", // Mobilde 8 kolon
-                      sm: "repeat(10, 1fr)", // Desktop'ta 10 kolon
-                    },
-                    gap: { xs: 0.8, sm: 1 }, // Mobilde gap azalt
-                    p: { xs: 1.5, sm: 2 }, // Mobilde padding azalt
-                    border: (t) => `1px solid ${alpha(t.palette.divider, 0.2)}`,
-                    borderRadius: 3,
-                    bgcolor: (t) => alpha(t.palette.background.default, 0.3),
-                  }}
-                >
-                  {PRESET_COLORS.map((color) => (
-                    <ColorPickerButton
-                      key={color}
-                      color={color}
-                      selected={categoryInput.color === color}
-                      onClick={() =>
-                        setCategoryInput({ ...categoryInput, color })
-                      }
-                      sx={{
-                        width: { xs: 32, sm: 40 }, // Mobilde küçült
-                        height: { xs: 32, sm: 40 }, // Mobilde küçült
-                      }}
-                    />
-                  ))}
-                </Box>
+            <Box sx={{ mt: 2 }}>
+              {" "}
+              {/* TextField'ları wrap eden Box eklendi */}
+              <Stack spacing={3}>
+                {/* Kategori Adı */}
                 <TextField
-                  label="Özel Renk (Hex)"
-                  size="small"
+                  label="Kategori Adı"
                   fullWidth
-                  value={categoryInput.color}
+                  value={categoryInput.name}
                   onChange={(e) =>
-                    setCategoryInput({
-                      ...categoryInput,
-                      color: e.target.value,
-                    })
+                    setCategoryInput({ ...categoryInput, name: e.target.value })
                   }
-                  sx={{
-                    mt: 2,
-                    "& .MuiOutlinedInput-root": {
-                      borderRadius: 2,
-                      height: { xs: 40, sm: 48 }, // Mobilde küçült
-                    },
-                  }}
                   InputProps={{
                     startAdornment: (
                       <InputAdornment position="start">
-                        <Box
-                          sx={{
-                            width: { xs: 16, sm: 20 },
-                            height: { xs: 16, sm: 20 },
-                            borderRadius: "50%",
-                            bgcolor: categoryInput.color,
-                            border: "1px solid #ccc",
-                          }}
-                        />
+                        <CategoryIcon sx={{ fontSize: 20 }} />
                       </InputAdornment>
                     ),
                   }}
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      borderRadius: 3,
+                      height: { xs: 48, sm: 56 },
+                      backdropFilter: "blur(10px)", // Blur efekti eklendi
+                      background: (t) =>
+                        alpha(t.palette.background.default, 0.7), // Saydam background
+                    },
+                  }}
                 />
-              </Box>
 
-              {/* İkon Seçimi */}
-              <Box>
-                <Typography
-                  variant="subtitle2"
-                  fontWeight={600}
-                  sx={{
-                    mb: 2,
-                    fontSize: { xs: "0.9rem", sm: "1rem" },
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 1,
-                  }}
-                >
-                  <SettingsIcon sx={{ fontSize: 18 }} />
-                  İkon Seçin
-                </Typography>
-                <Box
-                  sx={{
-                    display: "grid",
-                    gridTemplateColumns: {
-                      xs: "repeat(5, 1fr)", // Mobilde 5 kolon
-                      sm: "repeat(6, 1fr)", // Desktop'ta 6 kolon
-                      md: "repeat(7, 1fr)", // Büyük ekranlarda 7 kolon
-                    },
-                    gap: { xs: 1, sm: 1.5 }, // Mobilde gap azalt
-                    p: { xs: 1.5, sm: 2 }, // Mobilde padding azalt
-                    border: (t) => `1px solid ${alpha(t.palette.divider, 0.2)}`,
-                    borderRadius: 3,
-                    bgcolor: (t) => alpha(t.palette.background.default, 0.3),
-                    maxHeight: { xs: 200, sm: 220 }, // Mobilde daha düşük
-                    overflowY: "auto",
-                    "&::-webkit-scrollbar": {
-                      width: 6,
-                    },
-                    "&::-webkit-scrollbar-track": {
-                      backgroundColor: alpha("#000", 0.1),
-                      borderRadius: 3,
-                    },
-                    "&::-webkit-scrollbar-thumb": {
-                      backgroundColor: alpha("#000", 0.3),
-                      borderRadius: 3,
-                    },
-                  }}
-                >
-                  {AVAILABLE_ICONS.map((iconData) => {
-                    const IconComponent = iconData.icon;
-                    return (
-                      <Tooltip
-                        key={iconData.name}
-                        title={iconData.label}
-                        arrow
-                        placement="top"
+                {/* Açıklama */}
+                <TextField
+                  label="Açıklama"
+                  fullWidth
+                  multiline
+                  rows={3}
+                  value={categoryInput.description}
+                  onChange={(e) =>
+                    setCategoryInput({
+                      ...categoryInput,
+                      description: e.target.value,
+                    })
+                  }
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment
+                        position="start"
+                        sx={{ alignSelf: "flex-start", mt: 1 }}
                       >
-                        <IconPickerButton
-                          selected={categoryInput.icon === iconData.name}
-                          onClick={() =>
-                            setCategoryInput({
-                              ...categoryInput,
-                              icon: iconData.name,
-                            })
-                          }
-                        >
-                          <IconComponent
+                        <DescriptionIcon sx={{ fontSize: 20 }} />
+                      </InputAdornment>
+                    ),
+                  }}
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      borderRadius: 3,
+                      backdropFilter: "blur(10px)", // Blur efekti eklendi
+                      background: (t) =>
+                        alpha(t.palette.background.default, 0.7), // Saydam background
+                    },
+                  }}
+                />
+
+                {/* Renk Seçimi */}
+                <Box>
+                  <Typography
+                    variant="subtitle2"
+                    fontWeight={600}
+                    sx={{
+                      mb: 2,
+                      fontSize: { xs: "0.9rem", sm: "1rem" },
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 1,
+                    }}
+                  >
+                    <PaletteIcon sx={{ fontSize: 18 }} />
+                    Renk Seçin
+                  </Typography>
+                  <Box
+                    sx={{
+                      display: "grid",
+                      gridTemplateColumns: {
+                        xs: "repeat(8, 1fr)", // Mobilde 8 kolon
+                        sm: "repeat(10, 1fr)", // Desktop'ta 10 kolon
+                      },
+                      gap: { xs: 0.8, sm: 1 }, // Mobilde gap azalt
+                      p: { xs: 1.5, sm: 2 }, // Mobilde padding azalt
+                      border: (t) =>
+                        `1px solid ${alpha(t.palette.divider, 0.2)}`,
+                      borderRadius: 3,
+                      bgcolor: (t) => alpha(t.palette.background.default, 0.3),
+                    }}
+                  >
+                    {PRESET_COLORS.map((color) => (
+                      <ColorPickerButton
+                        key={color}
+                        color={color}
+                        selected={categoryInput.color === color}
+                        onClick={() =>
+                          setCategoryInput({ ...categoryInput, color })
+                        }
+                        sx={{
+                          width: { xs: 32, sm: 40 }, // Mobilde küçült
+                          height: { xs: 32, sm: 40 }, // Mobilde küçült
+                        }}
+                      />
+                    ))}
+                  </Box>
+                  <TextField
+                    label="Özel Renk (Hex)"
+                    size="small"
+                    fullWidth
+                    value={categoryInput.color}
+                    onChange={(e) =>
+                      setCategoryInput({
+                        ...categoryInput,
+                        color: e.target.value,
+                      })
+                    }
+                    sx={{
+                      mt: 2,
+                      "& .MuiOutlinedInput-root": {
+                        borderRadius: 2,
+                        height: { xs: 40, sm: 48 }, // Mobilde küçült
+                      },
+                    }}
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <Box
                             sx={{
-                              fontSize: { xs: 20, sm: 24 }, // Mobilde küçült
-                              color:
-                                categoryInput.icon === iconData.name
-                                  ? "primary.main"
-                                  : "text.secondary",
+                              width: { xs: 16, sm: 20 },
+                              height: { xs: 16, sm: 20 },
+                              borderRadius: "50%",
+                              bgcolor: categoryInput.color,
+                              border: "1px solid #ccc",
                             }}
                           />
-                        </IconPickerButton>
-                      </Tooltip>
-                    );
-                  })}
+                        </InputAdornment>
+                      ),
+                    }}
+                  />
                 </Box>
-              </Box>
 
-              {/* Parent Kategori */}
-              <TextField
-                select
-                label="Parent Kategori"
-                fullWidth
-                value={categoryInput.parent}
-                onChange={(e) =>
-                  setCategoryInput({
-                    ...categoryInput,
-                    parent: e.target.value,
-                  })
-                }
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <AccountTreeIcon sx={{ fontSize: 20 }} />
-                    </InputAdornment>
-                  ),
-                }}
-                sx={{
-                  "& .MuiOutlinedInput-root": {
+                {/* İkon Seçimi */}
+                <Box>
+                  <Typography
+                    variant="subtitle2"
+                    fontWeight={600}
+                    sx={{
+                      mb: 2,
+                      fontSize: { xs: "0.9rem", sm: "1rem" },
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 1,
+                    }}
+                  >
+                    <SettingsIcon sx={{ fontSize: 18 }} />
+                    İkon Seçin
+                  </Typography>
+                  <Box
+                    sx={{
+                      display: "grid",
+                      gridTemplateColumns: {
+                        xs: "repeat(5, 1fr)", // Mobilde 5 kolon
+                        sm: "repeat(6, 1fr)", // Desktop'ta 6 kolon
+                        md: "repeat(7, 1fr)", // Büyük ekranlarda 7 kolon
+                      },
+                      gap: { xs: 1, sm: 1.5 }, // Mobilde gap azalt
+                      p: { xs: 1.5, sm: 2 }, // Mobilde padding azalt
+                      border: (t) =>
+                        `1px solid ${alpha(t.palette.divider, 0.2)}`,
+                      borderRadius: 3,
+                      bgcolor: (t) => alpha(t.palette.background.default, 0.3),
+                      maxHeight: { xs: 200, sm: 220 }, // Mobilde daha düşük
+                      overflowY: "auto",
+                      "&::-webkit-scrollbar": {
+                        width: 6,
+                      },
+                      "&::-webkit-scrollbar-track": {
+                        backgroundColor: alpha("#000", 0.1),
+                        borderRadius: 3,
+                      },
+                      "&::-webkit-scrollbar-thumb": {
+                        backgroundColor: alpha("#000", 0.3),
+                        borderRadius: 3,
+                      },
+                    }}
+                  >
+                    {AVAILABLE_ICONS.map((iconData) => {
+                      const IconComponent = iconData.icon;
+                      return (
+                        <Tooltip
+                          key={iconData.name}
+                          title={iconData.label}
+                          arrow
+                          placement="top"
+                        >
+                          <IconPickerButton
+                            selected={categoryInput.icon === iconData.name}
+                            onClick={() =>
+                              setCategoryInput({
+                                ...categoryInput,
+                                icon: iconData.name,
+                              })
+                            }
+                          >
+                            <IconComponent
+                              sx={{
+                                fontSize: { xs: 20, sm: 24 }, // Mobilde küçült
+                                color:
+                                  categoryInput.icon === iconData.name
+                                    ? "primary.main"
+                                    : "text.secondary",
+                              }}
+                            />
+                          </IconPickerButton>
+                        </Tooltip>
+                      );
+                    })}
+                  </Box>
+                </Box>
+
+                {/* Parent Kategori */}
+                <TextField
+                  select
+                  label="Parent Kategori"
+                  fullWidth
+                  value={categoryInput.parent}
+                  onChange={(e) =>
+                    setCategoryInput({
+                      ...categoryInput,
+                      parent: e.target.value,
+                    })
+                  }
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <AccountTreeIcon sx={{ fontSize: 20 }} />
+                      </InputAdornment>
+                    ),
+                  }}
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      borderRadius: 3,
+                      height: { xs: 48, sm: 56 }, // Mobilde küçült
+                    },
+                  }}
+                >
+                  <MenuItem value="">(Ana Kategori)</MenuItem>
+                  {categories
+                    .filter((c) =>
+                      editingCategory ? c._id !== editingCategory._id : true
+                    )
+                    .map((c) => (
+                      <MenuItem key={c._id} value={c._id}>
+                        <Stack direction="row" alignItems="center" spacing={1}>
+                          <Box
+                            sx={{
+                              width: 12,
+                              height: 12,
+                              borderRadius: "50%",
+                              bgcolor: c.color || "#999",
+                            }}
+                          />
+                          <Typography
+                            sx={{
+                              fontSize: { xs: "0.9rem", sm: "1rem" },
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                              whiteSpace: "nowrap",
+                            }}
+                          >
+                            {c.name}
+                          </Typography>
+                        </Stack>
+                      </MenuItem>
+                    ))}
+                </TextField>
+
+                {/* Öne Çıkan Switch */}
+                <Paper
+                  sx={{
+                    p: { xs: 2, sm: 2.5 },
                     borderRadius: 3,
-                    height: { xs: 48, sm: 56 }, // Mobilde küçült
-                  },
-                }}
-              >
-                <MenuItem value="">(Ana Kategori)</MenuItem>
-                {categories
-                  .filter((c) =>
-                    editingCategory ? c._id !== editingCategory._id : true
-                  )
-                  .map((c) => (
-                    <MenuItem key={c._id} value={c._id}>
+                    bgcolor: (t) => alpha(t.palette.primary.main, 0.05),
+                    border: (t) =>
+                      `1px solid ${alpha(t.palette.primary.main, 0.1)}`,
+                  }}
+                >
+                  <FormControlLabel
+                    control={
+                      <Switch
+                        checked={categoryInput.featured}
+                        onChange={(e) =>
+                          setCategoryInput({
+                            ...categoryInput,
+                            featured: e.target.checked,
+                          })
+                        }
+                        sx={{
+                          "& .MuiSwitch-thumb": {
+                            boxShadow: (t) =>
+                              `0 2px 8px ${alpha(t.palette.primary.main, 0.3)}`,
+                          },
+                        }}
+                      />
+                    }
+                    label={
                       <Stack direction="row" alignItems="center" spacing={1}>
-                        <Box
-                          sx={{
-                            width: 12,
-                            height: 12,
-                            borderRadius: "50%",
-                            bgcolor: c.color || "#999",
-                          }}
-                        />
-                        <Typography
-                          sx={{
-                            fontSize: { xs: "0.9rem", sm: "1rem" },
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                            whiteSpace: "nowrap",
-                          }}
-                        >
-                          {c.name}
-                        </Typography>
+                        <StarIcon sx={{ fontSize: 18, color: "#FFD700" }} />
+                        <Box>
+                          <Typography
+                            variant="body2"
+                            fontWeight={600}
+                            sx={{ fontSize: { xs: "0.85rem", sm: "0.875rem" } }}
+                          >
+                            Öne Çıkan Kategori
+                          </Typography>
+                          <Typography
+                            variant="caption"
+                            color="text.secondary"
+                            sx={{
+                              display: "block",
+                              fontSize: { xs: "0.7rem", sm: "0.75rem" },
+                            }}
+                          >
+                            Sidebar'da öne çıkan olarak gösterilir
+                          </Typography>
+                        </Box>
                       </Stack>
-                    </MenuItem>
-                  ))}
-              </TextField>
-
-              {/* Öne Çıkan Switch */}
-              <Paper
-                sx={{
-                  p: { xs: 2, sm: 2.5 },
-                  borderRadius: 3,
-                  bgcolor: (t) => alpha(t.palette.primary.main, 0.05),
-                  border: (t) =>
-                    `1px solid ${alpha(t.palette.primary.main, 0.1)}`,
-                }}
-              >
-                <FormControlLabel
-                  control={
-                    <Switch
-                      checked={categoryInput.featured}
-                      onChange={(e) =>
-                        setCategoryInput({
-                          ...categoryInput,
-                          featured: e.target.checked,
-                        })
-                      }
-                      sx={{
-                        "& .MuiSwitch-thumb": {
-                          boxShadow: (t) =>
-                            `0 2px 8px ${alpha(t.palette.primary.main, 0.3)}`,
-                        },
-                      }}
-                    />
-                  }
-                  label={
-                    <Stack direction="row" alignItems="center" spacing={1}>
-                      <StarIcon sx={{ fontSize: 18, color: "#FFD700" }} />
-                      <Box>
-                        <Typography
-                          variant="body2"
-                          fontWeight={600}
-                          sx={{ fontSize: { xs: "0.85rem", sm: "0.875rem" } }}
-                        >
-                          Öne Çıkan Kategori
-                        </Typography>
-                        <Typography
-                          variant="caption"
-                          color="text.secondary"
-                          sx={{
-                            display: "block",
-                            fontSize: { xs: "0.7rem", sm: "0.75rem" },
-                          }}
-                        >
-                          Sidebar'da öne çıkan olarak gösterilir
-                        </Typography>
-                      </Box>
-                    </Stack>
-                  }
-                  sx={{ m: 0 }}
-                />
-              </Paper>
-            </Stack>
+                    }
+                    sx={{ m: 0 }}
+                  />
+                </Paper>
+              </Stack>
+            </Box>
           </DialogContent>
 
           <DialogActions
