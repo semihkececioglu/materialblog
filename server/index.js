@@ -4,6 +4,7 @@ const cors = require("cors");
 const path = require("path");
 require("dotenv").config();
 
+// Import route models
 const postRoutes = require("./routes/postRoutes");
 const categoryRoutes = require("./routes/categoryRoutes");
 const tagRoutes = require("./routes/tagRoutes");
@@ -28,7 +29,7 @@ app.use(
 
 app.use(express.json());
 
-// Route tanımları
+// Route middleware - API endpoints
 app.use("/api/posts", postRoutes);
 app.use("/api/categories", categoryRoutes);
 app.use("/api/tags", tagRoutes);
@@ -40,7 +41,7 @@ app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/analytics", analyticsRoutes);
 app.use("/api/contact", contactRoutes);
 
-// MongoDB bağlantısı
+// MongoDB connection
 mongoose
   .connect(process.env.MONGO_URI, {
     useNewUrlParser: true,
