@@ -5,6 +5,17 @@ const User = require("../models/User");
 const Category = require("../models/Category");
 const Tag = require("../models/Tags");
 
+// yardımcı: boş stringleri temizle
+const cleanBody = (body) => {
+  const cleaned = {};
+  Object.keys(body).forEach((key) => {
+    if (body[key] !== "" && body[key] != null) {
+      cleaned[key] = body[key];
+    }
+  });
+  return cleaned;
+};
+
 // SLUG İLE POST GETİR (kategori + etiket populate)
 router.get("/slug/:slug", async (req, res) => {
   try {
@@ -120,34 +131,22 @@ router.get("/", async (req, res) => {
       ],
     };
 
-    // kategori slug → ObjectId
     if (category) {
       const cat = await Category.findOne({ slug: category });
-      if (cat) {
-        filter.category = cat._id;
-      } else {
-        return res.json({ posts: [], totalPages: 0, currentPage: 1 });
-      }
+      if (cat) filter.category = cat._id;
+      else return res.json({ posts: [], totalPages: 0, currentPage: 1 });
     }
 
-    // etiket slug → ObjectId
     if (tag) {
       const tagDoc = await Tag.findOne({ tagSlug: tag });
-      if (tagDoc) {
-        filter.tags = tagDoc._id;
-      } else {
-        return res.json({ posts: [], totalPages: 0, currentPage: 1 });
-      }
+      if (tagDoc) filter.tags = tagDoc._id;
+      else return res.json({ posts: [], totalPages: 0, currentPage: 1 });
     }
 
-    // yazar username → ObjectId
     if (author) {
       const authorUser = await User.findOne({ username: author });
-      if (authorUser) {
-        filter.user = authorUser._id;
-      } else {
-        return res.json({ posts: [], totalPages: 0, currentPage: 1 });
-      }
+      if (authorUser) filter.user = authorUser._id;
+      else return res.json({ posts: [], totalPages: 0, currentPage: 1 });
     }
 
     const pageNumber = parseInt(page);
@@ -211,22 +210,31 @@ router.get("/:id", async (req, res) => {
 // POST OLUŞTUR
 router.post("/", async (req, res) => {
   try {
-    const newPost = new Post(req.body);
+    const body = cleanBody(req.body);
+    const newPost = new Post(body);
     const savedPost = await newPost.save();
-    const populatedPost = await savedPost
-      .populate("category", "name slug color icon")
-      .populate("tags", "name tagSlug");
-    res.status(201).json(populatedPost);
+
+    try {
+      await savedPost.populate([
+        { path: "category", select: "name slug color icon" },
+        { path: "tags", select: "name tagSlug" },
+      ]);
+    } catch (err) {
+      console.warn("Populate hatası (önemli değil):", err.message);
+    }
+
+    res.status(201).json(savedPost);
   } catch (err) {
     console.error("Yeni yazı ekleme hatası:", err);
-    res.status(400).json({ error: "Geçersiz veri!", details: err });
+    res.status(400).json({ error: "Geçersiz veri!", details: err.message });
   }
 });
 
 // POST GÜNCELLE
 router.put("/:id", async (req, res) => {
   try {
-    const updatedPost = await Post.findByIdAndUpdate(req.params.id, req.body, {
+    const body = cleanBody(req.body);
+    const updatedPost = await Post.findByIdAndUpdate(req.params.id, body, {
       new: true,
     })
       .populate("category", "name slug color icon")
