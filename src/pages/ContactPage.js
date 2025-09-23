@@ -561,7 +561,7 @@ const ContactPage = () => {
             },
           }}
         >
-          🎉 Mesajınız başarıyla gönderildi! Teşekkür ederiz.
+          Mesajınız başarıyla gönderildi! Teşekkür ederiz.
         </Alert>
       </Snackbar>
     </Box>
