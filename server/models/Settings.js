@@ -3,13 +3,11 @@ const mongoose = require("mongoose");
 const SettingsSchema = new mongoose.Schema({
   siteTitle: { type: String, default: "Material Blog" },
   siteDescription: { type: String, default: "Modern Blog Platform" },
-
-  // Meta Pixel
-  metaPixelEnabled: { type: Boolean, default: false },
-  metaPixelId: { type: String, default: "" },
+  metaPixelEnabled: { type: Boolean, default: false }, // Meta Pixel toggle
+  metaPixelId: { type: String, default: "" }, // Meta Pixel ID
 });
 
-// Singleton settings kaydı
+// singleton pattern to ensure only one settings document
 SettingsSchema.statics.getSingleton = async function () {
   let settings = await this.findOne();
   if (!settings) {

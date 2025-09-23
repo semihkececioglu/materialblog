@@ -26,7 +26,7 @@ const postSchema = new mongoose.Schema({
   },
 });
 
-// slug otomatik üret
+// Generate slug from title before saving
 postSchema.pre("save", function (next) {
   if (this.title && !this.slug) {
     this.slug = slugify(this.title, { lower: true, strict: true });

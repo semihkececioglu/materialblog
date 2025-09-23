@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const Setting = require("../models/Settings");
 
-// GET /api/settings → tüm ayarlar
+// Get all settings
 router.get("/", async (req, res) => {
   try {
     const settings = await Setting.getSingleton();
@@ -13,15 +13,13 @@ router.get("/", async (req, res) => {
   }
 });
 
-// GET /api/settings/public → sadece public alanlar
+// Get public settings (site title, description, Meta Pixel)
 router.get("/public", async (req, res) => {
   try {
     const settings = await Setting.getSingleton();
     res.json({
       siteTitle: settings.siteTitle,
       siteDescription: settings.siteDescription,
-
-      // Meta Pixel alanlarını da döndür
       metaPixelEnabled: settings.metaPixelEnabled,
       metaPixelId: settings.metaPixelId,
     });
@@ -31,7 +29,7 @@ router.get("/public", async (req, res) => {
   }
 });
 
-// PUT /api/settings → güncelle
+// Update settings
 router.put("/", async (req, res) => {
   try {
     let settings = await Setting.getSingleton();

@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const Comment = require("../models/comment.model");
 
-// GET: Belirli bir yazıya ait tüm yorumları al (user bilgileriyle birlikte)
+// Get all comments or comments for a specific post
 router.get("/", async (req, res) => {
   try {
     const { postId } = req.query;
@@ -18,7 +18,7 @@ router.get("/", async (req, res) => {
   }
 });
 
-//admin paneli için son 5 yorumu getir.
+// Get latest 5 comments for admin dashboard
 router.get("/latest", async (req, res) => {
   try {
     const latestComments = await Comment.find()
@@ -34,7 +34,7 @@ router.get("/latest", async (req, res) => {
   }
 });
 
-// POST: Yeni yorum veya yanıt ekle
+// Add new comment or reply to a comment
 router.post("/", async (req, res) => {
   try {
     const { user, postId, parentId, text } = req.body;
@@ -58,7 +58,7 @@ router.post("/", async (req, res) => {
   }
 });
 
-// DELETE: Yorumu (ve varsa alt yanıtlarını) sil
+// Delete comments and its replies
 router.delete("/:id", async (req, res) => {
   try {
     const id = req.params.id;
@@ -72,7 +72,7 @@ router.delete("/:id", async (req, res) => {
   }
 });
 
-// PUT: Yorumu güncelle
+// Update comment text
 router.put("/:id", async (req, res) => {
   try {
     const updated = await Comment.findByIdAndUpdate(
@@ -87,7 +87,7 @@ router.put("/:id", async (req, res) => {
   }
 });
 
-// PUT: Yorumu beğen / beğenmekten vazgeç
+// Like/unlike a comment
 router.put("/:id/like", async (req, res) => {
   const { username } = req.body;
 

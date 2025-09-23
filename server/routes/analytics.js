@@ -7,9 +7,7 @@ const analyticsDataClient = new BetaAnalyticsDataClient({
 });
 const propertyId = process.env.GA4_PROPERTY_ID;
 
-/* ===========================
-   GA Overview (aktif kullanıcı + page views)
-   =========================== */
+// Google Analytics - Time Series Data (last 7 days by default)
 router.get("/overview", async (req, res) => {
   try {
     const { startDate = "7daysAgo", endDate = "today" } = req.query;
@@ -36,9 +34,7 @@ router.get("/overview", async (req, res) => {
   }
 });
 
-/* ===========================
-   GA Timeseries (günlük aktif kullanıcı + page views)
-   =========================== */
+// Google Analytics - Time Series (active users + page views over time)
 router.get("/timeseries", async (req, res) => {
   try {
     const { startDate = "7daysAgo", endDate = "today" } = req.query;
@@ -66,9 +62,7 @@ router.get("/timeseries", async (req, res) => {
   }
 });
 
-/* ===========================
-   GA Top Pages (en çok görüntülenen sayfalar)
-   =========================== */
+// Google Analytics - Top Pages
 router.get("/top-pages", async (req, res) => {
   try {
     const {

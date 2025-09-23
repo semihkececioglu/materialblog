@@ -4,6 +4,7 @@ const router = express.Router();
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
+// Send contact form message
 router.post("/", async (req, res) => {
   const { name, email, message } = req.body || {};
   if (!name || !email || !message) {

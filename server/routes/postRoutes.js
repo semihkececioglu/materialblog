@@ -16,7 +16,7 @@ const cleanBody = (body) => {
   return cleaned;
 };
 
-// SLUG İLE POST GETİR (kategori + etiket populate)
+// Get post by slug (with populated user, category, tags)
 router.get("/slug/:slug", async (req, res) => {
   try {
     const post = await Post.findOne({ slug: req.params.slug })
@@ -32,7 +32,7 @@ router.get("/slug/:slug", async (req, res) => {
   }
 });
 
-// BEĞENİ DURUMU (GET)
+// Get like status for a post by a user
 router.get("/:postId/like-status", async (req, res) => {
   const { postId } = req.params;
   const { userId } = req.query;
@@ -52,7 +52,7 @@ router.get("/:postId/like-status", async (req, res) => {
   }
 });
 
-// BEĞEN / BEĞENME (TOGGLE)
+// Like/unlike a post (toggle)
 router.post("/:postId/like", async (req, res) => {
   const { postId } = req.params;
   const { userId } = req.body;
@@ -84,7 +84,7 @@ router.post("/:postId/like", async (req, res) => {
   }
 });
 
-// KAYDET / KAYDETME (TOGGLE)
+// Save/unsave a post (toggle)
 router.post("/:postId/save", async (req, res) => {
   const { postId } = req.params;
   const { userId } = req.body;
@@ -112,7 +112,7 @@ router.post("/:postId/save", async (req, res) => {
   }
 });
 
-// POST LİSTELEME (arama, kategori, etiket, yazar, sayfalama)
+// Post list with filters (search, category, tag, author) and pagination
 router.get("/", async (req, res) => {
   try {
     const {
@@ -174,7 +174,7 @@ router.get("/", async (req, res) => {
   }
 });
 
-// SON 5 YAZI
+// Get latest 5 post for admin dashboard
 router.get("/latest", async (req, res) => {
   try {
     const latestPosts = await Post.find()
@@ -191,7 +191,7 @@ router.get("/latest", async (req, res) => {
   }
 });
 
-// ID İLE POST GETİR
+// Get post by ID (with populated user, category, tags)
 router.get("/:id", async (req, res) => {
   try {
     const post = await Post.findById(req.params.id)
@@ -207,7 +207,7 @@ router.get("/:id", async (req, res) => {
   }
 });
 
-// POST OLUŞTUR
+// Create new post
 router.post("/", async (req, res) => {
   try {
     const body = cleanBody(req.body);
@@ -230,7 +230,7 @@ router.post("/", async (req, res) => {
   }
 });
 
-// POST GÜNCELLE
+// Update post by ID
 router.put("/:id", async (req, res) => {
   try {
     const body = cleanBody(req.body);
@@ -248,7 +248,7 @@ router.put("/:id", async (req, res) => {
   }
 });
 
-// POST SİL
+// Delete post by ID
 router.delete("/:id", async (req, res) => {
   try {
     const deletedPost = await Post.findByIdAndDelete(req.params.id);

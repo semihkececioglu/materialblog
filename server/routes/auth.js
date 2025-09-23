@@ -14,7 +14,7 @@ router.post("/register", async (req, res) => {
     if (userExists)
       return res.status(400).json({ message: "Kullanıcı zaten mevcut." });
 
-    // Şifreyi hashle
+    // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const newUser = new User({
@@ -27,14 +27,14 @@ router.post("/register", async (req, res) => {
 
     const savedUser = await newUser.save();
 
-    // JWT token oluştur
+    // Create JWT token
     const token = jwt.sign(
       { id: savedUser._id, role: savedUser.role },
       JWT_SECRET,
       { expiresIn: "7d" }
     );
 
-    // Otomatik giriş yapılıp kullanıcı bilgisiyle birlikte dön
+    // Auto login after registration
     res.status(201).json({
       token,
       user: {

@@ -6,6 +6,7 @@ const tagSchema = new mongoose.Schema({
   tagSlug: { type: String, unique: true },
 });
 
+// Update tag slug before saving
 tagSchema.pre("save", function (next) {
   if (this.name && !this.tagSlug) {
     this.tagSlug = slugify(this.name, { lower: true, strict: true });

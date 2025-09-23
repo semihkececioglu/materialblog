@@ -48,17 +48,17 @@ router.delete("/:id", async (req, res) => {
   }
 });
 
-// ✅ Popüler etiketler (en çok kullanılan ilk 6)
+// Popular tags (most used in posts - top 6)
 router.get("/popular", async (req, res) => {
   try {
     const tags = await Post.aggregate([
-      { $unwind: "$tags" }, // her tag'i ayır
-      { $group: { _id: "$tags", count: { $sum: 1 } } }, // tagId bazlı grupla
+      { $unwind: "$tags" },
+      { $group: { _id: "$tags", count: { $sum: 1 } } },
       { $sort: { count: -1 } },
       { $limit: 6 },
       {
         $lookup: {
-          from: "tags", // MongoDB'deki collection ismi (küçük harf + çoğul)
+          from: "tags",
           localField: "_id",
           foreignField: "_id",
           as: "tagDetails",

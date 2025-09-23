@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const User = require("../models/User");
 
-// GET /api/users → Tüm kullanıcıları getir
+// Get all users (without passwords)
 router.get("/", async (req, res) => {
   try {
     const users = await User.find({}, "-password");
@@ -13,7 +13,7 @@ router.get("/", async (req, res) => {
   }
 });
 
-// GET /api/users/:username → Tek bir kullanıcıyı getir
+// Get user by username (without password)
 router.get("/:username", async (req, res) => {
   try {
     const user = await User.findOne({ username: req.params.username }).select(
@@ -29,7 +29,7 @@ router.get("/:username", async (req, res) => {
   }
 });
 
-// PUT /api/users/:username → Kullanıcı profilini güncelle
+// Update user profile by username
 router.put("/:username", async (req, res) => {
   const { username } = req.params;
   const { firstName, lastName, bio, profileImage } = req.body;
@@ -66,7 +66,7 @@ router.put("/:username", async (req, res) => {
   }
 });
 
-// PUT /api/users/:id/role → Rol güncelle
+// Update user role by ID (admin only)
 router.put("/:id/role", async (req, res) => {
   const { id } = req.params;
   const { role } = req.body;
@@ -91,7 +91,7 @@ router.put("/:id/role", async (req, res) => {
   }
 });
 
-// GET /api/users/id/:id → ID ile kullanıcıyı getir
+// Get user by ID (without password)
 router.get("/id/:id", async (req, res) => {
   try {
     const user = await User.findById(req.params.id).select("-password");

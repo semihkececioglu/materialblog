@@ -9,7 +9,7 @@ const UserSchema = new Schema(
     password: { type: String, required: true },
     firstName: { type: String, required: true },
     lastName: { type: String, required: true },
-    role: { type: String, enum: ["user", "admin", "editor"], default: "user" },
+    role: { type: String, enum: ["user", "admin", "editor"], default: "user" }, // 3 different user roles
 
     likedPosts: [{ type: Schema.Types.ObjectId, ref: "Post" }],
     savedPosts: [{ type: Schema.Types.ObjectId, ref: "Post" }],
@@ -25,6 +25,7 @@ const UserSchema = new Schema(
   { timestamps: true }
 );
 
+// Hash password before saving
 UserSchema.pre("save", async function (next) {
   if (!this.isModified("password")) return next();
   const salt = await bcrypt.genSalt(10);

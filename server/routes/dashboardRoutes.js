@@ -5,6 +5,7 @@ const Post = require("../models/Post");
 const Category = require("../models/Category");
 const Comment = require("../models/comment.model");
 
+// Get dashboard statistics data (Total posts, categories and comments)
 router.get("/", async (req, res) => {
   try {
     const totalPosts = await Post.countDocuments();
