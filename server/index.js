@@ -13,6 +13,7 @@ const userRoutes = require("./routes/userRoutes");
 const settingsRoutes = require("./routes/settings");
 const dashboardRoutes = require("./routes/dashboardRoutes");
 const analyticsRoutes = require("./routes/analytics");
+const contactRoutes = require("./routes/contact");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -37,6 +38,7 @@ app.use("/api/users", userRoutes);
 app.use("/api/settings", settingsRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/analytics", analyticsRoutes);
+app.use("/api/contact", contactRoutes);
 
 // MongoDB bağlantısı
 mongoose
