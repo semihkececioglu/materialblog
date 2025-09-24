@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useMemo } from "react";
 import {
   Typography,
   List,
@@ -65,7 +65,7 @@ const AVAILABLE_ICONS = {
   LocalLibrary: LocalLibraryIcon,
 };
 
-const CategoryList = () => {
+const CategoryList = React.memo(() => {
   const dispatch = useDispatch();
   const { items: categories = [], loading } = useSelector(
     (state) => state.categories
@@ -150,24 +150,172 @@ const CategoryList = () => {
     </Box>
   );
 
+  // Memoized styles
+  const paperStyles = useMemo(
+    () => ({
+      p: 2,
+      mt: 3,
+      borderRadius: 2,
+      bgcolor: (theme) =>
+        theme.palette.mode === "dark"
+          ? alpha(theme.palette.background.paper, 0.4)
+          : alpha(theme.palette.background.paper, 0.85),
+      backdropFilter: "blur(12px)",
+      border: "1px solid",
+      borderColor: "divider",
+    }),
+    []
+  );
+
+  const headerStyles = useMemo(
+    () => ({
+      display: "flex",
+      alignItems: "center",
+      gap: 1,
+      mb: 2,
+    }),
+    []
+  );
+
+  // Memoized category item renderer
+  const CategoryItem = useMemo(
+    () =>
+      React.memo(({ category, index }) => {
+        const IconComponent = getIconComponent(category.icon);
+        const categoryColor = category.color || "#6366f1";
+
+        const itemStyles = useMemo(
+          () => ({
+            width: "100%",
+            p: 1.5,
+            borderRadius: 2.5,
+            display: "flex",
+            alignItems: "center",
+            gap: 1.5,
+            textDecoration: "none",
+            color: "text.primary",
+            bgcolor: alpha(categoryColor, 0.06),
+            border: "1px solid",
+            borderColor: alpha(categoryColor, 0.12),
+            transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+            position: "relative",
+            overflow: "hidden",
+            "&:hover": {
+              bgcolor: alpha(categoryColor, 0.12),
+              transform: "translateX(8px) scale(1.02)",
+              borderColor: alpha(categoryColor, 0.25),
+              boxShadow: `0 8px 25px ${alpha(categoryColor, 0.2)}`,
+              "&:before": {
+                width: 4,
+              },
+              "& .category-arrow": {
+                opacity: 1,
+                transform: "translateX(0)",
+              },
+            },
+            "&:before": {
+              content: '""',
+              position: "absolute",
+              top: 0,
+              left: 0,
+              bottom: 0,
+              width: 0,
+              bgcolor: categoryColor,
+              transition: "width 0.3s ease",
+              borderRadius: "0 4px 4px 0",
+            },
+          }),
+          [categoryColor]
+        );
+
+        return (
+          <ListItem disablePadding sx={{ mb: 0.75 }}>
+            <Paper
+              component={Link}
+              to={`/category/${category.slug}`}
+              elevation={0}
+              sx={itemStyles}
+            >
+              {/* İkon container */}
+              <Box
+                sx={{
+                  width: 40,
+                  height: 40,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  borderRadius: 2,
+                  bgcolor: alpha(categoryColor, 0.15),
+                  color: categoryColor,
+                  position: "relative",
+                  zIndex: 1,
+                  boxShadow: `0 2px 8px ${alpha(categoryColor, 0.2)}`,
+                }}
+              >
+                <IconComponent sx={{ fontSize: 20 }} />
+              </Box>
+
+              {/* Kategori bilgileri */}
+              <Box
+                sx={{
+                  flex: 1,
+                  minWidth: 0,
+                  position: "relative",
+                  zIndex: 1,
+                }}
+              >
+                <Typography
+                  sx={{
+                    fontWeight: 650,
+                    mb: 0.25,
+                    fontSize: "0.9rem",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap",
+                    letterSpacing: "-0.25px",
+                  }}
+                >
+                  {category.name}
+                </Typography>
+                <Typography
+                  variant="caption"
+                  sx={{
+                    color: "text.secondary",
+                    fontSize: "0.75rem",
+                    fontWeight: 500,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 0.5,
+                  }}
+                >
+                  {category.postCount || 0} yazı
+                </Typography>
+              </Box>
+
+              {/* Arrow icon */}
+              <ArrowForwardIcon
+                className="category-arrow"
+                sx={{
+                  fontSize: 16,
+                  color: categoryColor,
+                  opacity: 0,
+                  transform: "translateX(-8px)",
+                  transition: "all 0.3s ease",
+                  position: "relative",
+                  zIndex: 1,
+                }}
+              />
+            </Paper>
+          </ListItem>
+        );
+      }),
+    []
+  );
+
   return (
-    <Paper
-      elevation={0}
-      sx={{
-        p: 2,
-        mt: 3,
-        borderRadius: 2,
-        bgcolor: (theme) =>
-          theme.palette.mode === "dark"
-            ? alpha(theme.palette.background.paper, 0.4)
-            : alpha(theme.palette.background.paper, 0.85),
-        backdropFilter: "blur(12px)",
-        border: "1px solid",
-        borderColor: "divider",
-      }}
-    >
+    <Paper elevation={0} sx={paperStyles}>
       {/* Başlık - orijinal hali */}
-      <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
+      <Box sx={headerStyles}>
         <Box
           sx={{
             width: 3,
@@ -249,123 +397,11 @@ const CategoryList = () => {
             const categoryColor = category.color || "#6366f1"; // modern fallback color
 
             return (
-              <ListItem key={category._id} disablePadding sx={{ mb: 0.75 }}>
-                <Paper
-                  component={Link}
-                  to={`/category/${category.slug}`}
-                  elevation={0}
-                  sx={{
-                    width: "100%",
-                    p: 1.5,
-                    borderRadius: 2.5,
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 1.5,
-                    textDecoration: "none",
-                    color: "text.primary",
-                    bgcolor: alpha(categoryColor, 0.06),
-                    border: "1px solid",
-                    borderColor: alpha(categoryColor, 0.12),
-                    transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-                    position: "relative",
-                    overflow: "hidden",
-                    "&:hover": {
-                      bgcolor: alpha(categoryColor, 0.12),
-                      transform: "translateX(8px) scale(1.02)",
-                      borderColor: alpha(categoryColor, 0.25),
-                      boxShadow: `0 8px 25px ${alpha(categoryColor, 0.2)}`,
-                      "&:before": {
-                        width: 4,
-                      },
-                      "& .category-arrow": {
-                        opacity: 1,
-                        transform: "translateX(0)",
-                      },
-                    },
-                    "&:before": {
-                      content: '""',
-                      position: "absolute",
-                      top: 0,
-                      left: 0,
-                      bottom: 0,
-                      width: 0,
-                      bgcolor: categoryColor,
-                      transition: "width 0.3s ease",
-                      borderRadius: "0 4px 4px 0",
-                    },
-                  }}
-                >
-                  {/* İkon container */}
-                  <Box
-                    sx={{
-                      width: 40,
-                      height: 40,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      borderRadius: 2,
-                      bgcolor: alpha(categoryColor, 0.15),
-                      color: categoryColor,
-                      position: "relative",
-                      zIndex: 1,
-                      boxShadow: `0 2px 8px ${alpha(categoryColor, 0.2)}`,
-                    }}
-                  >
-                    <IconComponent sx={{ fontSize: 20 }} />
-                  </Box>
-
-                  {/* Kategori bilgileri */}
-                  <Box
-                    sx={{
-                      flex: 1,
-                      minWidth: 0,
-                      position: "relative",
-                      zIndex: 1,
-                    }}
-                  >
-                    <Typography
-                      sx={{
-                        fontWeight: 650,
-                        mb: 0.25,
-                        fontSize: "0.9rem",
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                        whiteSpace: "nowrap",
-                        letterSpacing: "-0.25px",
-                      }}
-                    >
-                      {category.name}
-                    </Typography>
-                    <Typography
-                      variant="caption"
-                      sx={{
-                        color: "text.secondary",
-                        fontSize: "0.75rem",
-                        fontWeight: 500,
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 0.5,
-                      }}
-                    >
-                      {category.postCount || 0} yazı
-                    </Typography>
-                  </Box>
-
-                  {/* Arrow icon */}
-                  <ArrowForwardIcon
-                    className="category-arrow"
-                    sx={{
-                      fontSize: 16,
-                      color: categoryColor,
-                      opacity: 0,
-                      transform: "translateX(-8px)",
-                      transition: "all 0.3s ease",
-                      position: "relative",
-                      zIndex: 1,
-                    }}
-                  />
-                </Paper>
-              </ListItem>
+              <CategoryItem
+                key={category._id}
+                category={category}
+                index={index}
+              />
             );
           })}
       </List>
@@ -450,6 +486,6 @@ const CategoryList = () => {
       )}
     </Paper>
   );
-};
+});
 
 export default CategoryList;
