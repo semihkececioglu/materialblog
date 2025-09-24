@@ -1,21 +1,17 @@
-import React, {
-  useEffect,
-  lazy,
-  Suspense,
-  useMemo,
-  useCallback,
-  startTransition,
-} from "react";
-import { Box, Pagination, Container, useTheme } from "@mui/material";
+import React, { useEffect, useMemo, useCallback, startTransition } from "react";
+import {
+  Box,
+  Pagination,
+  Container,
+  useTheme,
+  Typography,
+} from "@mui/material";
 import { useParams, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchPosts } from "../redux/postSlice";
-import PostCardSkeleton from "../components/skeletons/PostCardSkeleton";
-import HomeSlider from "../components/HomeSlider"; // Lazy loading kaldırıldı
-
-// Lazy loading ile bileşenleri yükle
-const PostCard = lazy(() => import("../components/PostCard"));
-const Sidebar = lazy(() => import("../components/sidebar/Sidebar"));
+import HomeSlider from "../components/HomeSlider";
+import Sidebar from "../components/sidebar/Sidebar";
+import PostCard from "../components/PostCard"; // Direkt import - lazy loading kaldırıldı
 
 const POSTS_PER_PAGE = 6;
 
@@ -104,13 +100,21 @@ const Home = () => {
 
   const contentBoxStyles = useMemo(() => ({ flex: 3 }), []);
 
-  const sidebarBoxStyles = useMemo(() => ({ flex: 1 }), []);
+  const sidebarBoxStyles = useMemo(
+    () => ({
+      flex: 1,
+      minHeight: 800, // Minimum height to prevent collapse
+    }),
+    []
+  );
 
+  // POSTS GRID - Sabit yükseklik ile
   const postsGridStyles = useMemo(
     () => ({
       display: "flex",
       flexWrap: "wrap",
       gap: 3,
+      minHeight: 800, // Sabit minimum yükseklik - layout shift önlenir
     }),
     []
   );
@@ -119,69 +123,147 @@ const Home = () => {
     () => ({
       flex: "1 1 calc(33.333% - 20px)",
       minWidth: "250px",
+      height: 360, // Sabit yükseklik - her item için
+    }),
+    []
+  );
+
+  // Content area için sabit container
+  const contentAreaStyles = useMemo(
+    () => ({
+      minHeight: 900, // İçerik alanı için sabit minimum yükseklik
     }),
     []
   );
 
   return (
     <Container maxWidth="lg" sx={containerStyles}>
-      {/* HomeSlider direkt render - Layout shift yok */}
+      {/* HomeSlider direkt render */}
       <HomeSlider />
 
       <Box sx={mainBoxStyles}>
-        {/* Ana içerik */}
+        {/* Ana içerik - Sabit yükseklik container */}
         <Box sx={contentBoxStyles}>
-          {loading ? (
-            <>
-              <Box sx={postsGridStyles}>
-                {Array.from({ length: POSTS_PER_PAGE }).map((_, i) => (
-                  <Box key={i} sx={postItemStyles}>
-                    <PostCardSkeleton />
+          <Box sx={contentAreaStyles}>
+            {/* Posts Grid - Her zaman aynı layout */}
+            <Box sx={postsGridStyles}>
+              {loading ? (
+                // Loading state - Skeleton kartlar (direkt render)
+                Array.from({ length: POSTS_PER_PAGE }).map((_, i) => (
+                  <Box key={`loading-${i}`} sx={postItemStyles}>
+                    <PostCard isLoading={true} priority={i < 3} index={i} />
                   </Box>
-                ))}
-              </Box>
-              <Box sx={{ mt: 4, height: 40 }} />
-            </>
-          ) : error ? (
-            <Box sx={{ textAlign: "center", mt: 6 }}>
-              <p>Hata: {error}</p>
-            </Box>
-          ) : (
-            <>
-              <Box sx={postsGridStyles}>
-                {posts.map((post, index) => (
-                  <Box key={post._id} sx={postItemStyles}>
-                    <Suspense fallback={<PostCardSkeleton />}>
-                      <PostCard
-                        post={post}
-                        priority={index < 3}
-                        index={index}
-                      />
-                    </Suspense>
-                  </Box>
-                ))}
-              </Box>
-
-              {totalPages > 1 && (
-                <Box sx={{ display: "flex", justifyContent: "center", mt: 6 }}>
-                  <Pagination
-                    count={totalPages}
-                    page={page}
-                    onChange={handleChange}
-                    size="large"
-                    sx={paginationStyles}
-                  />
+                ))
+              ) : error ? (
+                // Error state - Aynı grid yapısında
+                <Box
+                  sx={{
+                    width: "100%",
+                    textAlign: "center",
+                    py: 8,
+                    minHeight: 400,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <Typography variant="h6" color="error">
+                    Hata: {error}
+                  </Typography>
                 </Box>
+              ) : posts.length === 0 ? (
+                // Empty state - Aynı grid yapısında
+                <Box
+                  sx={{
+                    width: "100%",
+                    textAlign: "center",
+                    py: 8,
+                    minHeight: 400,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <Typography variant="h6" color="text.secondary">
+                    Henüz içerik bulunmuyor
+                  </Typography>
+                </Box>
+              ) : (
+                // Content loaded state (direkt render)
+                posts.map((post, index) => (
+                  <Box key={post._id} sx={postItemStyles}>
+                    <PostCard
+                      post={post}
+                      priority={index < 3}
+                      index={index}
+                      isLoading={false}
+                    />
+                  </Box>
+                ))
               )}
-            </>
-          )}
+            </Box>
+
+            {/* Pagination - Sabit pozisyon */}
+            {!loading && !error && totalPages > 1 && (
+              <Box
+                sx={{
+                  display: "flex",
+                  justifyContent: "center",
+                  mt: 6,
+                  minHeight: 80, // Pagination için sabit alan
+                }}
+              >
+                <Pagination
+                  count={totalPages}
+                  page={page}
+                  onChange={handleChange}
+                  size="large"
+                  sx={paginationStyles}
+                />
+              </Box>
+            )}
+
+            {/* Loading state pagination placeholder */}
+            {loading && (
+              <Box
+                sx={{
+                  display: "flex",
+                  justifyContent: "center",
+                  mt: 6,
+                  minHeight: 80, // Aynı yükseklik
+                }}
+              >
+                {/* Pagination skeleton */}
+                <Box
+                  sx={{
+                    display: "flex",
+                    gap: 1,
+                    alignItems: "center",
+                  }}
+                >
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <div
+                      key={i}
+                      style={{
+                        width: 48,
+                        height: 48,
+                        borderRadius: "50%",
+                        background:
+                          theme.palette.mode === "dark"
+                            ? "rgba(255,255,255,0.1)"
+                            : "rgba(0,0,0,0.08)",
+                      }}
+                    />
+                  ))}
+                </Box>
+              </Box>
+            )}
+          </Box>
         </Box>
 
-        {/* Sidebar */}
+        {/* Sidebar - Direkt render, lazy loading YOK */}
         <Box sx={sidebarBoxStyles}>
-          <Suspense fallback={<Box sx={{ height: 100 }} />}>
-            <Sidebar />
-          </Suspense>
+          <Sidebar />
         </Box>
       </Box>
     </Container>
