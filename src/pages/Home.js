@@ -80,6 +80,17 @@ const Home = () => {
     [theme.palette.mode, theme.palette.text.primary]
   );
 
+  const postsGridStyles = {
+    display: "flex",
+    flexWrap: "wrap",
+    gap: 3,
+  };
+
+  const postItemStyles = {
+    flex: "1 1 calc(33.333% - 20px)",
+    minWidth: "250px",
+  };
+
   return (
     <Container maxWidth="lg" sx={{ mt: 4 }}>
       <Suspense fallback={<Box sx={{ height: 200 }} />}>
@@ -97,15 +108,9 @@ const Home = () => {
         <Box sx={{ flex: 3 }}>
           {loading ? (
             <>
-              <Box sx={{ display: "flex", flexWrap: "wrap", gap: 3 }}>
+              <Box sx={postsGridStyles}>
                 {Array.from({ length: POSTS_PER_PAGE }).map((_, i) => (
-                  <Box
-                    key={i}
-                    sx={{
-                      flex: "1 1 calc(33.333% - 20px)",
-                      minWidth: "250px",
-                    }}
-                  >
+                  <Box key={i} sx={postItemStyles}>
                     <PostCardSkeleton />
                   </Box>
                 ))}
@@ -118,17 +123,15 @@ const Home = () => {
             </Box>
           ) : (
             <>
-              <Box sx={{ display: "flex", flexWrap: "wrap", gap: 3 }}>
-                {posts.map((post) => (
-                  <Box
-                    key={post._id}
-                    sx={{
-                      flex: "1 1 calc(33.333% - 20px)",
-                      minWidth: "250px",
-                    }}
-                  >
+              <Box sx={postsGridStyles}>
+                {posts.map((post, index) => (
+                  <Box key={post._id} sx={postItemStyles}>
                     <Suspense fallback={<PostCardSkeleton />}>
-                      <PostCard post={post} />
+                      <PostCard
+                        post={post}
+                        priority={index < 3} // İlk 3 post için priority
+                        index={index}
+                      />
                     </Suspense>
                   </Box>
                 ))}

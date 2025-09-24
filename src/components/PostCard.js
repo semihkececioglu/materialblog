@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo, useCallback } from "react";
 import {
   Card,
   CardMedia,
@@ -33,71 +33,121 @@ const isCloudinary = (url) =>
   url.includes("res.cloudinary.com") &&
   url.includes("/image/upload/");
 
-/** Cloudinary URL'ine dönüşüm (KESKİN PROFİL) */
-const buildCloudinaryUrl = (url, w) => {
+/** Cloudinary URL'ine dönüşüm (LCP için optimize) */
+const buildCloudinaryUrl = (url, w, quality = "auto:best") => {
   if (!url || !isCloudinary(url)) return url || "";
   return url.replace(
     "/image/upload/",
-    `/image/upload/f_auto,q_auto:best,dpr_auto,c_fill,g_auto,w_${w},e_sharpen/`
+    `/image/upload/f_auto,q_${quality},dpr_auto,c_fill,g_auto,w_${w},e_unsharp_mask:80/`
   );
 };
 
-/** srcset & sizes üretici – Cloudinary için (400/600/900) */
-const buildResponsive = (url) => {
+/** srcset & sizes üretici – LCP için optimize */
+const buildResponsive = (url, priority = false) => {
   if (!url) return { src: "", srcSet: undefined, sizes: undefined };
   if (!isCloudinary(url))
     return { src: url, srcSet: undefined, sizes: undefined };
 
-  const w400 = buildCloudinaryUrl(url, 400);
-  const w600 = buildCloudinaryUrl(url, 600);
-  const w900 = buildCloudinaryUrl(url, 900);
+  // Priority images için daha düşük kalite ama hızlı yükleme
+  const quality = priority ? "auto:low" : "auto:best";
+
+  const w400 = buildCloudinaryUrl(url, 400, quality);
+  const w600 = buildCloudinaryUrl(url, 600, quality);
+  const w900 = buildCloudinaryUrl(url, 900, quality);
 
   return {
     src: w600,
     srcSet: `${w400} 400w, ${w600} 600w, ${w900} 900w`,
-    sizes: "(max-width: 600px) 100vw, 50vw",
+    sizes: "(max-width: 600px) 100vw, (max-width: 900px) 50vw, 33vw",
   };
 };
 
-const PostCard = ({ post }) => {
+const PostCard = ({ post, priority = false, index = 0 }) => {
   const theme = useTheme();
   const navigate = useNavigate();
 
-  const handleClick = () => {
+  // Memoize expensive calculations
+  const firstImage = useMemo(
+    () => getFirstImageFromHTML(post.content),
+    [post.content]
+  );
+  const rawImageUrl = useMemo(
+    () => post.image || firstImage,
+    [post.image, firstImage]
+  );
+  const responsive = useMemo(() => buildResponsive(rawImageUrl), [rawImageUrl]);
+  const formattedDate = useMemo(
+    () => (post.date ? formatDate(post.date) : null),
+    [post.date]
+  );
+  const categoryData = useMemo(
+    () => ({
+      name:
+        typeof post.category === "object" ? post.category.name : post.category,
+      color:
+        typeof post.category === "object"
+          ? post.category.color || theme.palette.primary.light
+          : theme.palette.primary.light,
+    }),
+    [post.category, theme.palette.primary.light]
+  );
+
+  // Memoized click handler
+  const handleClick = useCallback(() => {
     navigate(`/post/${slugify(post.title)}`);
-  };
+  }, [navigate, post.title]);
 
-  const firstImage = getFirstImageFromHTML(post.content);
-  const rawImageUrl = post.image || firstImage;
+  const handleIconClick = useCallback(
+    (e) => {
+      e.stopPropagation();
+      handleClick();
+    },
+    [handleClick]
+  );
 
-  const responsive = buildResponsive(rawImageUrl);
+  // Memoized styles
+  const cardStyles = useMemo(
+    () => ({
+      width: "100%",
+      height: 360,
+      display: "flex",
+      flexDirection: "column",
+      justifyContent: "space-between",
+      borderRadius: 4,
+      cursor: "pointer",
+      overflow: "hidden",
+      backdropFilter: "blur(16px)",
+      backgroundColor:
+        theme.palette.mode === "dark"
+          ? "rgba(255,255,255,0.08)"
+          : "rgba(255,255,255,0.4)",
+      border: "1px solid rgba(255,255,255,0.15)",
+      boxShadow: "0 8px 20px rgba(0,0,0,0.1)",
+      transition: "all 0.3s ease",
+      contain: "layout style paint", // Browser'a layout hesaplamalarını optimize et
+      willChange: "transform", // GPU acceleration için
+      "&:hover": {
+        transform: "translateY(-6px)",
+        boxShadow: "0 12px 24px rgba(0,0,0,0.2)",
+      },
+    }),
+    [theme.palette.mode]
+  );
+
+  const mediaStyles = useMemo(
+    () => ({
+      height: 140,
+      objectFit: "cover",
+      transition: "transform 0.3s ease",
+      "&:hover": {
+        transform: "scale(1.03)",
+      },
+    }),
+    []
+  );
 
   return (
-    <Card
-      onClick={handleClick}
-      sx={{
-        width: "100%",
-        height: 360,
-        display: "flex",
-        flexDirection: "column",
-        justifyContent: "space-between",
-        borderRadius: 4,
-        cursor: "pointer",
-        overflow: "hidden",
-        backdropFilter: "blur(16px)",
-        backgroundColor:
-          theme.palette.mode === "dark"
-            ? "rgba(255,255,255,0.08)"
-            : "rgba(255,255,255,0.4)",
-        border: "1px solid rgba(255,255,255,0.15)",
-        boxShadow: "0 8px 20px rgba(0,0,0,0.1)",
-        transition: "all 0.3s ease",
-        "&:hover": {
-          transform: "translateY(-6px)",
-          boxShadow: "0 12px 24px rgba(0,0,0,0.2)",
-        },
-      }}
-    >
+    <Card onClick={handleClick} sx={cardStyles}>
       {rawImageUrl ? (
         <CardMedia
           component="img"
@@ -107,15 +157,18 @@ const PostCard = ({ post }) => {
           srcSet={responsive.srcSet}
           sizes={responsive.sizes}
           alt={post.title}
-          loading="lazy"
-          decoding="async"
-          sx={{
-            height: 140,
-            objectFit: "cover",
-            transition: "transform 0.3s ease",
-            "&:hover": {
-              transform: "scale(1.03)",
-            },
+          loading={priority || index < 3 ? "eager" : "lazy"} // İlk 3 görseli hemen yükle
+          decoding={priority ? "sync" : "async"}
+          fetchpriority={priority ? "high" : "auto"} // Modern browsers için
+          sx={mediaStyles}
+          onLoad={() => {
+            // Image yüklendiğinde preconnect hints ekle
+            if (index < 3) {
+              const link = document.createElement("link");
+              link.rel = "preconnect";
+              link.href = "https://res.cloudinary.com";
+              document.head.appendChild(link);
+            }
           }}
         />
       ) : (
@@ -197,17 +250,14 @@ const PostCard = ({ post }) => {
           <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
             <CalendarMonthIcon sx={{ fontSize: 16, color: "text.secondary" }} />
             <Typography variant="caption" color="text.secondary">
-              {formatDate(post.date)}
+              {formattedDate}
             </Typography>
           </Box>
         )}
 
         <Tooltip title="Devamını Oku">
           <IconButton
-            onClick={(e) => {
-              e.stopPropagation();
-              handleClick();
-            }}
+            onClick={handleIconClick}
             sx={{
               bgcolor: theme.palette.primary.main,
               color: theme.palette.getContrastText(theme.palette.primary.main),
@@ -226,4 +276,13 @@ const PostCard = ({ post }) => {
   );
 };
 
-export default React.memo(PostCard);
+// Optimized memo comparison
+export default React.memo(PostCard, (prevProps, nextProps) => {
+  return (
+    prevProps.post._id === nextProps.post._id &&
+    prevProps.post.title === nextProps.post.title &&
+    prevProps.post.image === nextProps.post.image &&
+    prevProps.post.date === nextProps.post.date &&
+    prevProps.post.category === nextProps.post.category
+  );
+});
