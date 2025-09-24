@@ -1,15 +1,21 @@
-import React, { useEffect, lazy, Suspense, useMemo, useCallback } from "react";
+import React, {
+  useEffect,
+  lazy,
+  Suspense,
+  useMemo,
+  useCallback,
+  startTransition,
+} from "react";
 import { Box, Pagination, Container, useTheme } from "@mui/material";
 import { useParams, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import SidebarSkeleton from "../components/skeletons/SidebarSkeleton";
 import { fetchPosts } from "../redux/postSlice";
 import PostCardSkeleton from "../components/skeletons/PostCardSkeleton";
+import HomeSlider from "../components/HomeSlider"; // Lazy loading kaldırıldı
 
 // Lazy loading ile bileşenleri yükle
 const PostCard = lazy(() => import("../components/PostCard"));
 const Sidebar = lazy(() => import("../components/sidebar/Sidebar"));
-const HomeSlider = lazy(() => import("../components/HomeSlider"));
 
 const POSTS_PER_PAGE = 6;
 
@@ -26,7 +32,9 @@ const Home = () => {
   );
 
   useEffect(() => {
-    dispatch(fetchPosts({ page, limit: POSTS_PER_PAGE }));
+    startTransition(() => {
+      dispatch(fetchPosts({ page, limit: POSTS_PER_PAGE }));
+    });
   }, [dispatch, page]);
 
   useEffect(() => {
@@ -36,7 +44,9 @@ const Home = () => {
   // Memoized pagination handler
   const handleChange = useCallback(
     (event, value) => {
-      navigate(value === 1 ? "/" : `/page/${value}`);
+      startTransition(() => {
+        navigate(value === 1 ? "/" : `/page/${value}`);
+      });
     },
     [navigate]
   );
@@ -80,32 +90,47 @@ const Home = () => {
     [theme.palette.mode, theme.palette.text.primary]
   );
 
-  const postsGridStyles = {
-    display: "flex",
-    flexWrap: "wrap",
-    gap: 3,
-  };
+  // Memoized styles
+  const containerStyles = useMemo(() => ({ mt: 4 }), []);
 
-  const postItemStyles = {
-    flex: "1 1 calc(33.333% - 20px)",
-    minWidth: "250px",
-  };
+  const mainBoxStyles = useMemo(
+    () => ({
+      display: "flex",
+      gap: 4,
+      flexDirection: { xs: "column", md: "row" },
+    }),
+    []
+  );
+
+  const contentBoxStyles = useMemo(() => ({ flex: 3 }), []);
+
+  const sidebarBoxStyles = useMemo(() => ({ flex: 1 }), []);
+
+  const postsGridStyles = useMemo(
+    () => ({
+      display: "flex",
+      flexWrap: "wrap",
+      gap: 3,
+    }),
+    []
+  );
+
+  const postItemStyles = useMemo(
+    () => ({
+      flex: "1 1 calc(33.333% - 20px)",
+      minWidth: "250px",
+    }),
+    []
+  );
 
   return (
-    <Container maxWidth="lg" sx={{ mt: 4 }}>
-      <Suspense fallback={<Box sx={{ height: 200 }} />}>
-        <HomeSlider />
-      </Suspense>
+    <Container maxWidth="lg" sx={containerStyles}>
+      {/* HomeSlider direkt render - Layout shift yok */}
+      <HomeSlider />
 
-      <Box
-        sx={{
-          display: "flex",
-          gap: 4,
-          flexDirection: { xs: "column", md: "row" },
-        }}
-      >
+      <Box sx={mainBoxStyles}>
         {/* Ana içerik */}
-        <Box sx={{ flex: 3 }}>
+        <Box sx={contentBoxStyles}>
           {loading ? (
             <>
               <Box sx={postsGridStyles}>
@@ -129,7 +154,7 @@ const Home = () => {
                     <Suspense fallback={<PostCardSkeleton />}>
                       <PostCard
                         post={post}
-                        priority={index < 3} // İlk 3 post için priority
+                        priority={index < 3}
                         index={index}
                       />
                     </Suspense>
@@ -153,8 +178,8 @@ const Home = () => {
         </Box>
 
         {/* Sidebar */}
-        <Box sx={{ flex: 1 }}>
-          <Suspense fallback={<SidebarSkeleton />}>
+        <Box sx={sidebarBoxStyles}>
+          <Suspense fallback={<Box sx={{ height: 100 }} />}>
             <Sidebar />
           </Suspense>
         </Box>

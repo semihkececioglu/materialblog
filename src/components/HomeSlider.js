@@ -6,10 +6,6 @@ import { useNavigate } from "react-router-dom";
 import NavigateNextIcon from "@mui/icons-material/NavigateNext";
 import NavigateBeforeIcon from "@mui/icons-material/NavigateBefore";
 
-// CSS'i component seviyesinde değil, app seviyesinde import et
-// Bu satırı App.js veya index.js'e taşıyın:
-// import "keen-slider/keen-slider.min.css";
-
 const featuredPosts = [
   {
     id: 1,
@@ -37,48 +33,7 @@ const featuredPosts = [
   },
 ];
 
-const SliderSkeleton = React.memo(() => (
-  <Box sx={{ position: "relative", mb: 4 }}>
-    <Box
-      sx={{
-        borderRadius: 3,
-        overflow: "hidden",
-        height: { xs: "400px", sm: "450px", md: "500px" },
-        bgcolor: (theme) =>
-          theme.palette.mode === "dark" ? "grey.900" : "grey.100",
-      }}
-    >
-      <Skeleton
-        variant="rectangular"
-        width="100%"
-        height="100%"
-        animation="wave"
-      />
-      <Box
-        sx={{
-          position: "absolute",
-          bottom: 0,
-          left: 0,
-          right: 0,
-          p: { xs: 3, md: 5 },
-          background: "linear-gradient(to top, rgba(0,0,0,0.8), transparent)",
-        }}
-      >
-        <Skeleton
-          variant="text"
-          width="60%"
-          height={60}
-          sx={{
-            mb: 2,
-            bgcolor: "rgba(255,255,255,0.1)",
-          }}
-        />
-      </Box>
-    </Box>
-  </Box>
-));
-
-const HomeSlider = () => {
+const HomeSlider = React.memo(() => {
   const navigate = useNavigate();
   const [currentSlide, setCurrentSlide] = useState(0);
   const [loaded, setLoaded] = useState(false);
@@ -103,7 +58,7 @@ const HomeSlider = () => {
 
   const [sliderRef, instanceRef] = useKeenSlider(sliderConfig);
 
-  // Simplified image preloading
+  // Optimized image preloading
   useEffect(() => {
     const preloadImages = () => {
       let loadedCount = 0;
@@ -121,9 +76,8 @@ const HomeSlider = () => {
       });
     };
 
-    // Biraz gecikme ile yükle ki diğer kritik kaynaklar önce yüklensin
-    const timer = setTimeout(preloadImages, 100);
-    return () => clearTimeout(timer);
+    // Start preloading immediately
+    preloadImages();
   }, []);
 
   // Memoized click handler
@@ -154,14 +108,35 @@ const HomeSlider = () => {
     [instanceRef]
   );
 
-  // Memoized styles
+  // Memoized styles - Fixed container size
+  const containerStyles = useMemo(
+    () => ({
+      position: "relative",
+      mb: 4,
+      height: { xs: "440px", sm: "490px", md: "540px" }, // Fixed height
+      minHeight: { xs: "440px", sm: "490px", md: "540px" }, // Prevent collapse
+    }),
+    []
+  );
+
   const sliderStyles = useMemo(
     () => ({
       borderRadius: 3,
       overflow: "hidden",
       height: { xs: "400px", sm: "450px", md: "500px" },
+      width: "100%",
     }),
     []
+  );
+
+  const skeletonContainerStyles = useMemo(
+    () => ({
+      ...sliderStyles,
+      bgcolor: (theme) =>
+        theme.palette.mode === "dark" ? "grey.900" : "grey.100",
+      position: "relative",
+    }),
+    [sliderStyles]
   );
 
   const buttonStyles = useMemo(
@@ -182,49 +157,157 @@ const HomeSlider = () => {
     []
   );
 
-  if (isLoading) {
-    return <SliderSkeleton />;
-  }
+  const dotsContainerStyles = useMemo(
+    () => ({
+      display: "flex",
+      justifyContent: "center",
+      gap: 1,
+      mt: 2,
+      position: "absolute",
+      bottom: 0,
+      left: 0,
+      right: 0,
+      height: 32, // Fixed height for dots
+    }),
+    []
+  );
 
+  // Always render with fixed container - no layout shift
   return (
-    <Box sx={{ position: "relative", mb: 4 }}>
-      <Box ref={sliderRef} className="keen-slider" sx={sliderStyles}>
-        {featuredPosts.map((post) => (
-          <SliderSlide key={post.id} post={post} onClick={handleSlideClick} />
-        ))}
-      </Box>
-
-      {loaded && instanceRef.current && (
+    <Box sx={containerStyles}>
+      {isLoading ? (
+        // Loading state - same dimensions as real content
         <>
-          {/* Önceki buton */}
-          <IconButton
-            onClick={handlePrev}
-            aria-label="Önceki slayt"
-            sx={{ ...buttonStyles, left: { xs: 8, md: 16 } }}
-          >
-            <NavigateBeforeIcon sx={{ fontSize: { xs: 24, md: 28 } }} />
-          </IconButton>
+          <Box sx={skeletonContainerStyles}>
+            <Skeleton
+              variant="rectangular"
+              width="100%"
+              height="100%"
+              animation="wave"
+              sx={{ borderRadius: 3 }}
+            />
 
-          {/* Sonraki buton */}
-          <IconButton
-            onClick={handleNext}
-            aria-label="Sonraki slayt"
-            sx={{ ...buttonStyles, right: { xs: 8, md: 16 } }}
-          >
-            <NavigateNextIcon sx={{ fontSize: { xs: 24, md: 28 } }} />
-          </IconButton>
+            {/* Skeleton overlay with text */}
+            <Box
+              sx={{
+                position: "absolute",
+                bottom: 0,
+                left: 0,
+                right: 0,
+                p: { xs: 3, md: 5 },
+                background:
+                  "linear-gradient(to top, rgba(0,0,0,0.8), transparent)",
+                zIndex: 1,
+              }}
+            >
+              <Skeleton
+                variant="text"
+                width="60%"
+                height={60}
+                sx={{
+                  bgcolor: "rgba(255,255,255,0.1)",
+                }}
+              />
+            </Box>
+          </Box>
 
-          {/* Dots */}
-          <DotsNavigation
-            posts={featuredPosts}
-            currentSlide={currentSlide}
-            onDotClick={handleDotClick}
+          {/* Skeleton Buttons - same position */}
+          <Skeleton
+            variant="circular"
+            sx={{
+              ...buttonStyles,
+              left: { xs: 8, md: 16 },
+              bgcolor: "rgba(255, 255, 255, 0.1)",
+              position: "absolute",
+            }}
           />
+          <Skeleton
+            variant="circular"
+            sx={{
+              ...buttonStyles,
+              right: { xs: 8, md: 16 },
+              bgcolor: "rgba(255, 255, 255, 0.1)",
+              position: "absolute",
+            }}
+          />
+
+          {/* Skeleton Dots - fixed position */}
+          <Box sx={dotsContainerStyles}>
+            {featuredPosts.map((_, idx) => (
+              <Skeleton
+                key={idx}
+                variant="rounded"
+                width={idx === 0 ? 24 : 8}
+                height={8}
+                sx={{
+                  borderRadius: 4,
+                  bgcolor: "rgba(0,0,0,0.1)",
+                }}
+              />
+            ))}
+          </Box>
+        </>
+      ) : (
+        // Loaded state - same dimensions
+        <>
+          <Box ref={sliderRef} className="keen-slider" sx={sliderStyles}>
+            {featuredPosts.map((post) => (
+              <SliderSlide
+                key={post.id}
+                post={post}
+                onClick={handleSlideClick}
+              />
+            ))}
+          </Box>
+
+          {loaded && instanceRef.current && (
+            <>
+              {/* Navigation Buttons */}
+              <IconButton
+                onClick={handlePrev}
+                aria-label="Önceki slayt"
+                sx={{ ...buttonStyles, left: { xs: 8, md: 16 } }}
+              >
+                <NavigateBeforeIcon sx={{ fontSize: { xs: 24, md: 28 } }} />
+              </IconButton>
+
+              <IconButton
+                onClick={handleNext}
+                aria-label="Sonraki slayt"
+                sx={{ ...buttonStyles, right: { xs: 8, md: 16 } }}
+              >
+                <NavigateNextIcon sx={{ fontSize: { xs: 24, md: 28 } }} />
+              </IconButton>
+
+              {/* Dots Navigation */}
+              <Box sx={dotsContainerStyles}>
+                {featuredPosts.map((_, idx) => (
+                  <Box
+                    key={idx}
+                    role="button"
+                    aria-label={`${idx + 1}. slayta git`}
+                    onClick={() => handleDotClick(idx)}
+                    sx={{
+                      width: currentSlide === idx ? 24 : 8,
+                      height: 8,
+                      borderRadius: 4,
+                      bgcolor:
+                        currentSlide === idx
+                          ? "primary.main"
+                          : alpha("#000", 0.2),
+                      cursor: "pointer",
+                      transition: "all 0.3s ease",
+                    }}
+                  />
+                ))}
+              </Box>
+            </>
+          )}
         </>
       )}
     </Box>
   );
-};
+});
 
 const SliderSlide = React.memo(({ post, onClick }) => {
   const handleClick = useCallback(() => {
@@ -294,7 +377,7 @@ const SliderSlide = React.memo(({ post, onClick }) => {
         component="img"
         src={post.image}
         alt={post.title}
-        loading="lazy" // İlk slide hariç lazy loading
+        loading="eager"
         sx={imageStyles}
       />
 
@@ -309,37 +392,5 @@ const SliderSlide = React.memo(({ post, onClick }) => {
   );
 });
 
-const DotsNavigation = React.memo(({ posts, currentSlide, onDotClick }) => {
-  const containerStyles = useMemo(
-    () => ({
-      display: "flex",
-      justifyContent: "center",
-      gap: 1,
-      mt: 2,
-    }),
-    []
-  );
-
-  return (
-    <Box sx={containerStyles}>
-      {posts.map((_, idx) => (
-        <Box
-          key={idx}
-          role="button"
-          aria-label={`${idx + 1}. slayta git`}
-          onClick={() => onDotClick(idx)}
-          sx={{
-            width: currentSlide === idx ? 24 : 8,
-            height: 8,
-            borderRadius: 4,
-            bgcolor: currentSlide === idx ? "primary.main" : alpha("#000", 0.2),
-            cursor: "pointer",
-            transition: "all 0.3s ease",
-          }}
-        />
-      ))}
-    </Box>
-  );
-});
-
+HomeSlider.displayName = "HomeSlider";
 export default HomeSlider;
