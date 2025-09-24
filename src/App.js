@@ -41,6 +41,7 @@ import { fetchSettings } from "./redux/settingsSlice";
 
 // Meta Pixel
 import MetaPixel from "./components/common/MetaPixel";
+import "keen-slider/keen-slider.min.css";
 
 const AuthLoader = ({ children }) => {
   const dispatch = useDispatch();

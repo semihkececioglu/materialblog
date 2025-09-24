@@ -1,10 +1,14 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { Box, Typography, IconButton, Skeleton } from "@mui/material";
 import { useKeenSlider } from "keen-slider/react";
 import { alpha } from "@mui/material/styles";
 import { useNavigate } from "react-router-dom";
 import NavigateNextIcon from "@mui/icons-material/NavigateNext";
 import NavigateBeforeIcon from "@mui/icons-material/NavigateBefore";
+
+// CSS'i component seviyesinde değil, app seviyesinde import et
+// Bu satırı App.js veya index.js'e taşıyın:
+// import "keen-slider/keen-slider.min.css";
 
 const featuredPosts = [
   {
@@ -33,7 +37,7 @@ const featuredPosts = [
   },
 ];
 
-const SliderSkeleton = () => (
+const SliderSkeleton = React.memo(() => (
   <Box sx={{ position: "relative", mb: 4 }}>
     <Box
       sx={{
@@ -72,160 +76,121 @@ const SliderSkeleton = () => (
       </Box>
     </Box>
   </Box>
-);
+));
 
 const HomeSlider = () => {
   const navigate = useNavigate();
   const [currentSlide, setCurrentSlide] = useState(0);
   const [loaded, setLoaded] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [imagesLoaded, setImagesLoaded] = useState(0);
-  const [cssLoaded, setCssLoaded] = useState(false);
 
-  // CSS'i lazy load et
+  // Memoized slider configuration
+  const sliderConfig = useMemo(
+    () => ({
+      initial: 0,
+      slideChanged(slider) {
+        setCurrentSlide(slider.track.details.rel);
+      },
+      created() {
+        setLoaded(true);
+      },
+      loop: true,
+      mode: "snap",
+      slides: { perView: 1 },
+    }),
+    []
+  );
+
+  const [sliderRef, instanceRef] = useKeenSlider(sliderConfig);
+
+  // Simplified image preloading
   useEffect(() => {
-    const loadKeenSliderCSS = async () => {
-      try {
-        await import("keen-slider/keen-slider.min.css");
-        setCssLoaded(true);
-      } catch (error) {
-        console.error("Keen Slider CSS yüklenemedi:", error);
-        setCssLoaded(true); // Hata durumunda da devam et
-      }
+    const preloadImages = () => {
+      let loadedCount = 0;
+      const totalImages = featuredPosts.length;
+
+      featuredPosts.forEach((post) => {
+        const img = new Image();
+        img.onload = img.onerror = () => {
+          loadedCount++;
+          if (loadedCount === totalImages) {
+            setIsLoading(false);
+          }
+        };
+        img.src = post.image;
+      });
     };
 
-    loadKeenSliderCSS();
+    // Biraz gecikme ile yükle ki diğer kritik kaynaklar önce yüklensin
+    const timer = setTimeout(preloadImages, 100);
+    return () => clearTimeout(timer);
   }, []);
 
-  const [sliderRef, instanceRef] = useKeenSlider({
-    initial: 0,
-    slideChanged(slider) {
-      setCurrentSlide(slider.track.details.rel);
+  // Memoized click handler
+  const handleSlideClick = useCallback(
+    (post) => {
+      if (post.isExternal) {
+        window.open(post.link, "_blank", "noopener,noreferrer");
+      } else {
+        navigate(post.link);
+      }
     },
-    created() {
-      setLoaded(true);
+    [navigate]
+  );
+
+  // Memoized navigation handlers
+  const handlePrev = useCallback(() => {
+    instanceRef.current?.prev();
+  }, [instanceRef]);
+
+  const handleNext = useCallback(() => {
+    instanceRef.current?.next();
+  }, [instanceRef]);
+
+  const handleDotClick = useCallback(
+    (idx) => {
+      instanceRef.current?.moveToIdx(idx);
     },
-    loop: true,
-    mode: "snap",
-    slides: { perView: 1 },
-  });
+    [instanceRef]
+  );
 
-  useEffect(() => {
-    const loadImages = async () => {
-      // CSS yüklenene kadar bekle
-      if (!cssLoaded) return;
+  // Memoized styles
+  const sliderStyles = useMemo(
+    () => ({
+      borderRadius: 3,
+      overflow: "hidden",
+      height: { xs: "400px", sm: "450px", md: "500px" },
+    }),
+    []
+  );
 
-      const imagePromises = featuredPosts.map((post) => {
-        return new Promise((resolve) => {
-          const img = new Image();
-          img.onload = () => {
-            setImagesLoaded((prev) => prev + 1);
-            resolve();
-          };
-          img.onerror = () => resolve();
-          img.src = post.image;
-        });
-      });
+  const buttonStyles = useMemo(
+    () => ({
+      position: "absolute",
+      top: "50%",
+      transform: "translateY(-50%)",
+      bgcolor: "rgba(255, 255, 255, 0.15)",
+      backdropFilter: "blur(4px)",
+      color: "white",
+      zIndex: 2,
+      "&:hover": {
+        bgcolor: "rgba(255, 255, 255, 0.25)",
+      },
+      width: { xs: 40, md: 48 },
+      height: { xs: 40, md: 48 },
+    }),
+    []
+  );
 
-      await Promise.all(imagePromises);
-      setIsLoading(false);
-    };
-
-    loadImages();
-
-    return () => {
-      setImagesLoaded(0);
-      setIsLoading(true);
-    };
-  }, [cssLoaded]);
-
-  const handleSlideClick = (post) => {
-    if (post.isExternal) {
-      window.open(post.link, "_blank", "noopener,noreferrer");
-    } else {
-      navigate(post.link);
-    }
-  };
-
-  if (isLoading || !cssLoaded) {
+  if (isLoading) {
     return <SliderSkeleton />;
   }
 
   return (
     <Box sx={{ position: "relative", mb: 4 }}>
-      <Box
-        ref={sliderRef}
-        className="keen-slider"
-        sx={{
-          borderRadius: 3,
-          overflow: "hidden",
-          height: { xs: "400px", sm: "450px", md: "500px" },
-        }}
-      >
+      <Box ref={sliderRef} className="keen-slider" sx={sliderStyles}>
         {featuredPosts.map((post) => (
-          <Box
-            key={post.id}
-            className="keen-slider__slide"
-            onClick={() => handleSlideClick(post)}
-            sx={{
-              position: "relative",
-              cursor: "pointer",
-              "&:hover img": {
-                transform: "scale(1.05)",
-              },
-              "&:hover .slide-overlay": {
-                background:
-                  "linear-gradient(to top, rgba(0,0,0,0.9), rgba(0,0,0,0.3))",
-              },
-            }}
-          >
-            <Box
-              component="img"
-              src={post.image}
-              alt={post.title}
-              sx={{
-                width: "100%",
-                height: "100%",
-                objectFit: "cover",
-                transition: "transform 0.6s ease",
-              }}
-            />
-
-            <Box
-              className="slide-overlay"
-              sx={{
-                position: "absolute",
-                inset: 0,
-                background:
-                  "linear-gradient(to top, rgba(0,0,0,0.8), rgba(0,0,0,0.2))",
-                transition: "background 0.3s ease",
-              }}
-            />
-
-            <Box
-              sx={{
-                position: "absolute",
-                bottom: 0,
-                left: 0,
-                right: 0,
-                p: { xs: 3, md: 5 },
-                color: "white",
-                zIndex: 1,
-              }}
-            >
-              <Typography
-                variant="h3"
-                sx={{
-                  fontSize: { xs: "1.5rem", sm: "2rem", md: "2.5rem" },
-                  fontWeight: 700,
-                  textShadow: "0 2px 4px rgba(0,0,0,0.3)",
-                  lineHeight: 1.2,
-                }}
-              >
-                {post.title}
-              </Typography>
-            </Box>
-          </Box>
+          <SliderSlide key={post.id} post={post} onClick={handleSlideClick} />
         ))}
       </Box>
 
@@ -233,83 +198,148 @@ const HomeSlider = () => {
         <>
           {/* Önceki buton */}
           <IconButton
-            onClick={() => instanceRef.current?.prev()}
+            onClick={handlePrev}
             aria-label="Önceki slayt"
-            title="Önceki slayt"
-            sx={{
-              position: "absolute",
-              left: { xs: 8, md: 16 },
-              top: "50%",
-              transform: "translateY(-50%)",
-              bgcolor: "rgba(255, 255, 255, 0.15)",
-              backdropFilter: "blur(4px)",
-              color: "white",
-              zIndex: 2,
-              "&:hover": {
-                bgcolor: "rgba(255, 255, 255, 0.25)",
-              },
-              width: { xs: 40, md: 48 },
-              height: { xs: 40, md: 48 },
-            }}
+            sx={{ ...buttonStyles, left: { xs: 8, md: 16 } }}
           >
             <NavigateBeforeIcon sx={{ fontSize: { xs: 24, md: 28 } }} />
           </IconButton>
 
           {/* Sonraki buton */}
           <IconButton
-            onClick={() => instanceRef.current?.next()}
+            onClick={handleNext}
             aria-label="Sonraki slayt"
-            title="Sonraki slayt"
-            sx={{
-              position: "absolute",
-              right: { xs: 8, md: 16 },
-              top: "50%",
-              transform: "translateY(-50%)",
-              bgcolor: "rgba(255, 255, 255, 0.15)",
-              backdropFilter: "blur(4px)",
-              color: "white",
-              zIndex: 2,
-              "&:hover": {
-                bgcolor: "rgba(255, 255, 255, 0.25)",
-              },
-              width: { xs: 40, md: 48 },
-              height: { xs: 40, md: 48 },
-            }}
+            sx={{ ...buttonStyles, right: { xs: 8, md: 16 } }}
           >
             <NavigateNextIcon sx={{ fontSize: { xs: 24, md: 28 } }} />
           </IconButton>
 
-          {/* Noktalar */}
-          <Box
-            sx={{
-              display: "flex",
-              justifyContent: "center",
-              gap: 1,
-              mt: 2,
-            }}
-          >
-            {featuredPosts.map((_, idx) => (
-              <Box
-                key={idx}
-                role="button"
-                aria-label={`${idx + 1}. slayta git`}
-                onClick={() => instanceRef.current?.moveToIdx(idx)}
-                sx={{
-                  width: currentSlide === idx ? 24 : 8,
-                  height: 8,
-                  borderRadius: 4,
-                  bgcolor:
-                    currentSlide === idx ? "primary.main" : alpha("#000", 0.2),
-                  cursor: "pointer",
-                  transition: "all 0.3s ease",
-                }}
-              />
-            ))}
-          </Box>
+          {/* Dots */}
+          <DotsNavigation
+            posts={featuredPosts}
+            currentSlide={currentSlide}
+            onDotClick={handleDotClick}
+          />
         </>
       )}
     </Box>
   );
 };
+
+const SliderSlide = React.memo(({ post, onClick }) => {
+  const handleClick = useCallback(() => {
+    onClick(post);
+  }, [onClick, post]);
+
+  const slideStyles = useMemo(
+    () => ({
+      position: "relative",
+      cursor: "pointer",
+      "&:hover img": {
+        transform: "scale(1.05)",
+      },
+      "&:hover .slide-overlay": {
+        background: "linear-gradient(to top, rgba(0,0,0,0.9), rgba(0,0,0,0.3))",
+      },
+    }),
+    []
+  );
+
+  const imageStyles = useMemo(
+    () => ({
+      width: "100%",
+      height: "100%",
+      objectFit: "cover",
+      transition: "transform 0.6s ease",
+    }),
+    []
+  );
+
+  const overlayStyles = useMemo(
+    () => ({
+      position: "absolute",
+      inset: 0,
+      background: "linear-gradient(to top, rgba(0,0,0,0.8), rgba(0,0,0,0.2))",
+      transition: "background 0.3s ease",
+    }),
+    []
+  );
+
+  const textContainerStyles = useMemo(
+    () => ({
+      position: "absolute",
+      bottom: 0,
+      left: 0,
+      right: 0,
+      p: { xs: 3, md: 5 },
+      color: "white",
+      zIndex: 1,
+    }),
+    []
+  );
+
+  const titleStyles = useMemo(
+    () => ({
+      fontSize: { xs: "1.5rem", sm: "2rem", md: "2.5rem" },
+      fontWeight: 700,
+      textShadow: "0 2px 4px rgba(0,0,0,0.3)",
+      lineHeight: 1.2,
+    }),
+    []
+  );
+
+  return (
+    <Box className="keen-slider__slide" onClick={handleClick} sx={slideStyles}>
+      <Box
+        component="img"
+        src={post.image}
+        alt={post.title}
+        loading="lazy" // İlk slide hariç lazy loading
+        sx={imageStyles}
+      />
+
+      <Box className="slide-overlay" sx={overlayStyles} />
+
+      <Box sx={textContainerStyles}>
+        <Typography variant="h3" sx={titleStyles}>
+          {post.title}
+        </Typography>
+      </Box>
+    </Box>
+  );
+});
+
+const DotsNavigation = React.memo(({ posts, currentSlide, onDotClick }) => {
+  const containerStyles = useMemo(
+    () => ({
+      display: "flex",
+      justifyContent: "center",
+      gap: 1,
+      mt: 2,
+    }),
+    []
+  );
+
+  return (
+    <Box sx={containerStyles}>
+      {posts.map((_, idx) => (
+        <Box
+          key={idx}
+          role="button"
+          aria-label={`${idx + 1}. slayta git`}
+          onClick={() => onDotClick(idx)}
+          sx={{
+            width: currentSlide === idx ? 24 : 8,
+            height: 8,
+            borderRadius: 4,
+            bgcolor: currentSlide === idx ? "primary.main" : alpha("#000", 0.2),
+            cursor: "pointer",
+            transition: "all 0.3s ease",
+          }}
+        />
+      ))}
+    </Box>
+  );
+});
 
 export default HomeSlider;
