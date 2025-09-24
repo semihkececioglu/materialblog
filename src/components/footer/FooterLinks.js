@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useMemo, useCallback } from "react";
 import { Box, Typography, Link, Chip } from "@mui/material";
 import {
   Home,
@@ -33,61 +33,84 @@ import {
 } from "@mui/icons-material";
 import { alpha } from "@mui/material/styles";
 import { useDispatch, useSelector } from "react-redux";
+import { createSelector } from "@reduxjs/toolkit";
 import { fetchCategories } from "../../redux/categoriesSlice";
 
-// AdminCategoriesPage ile aynı icon mapping'i kullan
-const AVAILABLE_ICONS = {
-  Category: CategoryIcon,
-  Folder: FolderIcon,
-  Star: StarIcon,
-  Home: HomeIcon,
-  Work: WorkIcon,
-  Sports: SportsIcon,
-  Music: MusicIcon,
-  Camera: CameraIcon,
-  Book: BookIcon,
-  Code: Code,
-  Travel: TravelIcon,
-  Restaurant: RestaurantIcon,
-  Science: ScienceIcon,
-  School: SchoolIcon,
-  Business: BusinessIcon,
-  Health: HealthIcon,
-  Nature: NatureIcon,
-  Art: ArtIcon,
-  Games: GamesIcon,
-  Movie: MovieIcon,
-  Build: BuildIcon,
-  DirectionsCar: DirectionsCarIcon,
-  LocalLibrary: LocalLibraryIcon,
-  Javascript: Javascript,
-  Palette: Palette,
-};
+// Memoized selector
+const selectFooterCategories = createSelector(
+  [(state) => state.categories.items, (state) => state.categories.loading],
+  (categories, loading) => {
+    if (loading || categories.length === 0) return [];
 
-const FooterLinks = () => {
+    const featuredCategories = categories.filter(
+      (cat) => cat.featured === true
+    );
+
+    return featuredCategories.length > 0
+      ? featuredCategories.slice(0, 3)
+      : categories
+          .sort((a, b) => (b.postCount || 0) - (a.postCount || 0))
+          .slice(0, 3);
+  }
+);
+
+const FooterLinks = React.memo(() => {
   const dispatch = useDispatch();
-  const { items: categories = [], loading } = useSelector(
-    (state) => state.categories
+  const { loading } = useSelector((state) => state.categories);
+  const footerCategories = useSelector(selectFooterCategories);
+
+  // Memoized icon mapping
+  const AVAILABLE_ICONS = useMemo(
+    () => ({
+      Category: CategoryIcon,
+      Folder: FolderIcon,
+      Star: StarIcon,
+      Home: HomeIcon,
+      Work: WorkIcon,
+      Sports: SportsIcon,
+      Music: MusicIcon,
+      Camera: CameraIcon,
+      Book: BookIcon,
+      Code: Code,
+      Travel: TravelIcon,
+      Restaurant: RestaurantIcon,
+      Science: ScienceIcon,
+      School: SchoolIcon,
+      Business: BusinessIcon,
+      Health: HealthIcon,
+      Nature: NatureIcon,
+      Art: ArtIcon,
+      Games: GamesIcon,
+      Movie: MovieIcon,
+      Build: BuildIcon,
+      DirectionsCar: DirectionsCarIcon,
+      LocalLibrary: LocalLibraryIcon,
+      Javascript: Javascript,
+      Palette: Palette,
+    }),
+    []
+  );
+
+  // Memoized icon getter
+  const getIconComponent = useCallback(
+    (iconName) => {
+      if (iconName && AVAILABLE_ICONS[iconName]) {
+        return AVAILABLE_ICONS[iconName];
+      }
+      return CategoryIcon;
+    },
+    [AVAILABLE_ICONS]
   );
 
   useEffect(() => {
-    if (categories.length === 0) {
+    if (footerCategories.length === 0 && !loading) {
       dispatch(fetchCategories());
     }
-  }, [dispatch, categories.length]);
+  }, [dispatch, footerCategories.length, loading]);
 
-  // İkon component'ini al
-  const getIconComponent = (iconName) => {
-    if (iconName && AVAILABLE_ICONS[iconName]) {
-      return AVAILABLE_ICONS[iconName];
-    }
-    return CategoryIcon;
-  };
-
-  // Footer'da gösterilecek kategorileri al (featured olanlar ya da en popüler 3)
-  const getFooterCategories = () => {
-    if (loading || categories.length === 0) {
-      // Loading durumunda default kategoriler
+  // Memoized categories for footer
+  const getFooterCategoriesFormatted = useMemo(() => {
+    if (loading || footerCategories.length === 0) {
       return [
         { label: "React", href: "/category/react", count: 0, icon: Code },
         {
@@ -105,185 +128,180 @@ const FooterLinks = () => {
       ];
     }
 
-    // Önce featured kategorileri al
-    const featuredCategories = categories.filter(
-      (cat) => cat.featured === true
-    );
-
-    // Eğer featured kategori varsa onları kullan, yoksa en popüler 3'ü al
-    const categoriesToShow =
-      featuredCategories.length > 0
-        ? featuredCategories.slice(0, 3)
-        : categories
-            .sort((a, b) => (b.postCount || 0) - (a.postCount || 0))
-            .slice(0, 3);
-
-    return categoriesToShow.map((cat) => ({
+    return footerCategories.map((cat) => ({
       label: cat.name,
       href: `/category/${cat.slug}`,
       count: cat.postCount || 0,
       icon: getIconComponent(cat.icon),
     }));
-  };
+  }, [footerCategories, loading, getIconComponent]);
 
-  const linkGroups = [
-    {
-      title: "Linkler",
-      links: [
-        { label: "Ana Sayfa", href: "/", icon: Home, isNew: false },
-        { label: "Hakkımızda", href: "/about", icon: Info, isNew: false },
-        {
-          label: "İletişim",
-          href: "/contact",
-          icon: ContactMail,
-          isNew: false,
-        },
-      ],
-    },
-    {
-      title: "Kategoriler",
-      links: getFooterCategories(),
-    },
-  ];
+  // Memoized link groups
+  const linkGroups = useMemo(
+    () => [
+      {
+        title: "Linkler",
+        links: [
+          { label: "Ana Sayfa", href: "/", icon: Home, isNew: false },
+          { label: "Hakkımızda", href: "/about", icon: Info, isNew: false },
+          {
+            label: "İletişim",
+            href: "/contact",
+            icon: ContactMail,
+            isNew: false,
+          },
+        ],
+      },
+      {
+        title: "Kategoriler",
+        links: getFooterCategoriesFormatted,
+      },
+    ],
+    [getFooterCategoriesFormatted]
+  );
+
+  // Memoized styles
+  const containerStyles = useMemo(
+    () => ({
+      display: "flex",
+      flexDirection: "column",
+      gap: 3,
+      height: "100%",
+    }),
+    []
+  );
+
+  const titleStyles = useMemo(
+    () => ({
+      mb: 2,
+      fontWeight: 600,
+      fontSize: "1rem",
+      position: "relative",
+      "&::after": {
+        content: '""',
+        position: "absolute",
+        bottom: -4,
+        left: 0,
+        width: 24,
+        height: 2,
+        background: "linear-gradient(45deg, #2196F3, #21CBF3)",
+        borderRadius: 1,
+      },
+    }),
+    []
+  );
+
+  // Memoized link item component
+  const LinkItem = useMemo(
+    () =>
+      React.memo(({ link }) => {
+        const itemStyles = useMemo(
+          () => ({
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            py: 0.5,
+            px: 1,
+            mx: -1,
+            borderRadius: 1,
+            transition: "all 0.2s ease-in-out",
+            "&:hover": {
+              backgroundColor: alpha("#2196F3", 0.04),
+              transform: "translateX(4px)",
+            },
+          }),
+          []
+        );
+
+        const linkStyles = useMemo(
+          () => ({
+            display: "flex",
+            alignItems: "center",
+            gap: 1,
+            color: "text.secondary",
+            textDecoration: "none",
+            fontSize: "0.875rem",
+            fontWeight: 400,
+            transition: "color 0.2s ease-in-out",
+            "&:hover": {
+              color: "primary.main",
+              textDecoration: "none",
+            },
+          }),
+          []
+        );
+
+        return (
+          <Box sx={itemStyles}>
+            <Link href={link.href} sx={linkStyles}>
+              {link.icon && <link.icon sx={{ fontSize: 16, opacity: 0.7 }} />}
+              {link.label}
+              {link.isNew && (
+                <Chip
+                  label="YENİ"
+                  size="small"
+                  sx={{
+                    height: 16,
+                    fontSize: "0.625rem",
+                    fontWeight: 600,
+                    background: "linear-gradient(45deg, #FF6B6B, #FF8E8E)",
+                    color: "white",
+                    "& .MuiChip-label": { px: 0.5 },
+                  }}
+                />
+              )}
+            </Link>
+
+            <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+              {link.count !== undefined && (
+                <Chip
+                  label={loading ? "..." : link.count}
+                  size="small"
+                  variant="outlined"
+                  sx={{
+                    height: 20,
+                    fontSize: "0.625rem",
+                    borderColor: alpha("#2196F3", 0.3),
+                    color: "text.secondary",
+                    "& .MuiChip-label": { px: 0.5 },
+                  }}
+                />
+              )}
+              <ChevronRight
+                sx={{
+                  fontSize: 14,
+                  opacity: 0.4,
+                  transition: "all 0.2s ease-in-out",
+                  ".MuiBox-root:hover &": {
+                    opacity: 0.8,
+                    transform: "translateX(2px)",
+                  },
+                }}
+              />
+            </Box>
+          </Box>
+        );
+      }),
+    [loading]
+  );
 
   return (
-    <Box
-      sx={{
-        display: "flex",
-        flexDirection: "column",
-        gap: 3,
-        height: "100%",
-      }}
-    >
+    <Box sx={containerStyles}>
       {linkGroups.map((group, groupIndex) => (
         <Box key={group.title}>
-          <Typography
-            variant="h3"
-            sx={{
-              mb: 2,
-              fontWeight: 600,
-              fontSize: "1rem",
-              position: "relative",
-              "&::after": {
-                content: '""',
-                position: "absolute",
-                bottom: -4,
-                left: 0,
-                width: 24,
-                height: 2,
-                background: "linear-gradient(45deg, #2196F3, #21CBF3)",
-                borderRadius: 1,
-              },
-            }}
-          >
+          <Typography variant="h3" sx={titleStyles}>
             {group.title}
           </Typography>
 
-          <Box
-            sx={{
-              display: "flex",
-              flexDirection: "column",
-              gap: 0.5,
-            }}
-          >
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
             {group.links.map((link) => (
-              <Box
-                key={link.label}
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  py: 0.5,
-                  px: 1,
-                  mx: -1,
-                  borderRadius: 1,
-                  transition: "all 0.2s ease-in-out",
-                  "&:hover": {
-                    backgroundColor: alpha("#2196F3", 0.04),
-                    transform: "translateX(4px)",
-                  },
-                }}
-              >
-                <Link
-                  href={link.href}
-                  sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 1,
-                    color: "text.secondary",
-                    textDecoration: "none",
-                    fontSize: "0.875rem",
-                    fontWeight: 400,
-                    transition: "color 0.2s ease-in-out",
-                    "&:hover": {
-                      color: "primary.main",
-                      textDecoration: "none",
-                    },
-                  }}
-                >
-                  {link.icon && (
-                    <link.icon
-                      sx={{
-                        fontSize: 16,
-                        opacity: 0.7,
-                      }}
-                    />
-                  )}
-                  {link.label}
-                  {link.isNew && (
-                    <Chip
-                      label="YENİ"
-                      size="small"
-                      sx={{
-                        height: 16,
-                        fontSize: "0.625rem",
-                        fontWeight: 600,
-                        background: "linear-gradient(45deg, #FF6B6B, #FF8E8E)",
-                        color: "white",
-                        "& .MuiChip-label": {
-                          px: 0.5,
-                        },
-                      }}
-                    />
-                  )}
-                </Link>
-
-                <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-                  {link.count !== undefined && (
-                    <Chip
-                      label={loading ? "..." : link.count}
-                      size="small"
-                      variant="outlined"
-                      sx={{
-                        height: 20,
-                        fontSize: "0.625rem",
-                        borderColor: alpha("#2196F3", 0.3),
-                        color: "text.secondary",
-                        "& .MuiChip-label": {
-                          px: 0.5,
-                        },
-                      }}
-                    />
-                  )}
-                  <ChevronRight
-                    sx={{
-                      fontSize: 14,
-                      opacity: 0.4,
-                      transition: "all 0.2s ease-in-out",
-                      ".MuiBox-root:hover &": {
-                        opacity: 0.8,
-                        transform: "translateX(2px)",
-                      },
-                    }}
-                  />
-                </Box>
-              </Box>
+              <LinkItem key={link.label} link={link} />
             ))}
           </Box>
         </Box>
       ))}
 
-      {/* Quick Actions */}
+      {/* Quick Actions - Memoized */}
       <Box
         sx={{
           mt: "auto",
@@ -310,35 +328,34 @@ const FooterLinks = () => {
         </Typography>
 
         <Box sx={{ display: "flex", gap: 0.5, flexWrap: "wrap" }}>
-          {getFooterCategories()
-            .slice(0, 3)
-            .map((category) => (
-              <Chip
-                key={category.label}
-                label={category.label}
-                size="small"
-                clickable
-                component={Link}
-                href={category.href}
-                sx={{
-                  height: 24,
-                  fontSize: "0.625rem",
-                  backgroundColor: alpha("#2196F3", 0.08),
-                  color: "primary.main",
-                  border: "none",
-                  textDecoration: "none",
-                  "&:hover": {
-                    backgroundColor: alpha("#2196F3", 0.12),
-                    transform: "translateY(-1px)",
-                  },
-                  transition: "all 0.2s ease-in-out",
-                }}
-              />
-            ))}
+          {getFooterCategoriesFormatted.slice(0, 3).map((category) => (
+            <Chip
+              key={category.label}
+              label={category.label}
+              size="small"
+              clickable
+              component={Link}
+              href={category.href}
+              sx={{
+                height: 24,
+                fontSize: "0.625rem",
+                backgroundColor: alpha("#2196F3", 0.08),
+                color: "primary.main",
+                border: "none",
+                textDecoration: "none",
+                "&:hover": {
+                  backgroundColor: alpha("#2196F3", 0.12),
+                  transform: "translateY(-1px)",
+                },
+                transition: "all 0.2s ease-in-out",
+              }}
+            />
+          ))}
         </Box>
       </Box>
     </Box>
   );
-};
+});
 
+FooterLinks.displayName = "FooterLinks";
 export default FooterLinks;

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { Suspense, lazy, useMemo } from "react";
 import {
   Box,
   Grid,
@@ -7,37 +7,99 @@ import {
   Container,
   Divider,
   Stack,
+  Skeleton,
 } from "@mui/material";
 import { motion } from "framer-motion";
-import FooterAbout from "../footer/FooterAbout";
-import FooterLinks from "../footer/FooterLinks";
-import FooterSubscribe from "../footer/FooterSubscribe";
 
-const Footer = () => {
+// Lazy load footer components
+const FooterAbout = lazy(() => import("./FooterAbout"));
+const FooterLinks = lazy(() => import("./FooterLinks"));
+const FooterSubscribe = lazy(() => import("./FooterSubscribe"));
+
+// Skeleton for lazy loaded components
+const FooterSkeleton = React.memo(() => (
+  <Box sx={{ p: 2 }}>
+    <Skeleton variant="text" width="60%" height={32} />
+    <Skeleton variant="text" width="80%" height={16} sx={{ mt: 1 }} />
+    <Skeleton variant="rectangular" width="100%" height={60} sx={{ mt: 2 }} />
+  </Box>
+));
+
+const Footer = React.memo(() => {
   const theme = useTheme();
-  const currentYear = new Date().getFullYear();
+  const currentYear = useMemo(() => new Date().getFullYear(), []);
 
-  const containerVariants = {
-    hidden: { opacity: 0, y: 60 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: {
-        duration: 0.8,
-        ease: "easeOut",
-        staggerChildren: 0.1,
+  // Memoized animation variants
+  const containerVariants = useMemo(
+    () => ({
+      hidden: { opacity: 0, y: 60 },
+      visible: {
+        opacity: 1,
+        y: 0,
+        transition: {
+          duration: 0.8,
+          ease: "easeOut",
+          staggerChildren: 0.1,
+        },
       },
-    },
-  };
+    }),
+    []
+  );
 
-  const itemVariants = {
-    hidden: { opacity: 0, y: 30 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: { duration: 0.6, ease: "easeOut" },
-    },
-  };
+  const itemVariants = useMemo(
+    () => ({
+      hidden: { opacity: 0, y: 30 },
+      visible: {
+        opacity: 1,
+        y: 0,
+        transition: { duration: 0.6, ease: "easeOut" },
+      },
+    }),
+    []
+  );
+
+  // Memoized styles
+  const footerStyles = useMemo(
+    () => ({
+      mt: { xs: 6, md: 10 },
+      position: "relative",
+      overflow: "hidden",
+      "&::before": {
+        content: '""',
+        position: "absolute",
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        background:
+          theme.palette.mode === "dark"
+            ? "linear-gradient(135deg, rgba(15,25,35,0.95), rgba(25,35,50,0.9))"
+            : "linear-gradient(135deg, rgba(248,250,252,0.95), rgba(241,245,249,0.9))",
+        backdropFilter: "blur(30px)",
+        WebkitBackdropFilter: "blur(30px)",
+        zIndex: -1,
+      },
+      borderTop: `1px solid ${theme.palette.divider}`,
+      borderRadius: { xs: "20px 20px 0 0", md: "32px 32px 0 0" },
+      boxShadow:
+        theme.palette.mode === "dark"
+          ? "0 -8px 48px rgba(0,0,0,0.4), 0 -2px 16px rgba(0,0,0,0.2)"
+          : "0 -8px 48px rgba(0,0,0,0.12), 0 -2px 16px rgba(0,0,0,0.06)",
+    }),
+    [theme.palette.mode, theme.palette.divider]
+  );
+
+  const dividerStyles = useMemo(
+    () => ({
+      my: { xs: 3, md: 5 },
+      background:
+        theme.palette.mode === "dark"
+          ? "rgba(255,255,255,0.1)"
+          : "rgba(0,0,0,0.08)",
+      height: "1.5px",
+    }),
+    [theme.palette.mode]
+  );
 
   return (
     <Box
@@ -46,32 +108,7 @@ const Footer = () => {
       initial="hidden"
       whileInView="visible"
       viewport={{ once: true, margin: "-100px" }}
-      sx={{
-        mt: { xs: 6, md: 10 },
-        position: "relative",
-        overflow: "hidden",
-        "&::before": {
-          content: '""',
-          position: "absolute",
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          background:
-            theme.palette.mode === "dark"
-              ? "linear-gradient(135deg, rgba(15,25,35,0.95), rgba(25,35,50,0.9))"
-              : "linear-gradient(135deg, rgba(248,250,252,0.95), rgba(241,245,249,0.9))",
-          backdropFilter: "blur(30px)",
-          WebkitBackdropFilter: "blur(30px)",
-          zIndex: -1,
-        },
-        borderTop: `1px solid ${theme.palette.divider}`,
-        borderRadius: { xs: "20px 20px 0 0", md: "32px 32px 0 0" },
-        boxShadow:
-          theme.palette.mode === "dark"
-            ? "0 -8px 48px rgba(0,0,0,0.4), 0 -2px 16px rgba(0,0,0,0.2)"
-            : "0 -8px 48px rgba(0,0,0,0.12), 0 -2px 16px rgba(0,0,0,0.06)",
-      }}
+      sx={footerStyles}
     >
       <Container maxWidth="lg">
         <Box sx={{ py: { xs: 4, md: 8 } }}>
@@ -82,23 +119,28 @@ const Footer = () => {
               justifyContent="space-between"
               alignItems="flex-start"
             >
-              <FooterAbout />
-              <FooterLinks />
-              <FooterSubscribe />
+              <Grid item xs={12} md={4}>
+                <Suspense fallback={<FooterSkeleton />}>
+                  <FooterAbout />
+                </Suspense>
+              </Grid>
+
+              <Grid item xs={12} md={3}>
+                <Suspense fallback={<FooterSkeleton />}>
+                  <FooterLinks />
+                </Suspense>
+              </Grid>
+
+              <Grid item xs={12} md={4}>
+                <Suspense fallback={<FooterSkeleton />}>
+                  <FooterSubscribe />
+                </Suspense>
+              </Grid>
             </Grid>
           </motion.div>
 
           <motion.div variants={itemVariants}>
-            <Divider
-              sx={{
-                my: { xs: 3, md: 5 },
-                background:
-                  theme.palette.mode === "dark"
-                    ? "rgba(255,255,255,0.1)"
-                    : "rgba(0,0,0,0.08)",
-                height: "1.5px",
-              }}
-            />
+            <Divider sx={dividerStyles} />
           </motion.div>
 
           <motion.div variants={itemVariants}>
@@ -136,7 +178,7 @@ const Footer = () => {
         </Box>
       </Container>
 
-      {/* Decorative gradient orbs */}
+      {/* Decorative gradient orbs - CSS only for better performance */}
       <Box
         sx={{
           position: "absolute",
@@ -154,25 +196,9 @@ const Footer = () => {
           zIndex: -1,
         }}
       />
-      <Box
-        sx={{
-          position: "absolute",
-          bottom: "-30px",
-          left: "-30px",
-          width: "150px",
-          height: "150px",
-          borderRadius: "50%",
-          background:
-            theme.palette.mode === "dark"
-              ? "radial-gradient(circle, rgba(236,72,153,0.1), transparent)"
-              : "radial-gradient(circle, rgba(168,85,247,0.08), transparent)",
-          filter: "blur(30px)",
-          pointerEvents: "none",
-          zIndex: -1,
-        }}
-      />
     </Box>
   );
-};
+});
 
+Footer.displayName = "Footer";
 export default Footer;
