@@ -38,11 +38,12 @@ const SidebarTags = React.memo(() => {
     []
   );
 
-  // Memoized styles - Hooks'ları conditional return'lerden önce tanımla
+  // Memoized styles - minHeight ekle layout shift için
   const paperStyles = useMemo(
     () => ({
       p: 2,
       mt: 3,
+      minHeight: 180, // Fixed minimum height - layout shift önlenir
       borderRadius: 2,
       bgcolor: (theme) =>
         theme.palette.mode === "dark"
@@ -70,6 +71,17 @@ const SidebarTags = React.memo(() => {
       alignItems: "center",
       gap: 1,
       mb: 2,
+    }),
+    []
+  );
+
+  // Loading skeleton için content height'ı da sabitliyoruz
+  const contentStyles = useMemo(
+    () => ({
+      display: "flex",
+      flexDirection: "column",
+      gap: 0.75,
+      minHeight: 60, // Fixed content height
     }),
     []
   );
@@ -305,8 +317,8 @@ const SidebarTags = React.memo(() => {
           </Typography>
         </Box>
 
-        {/* Loading skeletons - 2 satır dinamik genişlik */}
-        <Box sx={{ display: "flex", flexDirection: "column", gap: 0.75 }}>
+        {/* Loading skeletons - Fixed content height */}
+        <Box sx={contentStyles}>
           {Array.from({ length: 2 }).map((_, rowIndex) => (
             <Box
               key={rowIndex}
@@ -339,11 +351,26 @@ const SidebarTags = React.memo(() => {
             </Box>
           ))}
         </Box>
+
+        {/* Footer skeleton - sabit pozisyon */}
+        <Typography
+          variant="caption"
+          color="text.secondary"
+          sx={{
+            mt: 1.5,
+            display: "block",
+            fontStyle: "italic",
+            textAlign: "center",
+            opacity: 0.4,
+          }}
+        >
+          Yükleniyor...
+        </Typography>
       </Paper>
     );
   }
 
-  // Error state
+  // Error state - aynı height
   if (error && (!tags || tags.length === 0)) {
     return (
       <Paper elevation={0} sx={paperStyles}>
@@ -368,30 +395,35 @@ const SidebarTags = React.memo(() => {
             Etiketler
           </Typography>
         </Box>
-        <Typography
-          variant="body2"
-          color="text.secondary"
-          sx={{ fontStyle: "italic", mb: 1 }}
-        >
-          Etiketler yüklenemedi
-        </Typography>
-        <Typography
-          variant="caption"
-          color="primary.main"
-          sx={{
-            cursor: "pointer",
-            textDecoration: "underline",
-            "&:hover": { opacity: 0.8 },
-          }}
-          onClick={handleRetry}
-        >
-          Tekrar dene
-        </Typography>
+
+        {/* Error content - minimum height ile */}
+        <Box sx={{ ...contentStyles, justifyContent: "center" }}>
+          <Typography
+            variant="body2"
+            color="text.secondary"
+            sx={{ fontStyle: "italic", mb: 1, textAlign: "center" }}
+          >
+            Etiketler yüklenemedi
+          </Typography>
+          <Typography
+            variant="caption"
+            color="primary.main"
+            sx={{
+              cursor: "pointer",
+              textDecoration: "underline",
+              textAlign: "center",
+              "&:hover": { opacity: 0.8 },
+            }}
+            onClick={handleRetry}
+          >
+            Tekrar dene
+          </Typography>
+        </Box>
       </Paper>
     );
   }
 
-  // Eğer tags varsa ama boşsa
+  // Empty state - aynı height
   if (!tags || tags.length === 0) {
     return (
       <Paper elevation={0} sx={paperStyles}>
@@ -416,13 +448,17 @@ const SidebarTags = React.memo(() => {
             Etiketler
           </Typography>
         </Box>
-        <Typography
-          variant="body2"
-          color="text.secondary"
-          sx={{ fontStyle: "italic" }}
-        >
-          Henüz etiket bulunmuyor
-        </Typography>
+
+        {/* Empty content - minimum height ile */}
+        <Box sx={{ ...contentStyles, justifyContent: "center" }}>
+          <Typography
+            variant="body2"
+            color="text.secondary"
+            sx={{ fontStyle: "italic", textAlign: "center" }}
+          >
+            Henüz etiket bulunmuyor
+          </Typography>
+        </Box>
       </Paper>
     );
   }
@@ -453,12 +489,11 @@ const SidebarTags = React.memo(() => {
         </Typography>
       </Box>
 
-      {/* Etiketler - 2 satır x 3 sütun dinamik genişlik */}
-      <Box sx={{ display: "flex", flexDirection: "column", gap: 0.75 }}>
+      {/* Etiketler - Fixed content height */}
+      <Box sx={contentStyles}>
         {/* İlk satır - 3 etiket */}
         <Box sx={{ display: "flex", gap: 0.75, justifyContent: "flex-start" }}>
           {tags.slice(0, 3).map((tag, index) => {
-            // Güvenli veri kontrolü
             if (!tag || !tag.name) {
               console.warn("Geçersiz tag verisi:", tag);
               return null;
@@ -477,7 +512,6 @@ const SidebarTags = React.memo(() => {
         {/* İkinci satır - 3 etiket */}
         <Box sx={{ display: "flex", gap: 0.75, justifyContent: "flex-start" }}>
           {tags.slice(3, 6).map((tag, index) => {
-            // Güvenli veri kontrolü
             if (!tag || !tag.name) {
               console.warn("Geçersiz tag verisi:", tag);
               return null;
@@ -494,7 +528,7 @@ const SidebarTags = React.memo(() => {
         </Box>
       </Box>
 
-      {/* Alt bilgi */}
+      {/* Alt bilgi - sabit pozisyon */}
       <Typography
         variant="caption"
         color="text.secondary"

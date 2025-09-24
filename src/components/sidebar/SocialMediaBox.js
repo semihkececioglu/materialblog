@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   Box,
   Typography,
@@ -18,7 +18,7 @@ import {
 import SportsEsportsIcon from "@mui/icons-material/SportsEsports";
 import { alpha } from "@mui/material/styles";
 
-const SocialMediaBox = () => {
+const SocialMediaBox = React.memo(() => {
   const theme = useTheme();
   const [loading, setLoading] = useState(true);
   const [starCount, setStarCount] = useState(0);
@@ -106,23 +106,27 @@ const SocialMediaBox = () => {
     return () => clearTimeout(timer);
   }, []);
 
-  // Skeleton Component
+  // Memoized styles with fixed height
+  const paperStyles = useMemo(
+    () => ({
+      p: 2,
+      mt: 3,
+      minHeight: 280, // Fixed minimum height
+      borderRadius: 2,
+      bgcolor: (theme) =>
+        theme.palette.mode === "dark"
+          ? alpha(theme.palette.background.paper, 0.4)
+          : alpha(theme.palette.background.paper, 0.85),
+      backdropFilter: "blur(12px)",
+      border: "1px solid",
+      borderColor: "divider",
+    }),
+    []
+  );
+
+  // Skeleton Component with fixed height
   const SocialMediaSkeleton = () => (
-    <Paper
-      elevation={0}
-      sx={{
-        p: 2,
-        mt: 3,
-        borderRadius: 2,
-        bgcolor: (theme) =>
-          theme.palette.mode === "dark"
-            ? alpha(theme.palette.background.paper, 0.4)
-            : alpha(theme.palette.background.paper, 0.85),
-        backdropFilter: "blur(12px)",
-        border: "1px solid",
-        borderColor: "divider",
-      }}
-    >
+    <Paper elevation={0} sx={paperStyles}>
       {/* Header Skeleton */}
       <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
         <Box
@@ -146,12 +150,13 @@ const SocialMediaBox = () => {
         </Typography>
       </Box>
 
-      {/* Grid Skeleton */}
+      {/* Grid Skeleton - Fixed height */}
       <Box
         sx={{
           display: "grid",
           gridTemplateColumns: "repeat(3, 1fr)",
           gap: 1,
+          minHeight: 160, // Fixed grid height
         }}
       >
         {Array.from({ length: 6 }).map((_, index) => (
@@ -185,6 +190,11 @@ const SocialMediaBox = () => {
           </Box>
         ))}
       </Box>
+
+      {/* Footer skeleton */}
+      <Box sx={{ mt: 2, textAlign: "center" }}>
+        <Skeleton variant="text" width="80%" height={12} />
+      </Box>
     </Paper>
   );
 
@@ -193,21 +203,7 @@ const SocialMediaBox = () => {
   }
 
   return (
-    <Paper
-      elevation={0}
-      sx={{
-        p: 2,
-        mt: 3,
-        borderRadius: 2,
-        bgcolor: (theme) =>
-          theme.palette.mode === "dark"
-            ? alpha(theme.palette.background.paper, 0.4)
-            : alpha(theme.palette.background.paper, 0.85),
-        backdropFilter: "blur(12px)",
-        border: "1px solid",
-        borderColor: "divider",
-      }}
-    >
+    <Paper elevation={0} sx={paperStyles}>
       {/* Başlık - orijinal hali */}
       <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
         <Box
@@ -454,6 +450,6 @@ const SocialMediaBox = () => {
       </Typography>
     </Paper>
   );
-};
+});
 
 export default SocialMediaBox;

@@ -1,7 +1,7 @@
 import React, { useMemo } from "react";
 import { Box } from "@mui/material";
-import SocialMediaBox from "./SocialMediaBox";
 import CategoryList from "./CategoryList";
+import SocialMediaBox from "./SocialMediaBox";
 import SidebarTags from "./SidebarTags";
 
 const Sidebar = React.memo(() => {
@@ -10,6 +10,7 @@ const Sidebar = React.memo(() => {
       display: "flex",
       flexDirection: "column",
       gap: 0,
+      minHeight: 800, // Fixed minimum height
       contain: "layout style paint", // Browser optimizasyonu
       willChange: "auto", // GPU acceleration sadece gerektiğinde
     }),
