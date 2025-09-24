@@ -1,14 +1,15 @@
-import React, { useEffect } from "react";
+import React, { useEffect, lazy, Suspense, useMemo, useCallback } from "react";
 import { Box, Pagination, Container, useTheme } from "@mui/material";
 import { useParams, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-
-import PostCard from "../components/PostCard";
-import Sidebar from "../components/sidebar/Sidebar";
 import SidebarSkeleton from "../components/skeletons/SidebarSkeleton";
-import HomeSlider from "../components/HomeSlider";
 import { fetchPosts } from "../redux/postSlice";
 import PostCardSkeleton from "../components/skeletons/PostCardSkeleton";
+
+// Lazy loading ile bileşenleri yükle
+const PostCard = lazy(() => import("../components/PostCard"));
+const Sidebar = lazy(() => import("../components/sidebar/Sidebar"));
+const HomeSlider = lazy(() => import("../components/HomeSlider"));
 
 const POSTS_PER_PAGE = 6;
 
@@ -32,13 +33,58 @@ const Home = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [page]);
 
-  const handleChange = (event, value) => {
-    navigate(value === 1 ? "/" : `/page/${value}`);
-  };
+  // Memoized pagination handler
+  const handleChange = useCallback(
+    (event, value) => {
+      navigate(value === 1 ? "/" : `/page/${value}`);
+    },
+    [navigate]
+  );
+
+  // Memoized pagination styles
+  const paginationStyles = useMemo(
+    () => ({
+      "& .MuiPaginationItem-root": {
+        fontWeight: 600,
+        borderRadius: "50%",
+        width: 48,
+        height: 48,
+        backgroundColor:
+          theme.palette.mode === "dark"
+            ? "rgba(255,255,255,0.1)"
+            : "rgba(0,0,0,0.08)",
+        color: theme.palette.text.primary,
+        border: "none",
+        transition: "all 0.2s ease",
+        "&.Mui-selected": {
+          backgroundColor: "#000000",
+          color: "white",
+          "&:hover": {
+            backgroundColor: "#333333",
+          },
+        },
+        "&:hover": {
+          backgroundColor:
+            theme.palette.mode === "dark"
+              ? "rgba(255,255,255,0.15)"
+              : "rgba(0,0,0,0.12)",
+        },
+        "&.MuiPaginationItem-ellipsis": {
+          backgroundColor: "transparent",
+          "&:hover": {
+            backgroundColor: "transparent",
+          },
+        },
+      },
+    }),
+    [theme.palette.mode, theme.palette.text.primary]
+  );
 
   return (
     <Container maxWidth="lg" sx={{ mt: 4 }}>
-      <HomeSlider />
+      <Suspense fallback={<Box sx={{ height: 200 }} />}>
+        <HomeSlider />
+      </Suspense>
 
       <Box
         sx={{
@@ -64,7 +110,6 @@ const Home = () => {
                   </Box>
                 ))}
               </Box>
-              {/* Sayfalama yer tutucu */}
               <Box sx={{ mt: 4, height: 40 }} />
             </>
           ) : error ? (
@@ -82,7 +127,9 @@ const Home = () => {
                       minWidth: "250px",
                     }}
                   >
-                    <PostCard post={post} />
+                    <Suspense fallback={<PostCardSkeleton />}>
+                      <PostCard post={post} />
+                    </Suspense>
                   </Box>
                 ))}
               </Box>
@@ -94,40 +141,7 @@ const Home = () => {
                     page={page}
                     onChange={handleChange}
                     size="large"
-                    sx={{
-                      "& .MuiPaginationItem-root": {
-                        fontWeight: 600,
-                        borderRadius: "50%",
-                        width: 48,
-                        height: 48,
-                        backgroundColor:
-                          theme.palette.mode === "dark"
-                            ? "rgba(255,255,255,0.1)"
-                            : "rgba(0,0,0,0.08)",
-                        color: theme.palette.text.primary,
-                        border: "none",
-                        transition: "all 0.2s ease",
-                        "&.Mui-selected": {
-                          backgroundColor: "#000000",
-                          color: "white",
-                          "&:hover": {
-                            backgroundColor: "#333333",
-                          },
-                        },
-                        "&:hover": {
-                          backgroundColor:
-                            theme.palette.mode === "dark"
-                              ? "rgba(255,255,255,0.15)"
-                              : "rgba(0,0,0,0.12)",
-                        },
-                        "&.MuiPaginationItem-ellipsis": {
-                          backgroundColor: "transparent",
-                          "&:hover": {
-                            backgroundColor: "transparent",
-                          },
-                        },
-                      },
-                    }}
+                    sx={paginationStyles}
                   />
                 </Box>
               )}
@@ -137,11 +151,13 @@ const Home = () => {
 
         {/* Sidebar */}
         <Box sx={{ flex: 1 }}>
-          <Sidebar />
+          <Suspense fallback={<SidebarSkeleton />}>
+            <Sidebar />
+          </Suspense>
         </Box>
       </Box>
     </Container>
   );
 };
 
-export default Home;
+export default React.memo(Home);

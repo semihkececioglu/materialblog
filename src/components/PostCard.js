@@ -226,4 +226,4 @@ const PostCard = ({ post }) => {
   );
 };
 
-export default PostCard;
+export default React.memo(PostCard);
