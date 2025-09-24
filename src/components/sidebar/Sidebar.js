@@ -1,8 +1,8 @@
 import React, { useMemo } from "react";
 import { Box } from "@mui/material";
-import CategoryList from "./CategoryList";
-import SocialMediaBox from "./SocialMediaBox";
-import SidebarTags from "./SidebarTags";
+import CategoryList from "./CategoryList"; // Direkt import
+import SocialMediaBox from "./SocialMediaBox"; // Direkt import
+import SidebarTags from "./SidebarTags"; // Direkt import
 
 const Sidebar = React.memo(() => {
   const containerStyles = useMemo(

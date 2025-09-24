@@ -20,8 +20,9 @@ import { alpha } from "@mui/material/styles";
 
 const SocialMediaBox = React.memo(() => {
   const theme = useTheme();
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false); // Sadece star loading için false başlat
   const [starCount, setStarCount] = useState(0);
+  const [starLoading, setStarLoading] = useState(true); // Star için ayrı loading state
 
   // GitHub repository bilgileri
   const GITHUB_REPO = "semihkececioglu/materialblog";
@@ -81,6 +82,7 @@ const SocialMediaBox = React.memo(() => {
   useEffect(() => {
     const fetchStarCount = async () => {
       try {
+        setStarLoading(true);
         const response = await fetch(
           `https://api.github.com/repos/${GITHUB_REPO}`
         );
@@ -91,27 +93,20 @@ const SocialMediaBox = React.memo(() => {
       } catch (error) {
         console.error("GitHub API error:", error);
         setStarCount(42); // Fallback star count
+      } finally {
+        setStarLoading(false);
       }
     };
 
     fetchStarCount();
   }, []);
 
-  // Simulated loading
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setLoading(false);
-    }, 1000);
-
-    return () => clearTimeout(timer);
-  }, []);
-
-  // Memoized styles with fixed height
+  // Memoized styles with fixed height - minHeight'ı azalt
   const paperStyles = useMemo(
     () => ({
       p: 2,
       mt: 3,
-      minHeight: 280, // Fixed minimum height
+      minHeight: 240, // 280'den 240'a düşürüldü - boşluğu azaltır
       borderRadius: 2,
       bgcolor: (theme) =>
         theme.palette.mode === "dark"
@@ -120,87 +115,12 @@ const SocialMediaBox = React.memo(() => {
       backdropFilter: "blur(12px)",
       border: "1px solid",
       borderColor: "divider",
+      display: "flex", // Flex container yap
+      flexDirection: "column", // Dikey hizalama
+      justifyContent: "space-between", // İçeriği eşit dağıt
     }),
     []
   );
-
-  // Skeleton Component with fixed height
-  const SocialMediaSkeleton = () => (
-    <Paper elevation={0} sx={paperStyles}>
-      {/* Header Skeleton */}
-      <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
-        <Box
-          sx={{
-            width: 3,
-            height: 16,
-            borderRadius: 0.5,
-            bgcolor: "primary.main",
-          }}
-        />
-        <Typography
-          component="h2"
-          variant="h3"
-          sx={{
-            fontWeight: 600,
-            color: "text.primary",
-            fontSize: "1rem",
-          }}
-        >
-          Sosyal Medya
-        </Typography>
-      </Box>
-
-      {/* Grid Skeleton - Fixed height */}
-      <Box
-        sx={{
-          display: "grid",
-          gridTemplateColumns: "repeat(3, 1fr)",
-          gap: 1,
-          minHeight: 160, // Fixed grid height
-        }}
-      >
-        {Array.from({ length: 6 }).map((_, index) => (
-          <Box
-            key={index}
-            sx={{
-              aspectRatio: "1/1",
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: 0.5,
-              borderRadius: 2,
-              bgcolor: (theme) => alpha(theme.palette.background.default, 0.3),
-              border: "1px solid",
-              borderColor: "divider",
-            }}
-          >
-            <Skeleton
-              variant="circular"
-              width={24}
-              height={24}
-              sx={{ mb: 0.5 }}
-            />
-            <Skeleton
-              variant="text"
-              width="70%"
-              height={12}
-              sx={{ borderRadius: 1 }}
-            />
-          </Box>
-        ))}
-      </Box>
-
-      {/* Footer skeleton */}
-      <Box sx={{ mt: 2, textAlign: "center" }}>
-        <Skeleton variant="text" width="80%" height={12} />
-      </Box>
-    </Paper>
-  );
-
-  if (loading) {
-    return <SocialMediaSkeleton />;
-  }
 
   return (
     <Paper elevation={0} sx={paperStyles}>
@@ -233,6 +153,7 @@ const SocialMediaBox = React.memo(() => {
           display: "grid",
           gridTemplateColumns: "repeat(3, 1fr)",
           gap: 1.25,
+          flexGrow: 1, // Kalan alanı kapla
         }}
       >
         {socialLinks.map((item, index) => (
@@ -326,7 +247,7 @@ const SocialMediaBox = React.memo(() => {
                   },
                   "& .icon": {
                     color: item.color,
-                    transform: "scale(1.15)", // Rotate kaldırıldı
+                    transform: "scale(1.15)",
                   },
                   "& .text": {
                     transform: "translateY(-1px)",
@@ -339,55 +260,113 @@ const SocialMediaBox = React.memo(() => {
                 },
               }}
             >
-              {/* Badge ile star count */}
+              {/* Badge ile star count - Sadece skeleton star count'a uygulandı */}
               {item.type === "star" ? (
-                <Badge
-                  badgeContent={starCount}
-                  color="primary"
-                  sx={{
-                    "& .MuiBadge-badge": {
-                      bgcolor: item.color,
-                      color: "#000",
-                      fontSize: "0.65rem",
-                      fontWeight: 700,
-                      minWidth: 18,
-                      height: 18,
-                      padding: "0 4px",
-                      borderRadius: "9px",
-                      border: "2px solid",
-                      borderColor: (theme) =>
-                        theme.palette.mode === "dark"
-                          ? theme.palette.background.paper
-                          : "#fff",
-                      boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
-                    },
-                  }}
-                >
-                  <Box
-                    className="icon"
+                starLoading ? (
+                  // Star yüklenirken Badge'ı skeleton ile göster
+                  <Badge
+                    badgeContent={
+                      <Skeleton
+                        variant="text"
+                        width={12}
+                        height={12}
+                        sx={{ bgcolor: alpha(item.color, 0.3) }}
+                      />
+                    }
                     sx={{
-                      color: alpha(item.color, 0.8),
-                      transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-                      position: "relative",
-                      zIndex: 2,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      width: 32,
-                      height: 32,
-                      borderRadius: 1.5,
-                      bgcolor: alpha(item.color, 0.1),
-                      border: `1px solid ${alpha(item.color, 0.2)}`,
+                      "& .MuiBadge-badge": {
+                        bgcolor: item.color,
+                        color: "#000",
+                        fontSize: "0.65rem",
+                        fontWeight: 700,
+                        minWidth: 18,
+                        height: 18,
+                        padding: "0 4px",
+                        borderRadius: "9px",
+                        border: "2px solid",
+                        borderColor: (theme) =>
+                          theme.palette.mode === "dark"
+                            ? theme.palette.background.paper
+                            : "#fff",
+                        boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
+                      },
                     }}
                   >
-                    {React.cloneElement(item.icon, {
-                      sx: {
-                        fontSize: 20,
+                    <Box
+                      className="icon"
+                      sx={{
+                        color: alpha(item.color, 0.8),
+                        transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+                        position: "relative",
+                        zIndex: 2,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        width: 32,
+                        height: 32,
+                        borderRadius: 1.5,
+                        bgcolor: alpha(item.color, 0.1),
+                        border: `1px solid ${alpha(item.color, 0.2)}`,
+                      }}
+                    >
+                      {React.cloneElement(item.icon, {
+                        sx: {
+                          fontSize: 20,
+                        },
+                      })}
+                    </Box>
+                  </Badge>
+                ) : (
+                  // Star yüklendikten sonra normal Badge
+                  <Badge
+                    badgeContent={starCount}
+                    color="primary"
+                    sx={{
+                      "& .MuiBadge-badge": {
+                        bgcolor: item.color,
+                        color: "#000",
+                        fontSize: "0.65rem",
+                        fontWeight: 700,
+                        minWidth: 18,
+                        height: 18,
+                        padding: "0 4px",
+                        borderRadius: "9px",
+                        border: "2px solid",
+                        borderColor: (theme) =>
+                          theme.palette.mode === "dark"
+                            ? theme.palette.background.paper
+                            : "#fff",
+                        boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
                       },
-                    })}
-                  </Box>
-                </Badge>
+                    }}
+                  >
+                    <Box
+                      className="icon"
+                      sx={{
+                        color: alpha(item.color, 0.8),
+                        transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+                        position: "relative",
+                        zIndex: 2,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        width: 32,
+                        height: 32,
+                        borderRadius: 1.5,
+                        bgcolor: alpha(item.color, 0.1),
+                        border: `1px solid ${alpha(item.color, 0.2)}`,
+                      }}
+                    >
+                      {React.cloneElement(item.icon, {
+                        sx: {
+                          fontSize: 20,
+                        },
+                      })}
+                    </Box>
+                  </Badge>
+                )
               ) : (
+                // Diğer social media butonları - değişiklik yok
                 <Box
                   className="icon"
                   sx={{
@@ -433,12 +412,12 @@ const SocialMediaBox = React.memo(() => {
         ))}
       </Box>
 
-      {/* Footer Info */}
+      {/* Footer Info - mt'yi azalt */}
       <Typography
         variant="caption"
         color="text.secondary"
         sx={{
-          mt: 2,
+          mt: 1.5, // 2'den 1.5'e düşürüldü
           display: "block",
           textAlign: "center",
           fontSize: "0.75rem",

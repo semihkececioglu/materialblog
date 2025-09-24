@@ -38,12 +38,11 @@ const SidebarTags = React.memo(() => {
     []
   );
 
-  // Memoized styles - minHeight ekle layout shift için
+  // Memoized styles - boşluğu minimize et
   const paperStyles = useMemo(
     () => ({
       p: 2,
       mt: 3,
-      minHeight: 180, // Fixed minimum height - layout shift önlenir
       borderRadius: 2,
       bgcolor: (theme) =>
         theme.palette.mode === "dark"
@@ -61,6 +60,7 @@ const SidebarTags = React.memo(() => {
         transform: "translateY(-1px)",
         boxShadow: "0 4px 20px rgba(0, 0, 0, 0.1)",
       },
+      // minHeight kaldırıldı - doğal yükseklik kullanılacak
     }),
     []
   );
@@ -75,13 +75,13 @@ const SidebarTags = React.memo(() => {
     []
   );
 
-  // Loading skeleton için content height'ı da sabitliyoruz
+  // Content styles - minHeight kaldırıldı
   const contentStyles = useMemo(
     () => ({
       display: "flex",
       flexDirection: "column",
       gap: 0.75,
-      minHeight: 60, // Fixed content height
+      mb: 1, // Content'ten sonra küçük margin
     }),
     []
   );
@@ -290,11 +290,10 @@ const SidebarTags = React.memo(() => {
     fetchPopularTags(true);
   }, [fetchPopularTags]);
 
-  // Loading skeleton
+  // Loading skeleton - paperStyles'da minHeight yok artık
   if (loading && (!tags || tags.length === 0)) {
     return (
       <Paper elevation={0} sx={paperStyles}>
-        {/* Başlık */}
         <Box sx={headerStyles}>
           <Box
             sx={{
@@ -317,7 +316,6 @@ const SidebarTags = React.memo(() => {
           </Typography>
         </Box>
 
-        {/* Loading skeletons - Fixed content height */}
         <Box sx={contentStyles}>
           {Array.from({ length: 2 }).map((_, rowIndex) => (
             <Box
@@ -352,16 +350,15 @@ const SidebarTags = React.memo(() => {
           ))}
         </Box>
 
-        {/* Footer skeleton - sabit pozisyon */}
         <Typography
           variant="caption"
           color="text.secondary"
           sx={{
-            mt: 1.5,
             display: "block",
             fontStyle: "italic",
             textAlign: "center",
             opacity: 0.4,
+            // mt kaldırıldı
           }}
         >
           Yükleniyor...
@@ -370,7 +367,7 @@ const SidebarTags = React.memo(() => {
     );
   }
 
-  // Error state - aynı height
+  // Error state
   if (error && (!tags || tags.length === 0)) {
     return (
       <Paper elevation={0} sx={paperStyles}>
@@ -396,7 +393,6 @@ const SidebarTags = React.memo(() => {
           </Typography>
         </Box>
 
-        {/* Error content - minimum height ile */}
         <Box sx={{ ...contentStyles, justifyContent: "center" }}>
           <Typography
             variant="body2"
@@ -423,7 +419,7 @@ const SidebarTags = React.memo(() => {
     );
   }
 
-  // Empty state - aynı height
+  // Empty state
   if (!tags || tags.length === 0) {
     return (
       <Paper elevation={0} sx={paperStyles}>
@@ -449,7 +445,6 @@ const SidebarTags = React.memo(() => {
           </Typography>
         </Box>
 
-        {/* Empty content - minimum height ile */}
         <Box sx={{ ...contentStyles, justifyContent: "center" }}>
           <Typography
             variant="body2"
@@ -465,7 +460,6 @@ const SidebarTags = React.memo(() => {
 
   return (
     <Paper elevation={0} sx={paperStyles}>
-      {/* Başlık */}
       <Box sx={headerStyles}>
         <Box
           sx={{
@@ -489,7 +483,6 @@ const SidebarTags = React.memo(() => {
         </Typography>
       </Box>
 
-      {/* Etiketler - Fixed content height */}
       <Box sx={contentStyles}>
         {/* İlk satır - 3 etiket */}
         <Box sx={{ display: "flex", gap: 0.75, justifyContent: "flex-start" }}>
@@ -528,16 +521,16 @@ const SidebarTags = React.memo(() => {
         </Box>
       </Box>
 
-      {/* Alt bilgi - sabit pozisyon */}
+      {/* Footer - direkt content'in altına yapışık */}
       <Typography
         variant="caption"
         color="text.secondary"
         sx={{
-          mt: 1.5,
           display: "block",
           fontStyle: "italic",
           textAlign: "center",
           opacity: 0.8,
+          // mt kaldırıldı - direkt content'in altına yapışacak
         }}
       >
         En çok kullanılan etiketler
