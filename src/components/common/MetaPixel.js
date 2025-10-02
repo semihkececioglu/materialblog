@@ -9,72 +9,88 @@ const MetaPixel = () => {
   const isInitialized = useRef(false);
   const loadingRef = useRef(false);
 
-  // Memoized script loader
-  const loadMetaPixelScript = useCallback((pixelId) => {
-    return new Promise((resolve, reject) => {
-      // Eğer zaten yükleniyor veya yüklenmiş ise, çık
-      if (loadingRef.current || window.fbq) {
-        resolve();
-        return;
-      }
+  // Initialize fbq function önce
+  const initializeFbq = useCallback(() => {
+    if (typeof window.fbq !== "undefined") {
+      return; // Zaten tanımlı
+    }
 
-      loadingRef.current = true;
+    // fbq function'ını manuel olarak tanımla
+    window.fbq = function () {
+      window.fbq.callMethod
+        ? window.fbq.callMethod.apply(window.fbq, arguments)
+        : window.fbq.queue.push(arguments);
+    };
 
-      // Script element oluştur
-      const script = document.createElement("script");
-      script.async = true;
-      script.src = "https://connect.facebook.net/en_US/fbevents.js";
-
-      script.onload = () => {
-        try {
-          // fbq function'ını initialize et
-          if (!window.fbq) {
-            (function (f, b, e, v, n, t, s) {
-              if (f.fbq) return;
-              n = f.fbq = function () {
-                n.callMethod
-                  ? n.callMethod.apply(n, arguments)
-                  : n.queue.push(arguments);
-              };
-              if (!f._fbq) f._fbq = n;
-              n.push = n;
-              n.loaded = !0;
-              n.version = "2.0";
-              n.queue = [];
-            })(window, document, "script");
-          }
-
-          // Initialize pixel
-          window.fbq("init", pixelId);
-          isInitialized.current = true;
-          loadingRef.current = false;
-          resolve();
-        } catch (error) {
-          console.error("Meta Pixel initialization error:", error);
-          loadingRef.current = false;
-          reject(error);
-        }
-      };
-
-      script.onerror = () => {
-        console.error("Meta Pixel script loading failed");
-        loadingRef.current = false;
-        reject(new Error("Script loading failed"));
-      };
-
-      // Script'i head'e ekle
-      document.head.appendChild(script);
-    });
+    if (!window._fbq) window._fbq = window.fbq;
+    window.fbq.push = window.fbq;
+    window.fbq.loaded = true;
+    window.fbq.version = "2.0";
+    window.fbq.queue = [];
   }, []);
 
-  // User interaction sonrası yükleme
+  // Script loader
+  const loadMetaPixelScript = useCallback(
+    (pixelId) => {
+      return new Promise((resolve, reject) => {
+        if (loadingRef.current || isInitialized.current) {
+          resolve();
+          return;
+        }
+
+        loadingRef.current = true;
+
+        // Önce fbq function'ını initialize et
+        initializeFbq();
+
+        // Script element oluştur
+        const script = document.createElement("script");
+        script.async = true;
+        script.src = "https://connect.facebook.net/en_US/fbevents.js";
+
+        script.onload = () => {
+          try {
+            // Script yüklendikten sonra pixel'i initialize et
+            if (typeof window.fbq === "function") {
+              window.fbq("init", pixelId);
+              window.fbq("track", "PageView");
+              isInitialized.current = true;
+              loadingRef.current = false;
+              resolve();
+            } else {
+              throw new Error("fbq function not available after script load");
+            }
+          } catch (error) {
+            console.error("Meta Pixel initialization error:", error);
+            loadingRef.current = false;
+            reject(error);
+          }
+        };
+
+        script.onerror = () => {
+          console.error("Meta Pixel script loading failed");
+          loadingRef.current = false;
+          reject(new Error("Script loading failed"));
+        };
+
+        document.head.appendChild(script);
+      });
+    },
+    [initializeFbq]
+  );
+
+  // User interaction'da yükle
   const initializeOnInteraction = useCallback(
     (pixelId) => {
+      if (!pixelId) return;
+
       const events = ["click", "scroll", "keydown", "touchstart"];
 
       const handleInteraction = () => {
         if (!isInitialized.current && !loadingRef.current) {
-          loadMetaPixelScript(pixelId).catch(console.error);
+          loadMetaPixelScript(pixelId).catch((error) => {
+            console.error("Meta Pixel loading failed:", error);
+          });
         }
 
         // Event listener'ları temizle
@@ -83,7 +99,7 @@ const MetaPixel = () => {
         });
       };
 
-      // Her event için listener ekle
+      // Event listener'ları ekle
       events.forEach((event) => {
         document.addEventListener(event, handleInteraction, {
           once: true,
@@ -91,10 +107,12 @@ const MetaPixel = () => {
         });
       });
 
-      // 3 saniye sonra otomatik yükle (fallback)
+      // 3 saniye fallback
       const fallbackTimer = setTimeout(() => {
         if (!isInitialized.current && !loadingRef.current) {
-          loadMetaPixelScript(pixelId).catch(console.error);
+          loadMetaPixelScript(pixelId).catch((error) => {
+            console.error("Meta Pixel fallback loading failed:", error);
+          });
         }
       }, 3000);
 
@@ -108,14 +126,11 @@ const MetaPixel = () => {
     [loadMetaPixelScript]
   );
 
-  // Settings değişiminde initialize
+  // Settings değişikliği
   useEffect(() => {
     if (settings?.metaPixelEnabled && settings?.metaPixelId) {
-      if (!isInitialized.current && !loadingRef.current) {
-        // User interaction'a kadar bekle
-        const cleanup = initializeOnInteraction(settings.metaPixelId);
-        return cleanup;
-      }
+      const cleanup = initializeOnInteraction(settings.metaPixelId);
+      return cleanup;
     }
   }, [
     settings?.metaPixelEnabled,
@@ -123,22 +138,16 @@ const MetaPixel = () => {
     initializeOnInteraction,
   ]);
 
-  // Route değişiminde PageView track et (sadece pixel initialize ise)
+  // Route change tracking
   useEffect(() => {
     if (
       settings?.metaPixelEnabled &&
-      settings?.metaPixelId &&
       isInitialized.current &&
-      window.fbq
+      typeof window.fbq === "function"
     ) {
-      // Küçük delay ile PageView track et (DOM güncellensin diye)
       const trackTimer = setTimeout(() => {
         try {
-          window.fbq("track", "PageView", {
-            page_title: document.title,
-            page_location: window.location.href,
-            page_path: location.pathname,
-          });
+          window.fbq("track", "PageView");
         } catch (error) {
           console.error("Meta Pixel PageView tracking error:", error);
         }
@@ -146,28 +155,15 @@ const MetaPixel = () => {
 
       return () => clearTimeout(trackTimer);
     }
-  }, [location.pathname, settings?.metaPixelEnabled, settings?.metaPixelId]);
+  }, [location.pathname, settings?.metaPixelEnabled]);
 
-  // Custom events için helper function
+  // Cleanup on unmount
   useEffect(() => {
-    // Global helper function ekle
-    if (settings?.metaPixelEnabled && window.fbq && isInitialized.current) {
-      window.trackMetaEvent = (eventName, parameters = {}) => {
-        try {
-          window.fbq("track", eventName, parameters);
-        } catch (error) {
-          console.error(`Meta Pixel ${eventName} tracking error:`, error);
-        }
-      };
-    }
-
-    // Cleanup function
     return () => {
-      if (window.trackMetaEvent) {
-        delete window.trackMetaEvent;
-      }
+      isInitialized.current = false;
+      loadingRef.current = false;
     };
-  }, [settings?.metaPixelEnabled, isInitialized.current]);
+  }, []);
 
   return null;
 };
