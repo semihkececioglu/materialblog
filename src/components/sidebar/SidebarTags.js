@@ -226,8 +226,6 @@ const SidebarTags = React.memo(() => {
         // Component hala mount edilmiş mi kontrol et
         if (!mountedRef.current) return;
 
-        console.log("Tags response:", response.data);
-
         // Veri kontrolü
         if (
           response.data &&
