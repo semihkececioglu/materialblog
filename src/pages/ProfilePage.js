@@ -100,6 +100,10 @@ const ProfilePage = () => {
     fetchData();
   }, [username, isOwnProfile]);
 
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [username]);
+
   const postItemStyle = {
     mb: 2,
     p: 2,
