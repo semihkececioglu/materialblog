@@ -1,357 +1,183 @@
-import React, { useEffect, useMemo, useCallback } from "react";
-import { Box, Typography, Link, Chip } from "@mui/material";
-import {
-  Home,
-  Info,
-  ContactMail,
-  Code,
-  Javascript,
-  Palette,
-  ChevronRight,
-  Category as CategoryIcon,
-  Folder as FolderIcon,
-  Star as StarIcon,
-  Home as HomeIcon,
-  Work as WorkIcon,
-  Sports as SportsIcon,
-  LibraryMusic as MusicIcon,
-  Camera as CameraIcon,
-  Book as BookIcon,
-  CardTravel as TravelIcon,
-  Restaurant as RestaurantIcon,
-  Science as ScienceIcon,
-  School as SchoolIcon,
-  Business as BusinessIcon,
-  HealthAndSafety as HealthIcon,
-  Nature as NatureIcon,
-  Brush as ArtIcon,
-  Games as GamesIcon,
-  Movie as MovieIcon,
-  Build as BuildIcon,
-  DirectionsCar as DirectionsCarIcon,
-  LocalLibrary as LocalLibraryIcon,
-} from "@mui/icons-material";
+import React, { useMemo } from "react";
+import { Box, Typography, ButtonBase } from "@mui/material";
+import { Home, Info, ContactMail, ArrowOutward } from "@mui/icons-material";
 import { alpha } from "@mui/material/styles";
-import { useDispatch, useSelector } from "react-redux";
-import { createSelector } from "@reduxjs/toolkit";
-import { fetchCategories } from "../../redux/categoriesSlice";
-
-// Memoized selector
-const selectFooterCategories = createSelector(
-  [(state) => state.categories.items, (state) => state.categories.loading],
-  (categories, loading) => {
-    if (loading || categories.length === 0) return [];
-
-    const featuredCategories = categories.filter(
-      (cat) => cat.featured === true
-    );
-
-    return featuredCategories.length > 0
-      ? featuredCategories.slice(0, 3)
-      : categories
-          .sort((a, b) => (b.postCount || 0) - (a.postCount || 0))
-          .slice(0, 3);
-  }
-);
 
 const FooterLinks = React.memo(() => {
-  const dispatch = useDispatch();
-  const { loading } = useSelector((state) => state.categories);
-  const footerCategories = useSelector(selectFooterCategories);
-
-  // Memoized icon mapping
-  const AVAILABLE_ICONS = useMemo(
-    () => ({
-      Category: CategoryIcon,
-      Folder: FolderIcon,
-      Star: StarIcon,
-      Home: HomeIcon,
-      Work: WorkIcon,
-      Sports: SportsIcon,
-      Music: MusicIcon,
-      Camera: CameraIcon,
-      Book: BookIcon,
-      Code: Code,
-      Travel: TravelIcon,
-      Restaurant: RestaurantIcon,
-      Science: ScienceIcon,
-      School: SchoolIcon,
-      Business: BusinessIcon,
-      Health: HealthIcon,
-      Nature: NatureIcon,
-      Art: ArtIcon,
-      Games: GamesIcon,
-      Movie: MovieIcon,
-      Build: BuildIcon,
-      DirectionsCar: DirectionsCarIcon,
-      LocalLibrary: LocalLibraryIcon,
-      Javascript: Javascript,
-      Palette: Palette,
-    }),
+  const links = useMemo(
+    () => [
+      {
+        label: "Ana Sayfa",
+        href: "/",
+        icon: Home,
+        description: "Blog anasayfası",
+      },
+      {
+        label: "Hakkımızda",
+        href: "/about",
+        icon: Info,
+        description: "Biz kimiz?",
+      },
+      {
+        label: "İletişim",
+        href: "/contact",
+        icon: ContactMail,
+        description: "Bizimle iletişime geçin",
+      },
+    ],
     []
   );
 
-  // Memoized icon getter
-  const getIconComponent = useCallback(
-    (iconName) => {
-      if (iconName && AVAILABLE_ICONS[iconName]) {
-        return AVAILABLE_ICONS[iconName];
-      }
-      return CategoryIcon;
-    },
-    [AVAILABLE_ICONS]
-  );
-
-  useEffect(() => {
-    if (footerCategories.length === 0 && !loading) {
-      dispatch(fetchCategories());
-    }
-  }, [dispatch, footerCategories.length, loading]);
-
-  // Memoized categories for footer
-  const getFooterCategoriesFormatted = useMemo(() => {
-    if (loading || footerCategories.length === 0) {
-      return [
-        { label: "React", href: "/category/react", count: 0, icon: Code },
-        {
-          label: "Javascript",
-          href: "/category/javascript",
-          count: 0,
-          icon: Javascript,
-        },
-        {
-          label: "Tasarım",
-          href: "/category/tasarim",
-          count: 0,
-          icon: Palette,
-        },
-      ];
-    }
-
-    return footerCategories.map((cat) => ({
-      label: cat.name,
-      href: `/category/${cat.slug}`,
-      count: cat.postCount || 0,
-      icon: getIconComponent(cat.icon),
-    }));
-  }, [footerCategories, loading, getIconComponent]);
-
-  // Memoized link groups
-  const linkGroups = useMemo(
-    () => [
-      {
-        title: "Linkler",
-        links: [
-          { label: "Ana Sayfa", href: "/", icon: Home, isNew: false },
-          { label: "Hakkımızda", href: "/about", icon: Info, isNew: false },
-          {
-            label: "İletişim",
-            href: "/contact",
-            icon: ContactMail,
-            isNew: false,
-          },
-        ],
-      },
-      {
-        title: "Kategoriler",
-        links: getFooterCategoriesFormatted,
-      },
-    ],
-    [getFooterCategoriesFormatted]
-  );
-
-  // Memoized styles
+  // Compact styles
   const containerStyles = useMemo(
     () => ({
       display: "flex",
       flexDirection: "column",
-      gap: 3,
+      gap: 1.5,
       height: "100%",
     }),
     []
   );
-
   const titleStyles = useMemo(
     () => ({
-      mb: 2,
       fontWeight: 600,
+      background: "linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)",
+      backgroundClip: "text",
+      WebkitBackgroundClip: "text",
+      WebkitTextFillColor: "transparent",
       fontSize: "1rem",
-      position: "relative",
-      "&::after": {
-        content: '""',
-        position: "absolute",
-        bottom: -4,
-        left: 0,
-        width: 24,
-        height: 2,
-        background: "linear-gradient(45deg, #2196F3, #21CBF3)",
-        borderRadius: 1,
-      },
+      mb: 0.5,
     }),
     []
   );
 
-  // Memoized link item component
-  const LinkItem = useMemo(
+  <Typography variant="h6" sx={titleStyles}>
+    Sayfalar
+  </Typography>;
+
+  const LinkButton = useMemo(
     () =>
-      React.memo(({ link }) => {
-        const itemStyles = useMemo(
-          () => ({
+      React.memo(({ link }) => (
+        <ButtonBase
+          href={link.href}
+          sx={{
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
-            py: 0.5,
-            px: 1,
-            mx: -1,
-            borderRadius: 1,
-            transition: "all 0.2s ease-in-out",
+            width: "100%",
+            p: 1,
+            borderRadius: 1.5,
+            textAlign: "left",
+            background: (theme) =>
+              theme.palette.mode === "dark"
+                ? "rgba(255,255,255,0.02)"
+                : "rgba(0,0,0,0.02)",
+            border: "1px solid transparent",
+            transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
             "&:hover": {
-              backgroundColor: alpha("#2196F3", 0.04),
-              transform: "translateX(4px)",
+              background: (theme) =>
+                theme.palette.mode === "dark"
+                  ? alpha(theme.palette.primary.main, 0.08)
+                  : alpha(theme.palette.primary.main, 0.04),
+              borderColor: alpha("#2196F3", 0.2),
+              transform: "translateX(3px)", // Küçültüldü: 4px → 3px
+              boxShadow: `0 3px 10px ${alpha("#2196F3", 0.12)}`, // Küçültüldü
+              "& .icon": {
+                color: "primary.main",
+                transform: "scale(1.05)", // Küçültüldü: 1.1 → 1.05
+              },
+              "& .arrow": {
+                transform: "translate(2px, -2px)",
+                opacity: 1,
+              },
+              "& .title": {
+                color: "primary.main",
+              },
             },
-          }),
-          []
-        );
-
-        const linkStyles = useMemo(
-          () => ({
-            display: "flex",
-            alignItems: "center",
-            gap: 1,
-            color: "text.secondary",
-            textDecoration: "none",
-            fontSize: "0.875rem",
-            fontWeight: 400,
-            transition: "color 0.2s ease-in-out",
-            "&:hover": {
-              color: "primary.main",
-              textDecoration: "none",
-            },
-          }),
-          []
-        );
-
-        return (
-          <Box sx={itemStyles}>
-            <Link href={link.href} sx={linkStyles}>
-              {link.icon && <link.icon sx={{ fontSize: 16, opacity: 0.7 }} />}
-              {link.label}
-              {link.isNew && (
-                <Chip
-                  label="YENİ"
-                  size="small"
-                  sx={{
-                    height: 16,
-                    fontSize: "0.625rem",
-                    fontWeight: 600,
-                    background: "linear-gradient(45deg, #FF6B6B, #FF8E8E)",
-                    color: "white",
-                    "& .MuiChip-label": { px: 0.5 },
-                  }}
-                />
-              )}
-            </Link>
-
-            <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-              {link.count !== undefined && (
-                <Chip
-                  label={loading ? "..." : link.count}
-                  size="small"
-                  variant="outlined"
-                  sx={{
-                    height: 20,
-                    fontSize: "0.625rem",
-                    borderColor: alpha("#2196F3", 0.3),
-                    color: "text.secondary",
-                    "& .MuiChip-label": { px: 0.5 },
-                  }}
-                />
-              )}
-              <ChevronRight
+          }}
+        >
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+            {" "}
+            {/* Küçültüldü: 1.5 → 1 */}
+            <Box
+              sx={{
+                width: 28, // Küçültüldü: 32 → 28
+                height: 28,
+                borderRadius: 1.5,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                background: (theme) =>
+                  theme.palette.mode === "dark"
+                    ? "rgba(255,255,255,0.06)"
+                    : "rgba(0,0,0,0.06)",
+                transition: "all 0.3s ease",
+              }}
+            >
+              <link.icon
+                className="icon"
                 sx={{
-                  fontSize: 14,
-                  opacity: 0.4,
-                  transition: "all 0.2s ease-in-out",
-                  ".MuiBox-root:hover &": {
-                    opacity: 0.8,
-                    transform: "translateX(2px)",
-                  },
+                  fontSize: 14, // Küçültüldü: 16 → 14
+                  color: "text.secondary",
+                  transition: "all 0.3s ease",
                 }}
               />
             </Box>
+            <Box>
+              <Typography
+                className="title"
+                variant="body2"
+                sx={{
+                  fontWeight: 600,
+                  fontSize: "0.8rem", // Küçültüldü: 0.875rem → 0.8rem
+                  color: "text.primary",
+                  transition: "color 0.3s ease",
+                  lineHeight: 1.2,
+                }}
+              >
+                {link.label}
+              </Typography>
+              <Typography
+                variant="caption"
+                sx={{
+                  fontSize: "0.65rem", // Küçültüldü: 0.7rem → 0.65rem
+                  color: "text.secondary",
+                  opacity: 0.7,
+                  lineHeight: 1.1,
+                }}
+              >
+                {link.description}
+              </Typography>
+            </Box>
           </Box>
-        );
-      }),
-    [loading]
+
+          <ArrowOutward
+            className="arrow"
+            sx={{
+              fontSize: 12, // Küçültüldü: 14 → 12
+              color: "text.secondary",
+              opacity: 0.5,
+              transition: "all 0.3s ease",
+            }}
+          />
+        </ButtonBase>
+      )),
+    []
   );
 
   return (
     <Box sx={containerStyles}>
-      {linkGroups.map((group, groupIndex) => (
-        <Box key={group.title}>
-          <Typography variant="h3" sx={titleStyles}>
-            {group.title}
-          </Typography>
-
-          <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
-            {group.links.map((link) => (
-              <LinkItem key={link.label} link={link} />
-            ))}
-          </Box>
-        </Box>
-      ))}
-
-      {/* Quick Actions - Memoized */}
-      <Box
-        sx={{
-          mt: "auto",
-          p: 1.5,
-          borderRadius: 2,
-          background: (theme) =>
-            theme.palette.mode === "dark"
-              ? "linear-gradient(135deg, rgba(33, 150, 243, 0.05) 0%, rgba(33, 203, 243, 0.05) 100%)"
-              : "linear-gradient(135deg, rgba(33, 150, 243, 0.02) 0%, rgba(33, 203, 243, 0.02) 100%)",
-          border: (theme) =>
-            `1px solid ${alpha(theme.palette.primary.main, 0.08)}`,
-        }}
-      >
-        <Typography
-          variant="caption"
-          sx={{
-            display: "block",
-            fontWeight: 500,
-            mb: 0.5,
-            color: "text.secondary",
-          }}
-        >
-          Hızlı Erişim
+      {/* Header - Newsletter ile aynı yapı */}
+      <Box>
+        <Typography variant="h6" sx={titleStyles}>
+          Sayfalar
         </Typography>
+      </Box>
 
-        <Box sx={{ display: "flex", gap: 0.5, flexWrap: "wrap" }}>
-          {getFooterCategoriesFormatted.slice(0, 3).map((category) => (
-            <Chip
-              key={category.label}
-              label={category.label}
-              size="small"
-              clickable
-              component={Link}
-              href={category.href}
-              sx={{
-                height: 24,
-                fontSize: "0.625rem",
-                backgroundColor: alpha("#2196F3", 0.08),
-                color: "primary.main",
-                border: "none",
-                textDecoration: "none",
-                "&:hover": {
-                  backgroundColor: alpha("#2196F3", 0.12),
-                  transform: "translateY(-1px)",
-                },
-                transition: "all 0.2s ease-in-out",
-              }}
-            />
-          ))}
-        </Box>
+      <Box sx={{ display: "flex", flexDirection: "column", gap: 0.75 }}>
+        {links.map((link) => (
+          <LinkButton key={link.label} link={link} />
+        ))}
       </Box>
     </Box>
   );
