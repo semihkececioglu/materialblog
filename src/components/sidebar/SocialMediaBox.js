@@ -17,6 +17,7 @@ import {
 } from "@mui/icons-material";
 import SportsEsportsIcon from "@mui/icons-material/SportsEsports";
 import { alpha } from "@mui/material/styles";
+import XIcon from "@mui/icons-material/X";
 
 const SocialMediaBox = React.memo(() => {
   const theme = useTheme();
@@ -30,7 +31,7 @@ const SocialMediaBox = React.memo(() => {
   const socialLinks = [
     {
       name: "Twitter",
-      icon: <Twitter />,
+      icon: <XIcon />,
       color: "#1DA1F2",
       link: "https://twitter.com/",
       username: "@username",
