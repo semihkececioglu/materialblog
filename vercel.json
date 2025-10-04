@@ -14,5 +14,11 @@
         }
       ]
     }
+  ],
+  "rewrites": [
+    {
+      "source": "/rss.xml",
+      "destination": "https://materialblog-server-production.up.railway.app/api/rss.xml"
+    }
   ]
 }
