@@ -10,22 +10,51 @@ import {
 } from "@mui/material";
 import { Email, Send, NotificationsActive } from "@mui/icons-material";
 import { alpha } from "@mui/material/styles";
+import axios from "axios";
 
 const FooterSubscribe = React.memo(() => {
   const [email, setEmail] = useState("");
   const [showSuccess, setShowSuccess] = useState(false);
+  const [showError, setShowError] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const handleEmailChange = useCallback((e) => {
     setEmail(e.target.value);
   }, []);
 
   const handleSubmit = useCallback(
-    (e) => {
+    async (e) => {
       e.preventDefault();
-      if (email && email.includes("@")) {
+      if (!email || !email.includes("@")) return;
+
+      setLoading(true);
+      setShowError(false);
+      setShowSuccess(false);
+
+      try {
+        await axios.post(
+          "https://api.brevo.com/v3/contacts",
+          {
+            email: email,
+            listIds: [2], // <-- Buraya Brevo'daki abone listeni ID olarak yaz
+            updateEnabled: true,
+          },
+          {
+            headers: {
+              "Content-Type": "application/json",
+              "api-key": process.env.REACT_APP_BREVO_API_KEY,
+            },
+          }
+        );
+
         setShowSuccess(true);
         setEmail("");
         setTimeout(() => setShowSuccess(false), 3000);
+      } catch (err) {
+        console.error("Abonelik hatası:", err);
+        setShowError(true);
+      } finally {
+        setLoading(false);
       }
     },
     [email]
@@ -35,12 +64,11 @@ const FooterSubscribe = React.memo(() => {
     return email && email.includes("@");
   }, [email]);
 
-  // Compact styles
   const containerStyles = useMemo(
     () => ({
       display: "flex",
       flexDirection: "column",
-      gap: 1.5, // Reduced gap
+      gap: 1.5,
       height: "100%",
     }),
     []
@@ -53,7 +81,7 @@ const FooterSubscribe = React.memo(() => {
       backgroundClip: "text",
       WebkitBackgroundClip: "text",
       WebkitTextFillColor: "transparent",
-      fontSize: "1rem", // Reduced font size
+      fontSize: "1rem",
       display: "flex",
       alignItems: "center",
       gap: 0.5,
@@ -69,13 +97,12 @@ const FooterSubscribe = React.memo(() => {
           <NotificationsActive sx={{ fontSize: 18 }} />
           Newsletter
         </Typography>
-
         <Typography
           variant="body2"
           color="text.secondary"
           sx={{
             lineHeight: 1.4,
-            fontSize: "0.875rem", // Reduced font size
+            fontSize: "0.875rem",
             mt: 0.5,
           }}
         >
@@ -97,12 +124,26 @@ const FooterSubscribe = React.memo(() => {
         </Alert>
       </Collapse>
 
+      {/* Error Alert */}
+      <Collapse in={showError}>
+        <Alert
+          severity="error"
+          sx={{
+            borderRadius: 1.5,
+            fontSize: "0.8rem",
+            py: 0.5,
+          }}
+        >
+          Bir hata oluştu, lütfen tekrar deneyin.
+        </Alert>
+      </Collapse>
+
       {/* Form */}
       <Box
         component="form"
         onSubmit={handleSubmit}
         sx={{
-          p: 1.5, // Reduced padding
+          p: 1.5,
           borderRadius: 2,
           background: (theme) =>
             theme.palette.mode === "dark"
@@ -129,7 +170,7 @@ const FooterSubscribe = React.memo(() => {
             ),
           }}
           sx={{
-            mb: 1, // Reduced margin
+            mb: 1,
             "& .MuiOutlinedInput-root": {
               backgroundColor: "background.paper",
               fontSize: "0.875rem",
@@ -141,9 +182,9 @@ const FooterSubscribe = React.memo(() => {
           type="submit"
           variant="contained"
           fullWidth
-          disabled={!isEmailValid}
+          disabled={!isEmailValid || loading}
           endIcon={<Send sx={{ fontSize: 14 }} />}
-          size="small" // Reduced size
+          size="small"
           sx={{
             borderRadius: 1.5,
             background: "linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)",
@@ -155,7 +196,7 @@ const FooterSubscribe = React.memo(() => {
             },
           }}
         >
-          Abone Ol
+          {loading ? "Gönderiliyor..." : "Abone Ol"}
         </Button>
       </Box>
 
